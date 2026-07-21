@@ -11,9 +11,23 @@ import {
 import { MAP_DEFINITIONS } from "../../content/maps/mapCatalog";
 import { createTerrainMaskFromImage } from "../../content/maps/terrainMaskFromImage";
 import {
+  COMIC_PROJECTILE_TEXTURE_KEY,
+  comicProjectileDisplaySize,
+  comicProjectileFrame,
+} from "../../content/projectiles/comicProjectileKit";
+import {
+  FEEDBACK_ICON_TEXTURE_KEY,
+  feedbackIconFrame,
+} from "../../content/ui/feedbackIconKit";
+import {
   COMIC_VFX_TEXTURE_KEY,
   comicVfxFrame,
 } from "../../content/vfx/comicVfxKit";
+import {
+  SECONDARY_VFX_TEXTURE_KEY,
+  secondaryVfxFrames,
+  type SecondaryVfx,
+} from "../../content/vfx/secondaryVfxKit";
 import { FIGHTER_ROSTER } from "../../manager/fighterRoster";
 import {
   calculateBlastDamage,
@@ -26,7 +40,10 @@ import {
   type RocketCandidate,
   type WeaponId,
 } from "../../simulation/ai/RocketActionPlanner";
-import { sampleTrajectoryAtElapsed } from "../../simulation/ballistics/Ballistics";
+import {
+  sampleTrajectoryAtElapsed,
+  type Vector2,
+} from "../../simulation/ballistics/Ballistics";
 import {
   planLocalMovement,
   type LocalMovementPlan,
@@ -173,6 +190,7 @@ export class MatchScene extends Phaser.Scene {
     {
       readonly background: Phaser.GameObjects.Rectangle;
       readonly text: Phaser.GameObjects.Text;
+      readonly icon: Phaser.GameObjects.Sprite;
     }
   >();
   private helpButton!: Phaser.GameObjects.Rectangle;
@@ -182,11 +200,8 @@ export class MatchScene extends Phaser.Scene {
     | Phaser.GameObjects.Text
   )[] = [];
   private helpVisible = false;
-  private projectile!: Phaser.GameObjects.Container;
-  private projectileParts = new Map<
-    WeaponId,
-    { setVisible(value: boolean): unknown }[]
-  >();
+  private projectile!: Phaser.GameObjects.Sprite;
+  private nextGrenadeBounceIndex = 0;
   private uiCamera?: Phaser.Cameras.Scene2D.Camera;
   private cameraKeys?: CameraKeys;
   private cameraTarget: CameraFrame = {
@@ -260,7 +275,7 @@ export class MatchScene extends Phaser.Scene {
     this.helpOverlayObjects = [];
     this.weaponCommandButtons = new Map();
     this.helpVisible = false;
-    this.projectileParts = new Map();
+    this.nextGrenadeBounceIndex = 0;
     this.preferredWeaponByUnitId = new Map();
     this.preferenceConsumedByUnitId = new Set();
     this.touchPointers = new Map();
@@ -323,10 +338,35 @@ export class MatchScene extends Phaser.Scene {
     }
 
     this.executionElapsedSeconds += deltaMilliseconds / 1000;
+    const selected = this.plan.selected;
     const playback = sampleTrajectoryAtElapsed(
-      this.plan.selected.trajectory,
+      selected.trajectory,
       this.executionElapsedSeconds,
     );
+
+    if (selected.weaponId === "grenade") {
+      this.projectile.setFrame(
+        comicProjectileFrame(
+          "grenade",
+          Math.floor(this.executionElapsedSeconds * 10) % 2 === 1,
+        ),
+      );
+      while (
+        this.nextGrenadeBounceIndex < selected.trajectory.bounces.length &&
+        (selected.trajectory.bounces[this.nextGrenadeBounceIndex]?.timeSeconds ??
+          Number.POSITIVE_INFINITY) <= this.executionElapsedSeconds
+      ) {
+        const bounce = selected.trajectory.bounces[this.nextGrenadeBounceIndex];
+        if (bounce) {
+          this.showSecondaryVfx(
+            "bounce",
+            bounce.position.x,
+            bounce.position.y,
+          );
+        }
+        this.nextGrenadeBounceIndex += 1;
+      }
+    }
 
     if (playback.sampleIndex !== this.lastPlaybackSampleIndex) {
       this.lastPlaybackSampleIndex = playback.sampleIndex;
@@ -343,7 +383,7 @@ export class MatchScene extends Phaser.Scene {
     this.updateCameraDebug();
 
     if (playback.complete) {
-      this.completeAction(this.plan.selected);
+      this.completeAction(selected);
     }
   }
 
@@ -391,8 +431,12 @@ export class MatchScene extends Phaser.Scene {
     turnBackground.lineStyle(1, 0xfff5d6, 0.24);
     turnBackground.strokeRoundedRect(424, 10, 432, 68, 13);
 
+    this.add
+      .sprite(446, 32, FEEDBACK_ICON_TEXTURE_KEY, feedbackIconFrame("turn"))
+      .setDisplaySize(28, 28)
+      .setDepth(100);
     this.headlineText = this.add
-      .text(442, 19, "ZUG 1  ·  BRUNO", {
+      .text(468, 19, "ZUG 1  ·  BRUNO", {
         fontFamily: "Segoe UI, Arial, sans-serif",
         fontSize: "17px",
         fontStyle: "bold",
@@ -401,7 +445,7 @@ export class MatchScene extends Phaser.Scene {
       .setDepth(100);
 
     this.turnQueueText = this.add
-      .text(442, 48, "", {
+      .text(468, 48, "", {
         fontFamily: "Consolas, ui-monospace, monospace",
         fontSize: "11px",
         fontStyle: "bold",
@@ -463,6 +507,15 @@ export class MatchScene extends Phaser.Scene {
           color: COLORS.cream,
         })
         .setOrigin(1, 0)
+        .setDepth(100);
+      this.add
+        .sprite(
+          layout.x + 286,
+          27,
+          FEEDBACK_ICON_TEXTURE_KEY,
+          feedbackIconFrame("health"),
+        )
+        .setDisplaySize(20, 20)
         .setDepth(100);
       this.teamHudTitleTexts.set(layout.team, titleText);
       this.teamHudTotalTexts.set(layout.team, totalText);
@@ -539,9 +592,7 @@ export class MatchScene extends Phaser.Scene {
         ?.setText(`${layout.title}${activeTeam ? "  ·  AM ZUG" : ""}`);
       this.teamHudTotalTexts
         .get(layout.team)
-        ?.setText(
-          `TEAM-HP  ${teamStatus.hitPoints} / ${teamStatus.maximumHitPoints}`,
-        );
+        ?.setText(`${teamStatus.hitPoints} / ${teamStatus.maximumHitPoints}`);
 
       for (const [index, member] of teamStatus.members.entries()) {
         const activeUnit =
@@ -754,66 +805,27 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private createProjectile(): void {
-    const flame = this.add
-      .sprite(-22, 0, COMIC_VFX_TEXTURE_KEY, comicVfxFrame("exhaust"))
-      .setDisplaySize(54, 54);
-    const body = this.add.rectangle(0, 0, 26, 10, COLORS.paper, 1);
-    body.setStrokeStyle(3, COLORS.night, 1);
-    const nose = this.add.triangle(17, 0, 0, -5, 0, 5, 9, 0, COLORS.coral, 1);
-
-    const grenadeBody = this.add.circle(0, 0, 11, 0x36565a, 1);
-    grenadeBody.setStrokeStyle(3, COLORS.night, 1);
-    const grenadeBand = this.add.rectangle(0, 0, 4, 19, COLORS.yellow, 0.9);
-    const grenadeFuse = this.add.line(8, -10, 0, 0, 7, -8, COLORS.paper, 1);
-    grenadeFuse.setLineWidth(3, 3);
-    const grenadeSpark = this.add.circle(15, -18, 4, COLORS.yellow, 1);
-
-    const breakerExhaust = this.add
-      .sprite(-21, 0, COMIC_VFX_TEXTURE_KEY, comicVfxFrame("exhaust"))
-      .setDisplaySize(48, 48);
-    const breakerBody = this.add.rectangle(0, 0, 25, 14, COLORS.yellow, 1);
-    breakerBody.setStrokeStyle(3, COLORS.night, 1);
-    const breakerTip = this.add.triangle(20, 0, 0, -9, 0, 9, 13, 0, COLORS.tealBright, 1);
-    const breakerFin = this.add.triangle(-10, 0, 0, 0, 13, -10, 13, 10, COLORS.coral, 1);
-
     this.projectile = this.add
-      .container(-100, -100, [
-        flame,
-        body,
-        nose,
-        grenadeBody,
-        grenadeBand,
-        grenadeFuse,
-        grenadeSpark,
-        breakerExhaust,
-        breakerBody,
-        breakerTip,
-        breakerFin,
-      ])
+      .sprite(
+        -100,
+        -100,
+        COMIC_PROJECTILE_TEXTURE_KEY,
+        comicProjectileFrame("rocket"),
+      )
+      .setDisplaySize(
+        comicProjectileDisplaySize("rocket"),
+        comicProjectileDisplaySize("rocket"),
+      )
       .setDepth(70)
       .setVisible(false);
-    this.projectileParts.set("rocket", [flame, body, nose]);
-    this.projectileParts.set("grenade", [
-      grenadeBody,
-      grenadeBand,
-      grenadeFuse,
-      grenadeSpark,
-    ]);
-    this.projectileParts.set("breaker", [
-      breakerExhaust,
-      breakerBody,
-      breakerTip,
-      breakerFin,
-    ]);
     this.setProjectileAppearance("rocket");
   }
 
   private setProjectileAppearance(weaponId: WeaponId): void {
-    for (const [id, parts] of this.projectileParts) {
-      for (const part of parts) {
-        part.setVisible(id === weaponId);
-      }
-    }
+    const displaySize = comicProjectileDisplaySize(weaponId);
+    this.projectile
+      .setFrame(comicProjectileFrame(weaponId))
+      .setDisplaySize(displaySize, displaySize);
   }
 
   private createIntentPanel(): void {
@@ -825,8 +837,18 @@ export class MatchScene extends Phaser.Scene {
     panel.fillStyle(COLORS.yellow, 1);
     panel.fillRoundedRect(988, 110, 260, 34, 9);
 
+    this.add
+      .sprite(
+        1005,
+        127,
+        FEEDBACK_ICON_TEXTURE_KEY,
+        feedbackIconFrame("manager"),
+      )
+      .setDisplaySize(26, 26)
+      .setDepth(82);
+
     this.intentHeaderText = this.add
-      .text(1001, 118, "PLAN VON BRUNO", {
+      .text(1024, 118, "PLAN VON BRUNO", {
         fontFamily: "Segoe UI, Arial, sans-serif",
         fontSize: "15px",
         fontStyle: "bold",
@@ -899,7 +921,7 @@ export class MatchScene extends Phaser.Scene {
         .setInteractive({ useHandCursor: true })
         .setDepth(82);
       const text = this.add
-        .text(definition.x, 482, definition.label, {
+        .text(definition.x + 8, 482, definition.label, {
           fontFamily: "Consolas, ui-monospace, monospace",
           fontSize: "8px",
           fontStyle: "bold",
@@ -907,10 +929,23 @@ export class MatchScene extends Phaser.Scene {
         })
         .setOrigin(0.5)
         .setDepth(83);
+      const icon = this.add
+        .sprite(
+          definition.x - 27,
+          482,
+          FEEDBACK_ICON_TEXTURE_KEY,
+          feedbackIconFrame(definition.id),
+        )
+        .setDisplaySize(18, 18)
+        .setDepth(83);
       background.on("pointerdown", () =>
         this.chooseManagerWeapon(definition.id),
       );
-      this.weaponCommandButtons.set(definition.id, { background, text });
+      this.weaponCommandButtons.set(definition.id, {
+        background,
+        text,
+        icon,
+      });
     }
 
     const debugBackground = this.add.graphics().setDepth(75);
@@ -1451,6 +1486,13 @@ export class MatchScene extends Phaser.Scene {
           movement.destination.x,
           movement.destination.y,
         );
+        if (movement.kind === "jump") {
+          this.showSecondaryVfx(
+            "landing",
+            movement.destination.x,
+            movement.destination.y,
+          );
+        }
         active.sprite.setFlipX(false);
         this.time.delayedCall(140, () => {
           if (this.plan.selected) {
@@ -1488,10 +1530,15 @@ export class MatchScene extends Phaser.Scene {
     this.actionState = "executing";
     this.executionElapsedSeconds = 0;
     this.lastPlaybackSampleIndex = 0;
+    this.nextGrenadeBounceIndex = 0;
     this.projectile
       .setPosition(firstSample.position.x, firstSample.position.y)
+      .setRotation(
+        Math.atan2(firstSample.velocity.y, firstSample.velocity.x),
+      )
       .setVisible(true);
     this.setProjectileAppearance(selected.weaponId);
+    this.showLaunchExhaust(firstSample.position, firstSample.velocity);
     this.setCreaturePose(
       active.data.id,
       selected.weaponId === "grenade" ? "grenade" : "action",
@@ -1716,6 +1763,13 @@ export class MatchScene extends Phaser.Scene {
             this.updateUnitHealthBar(view);
             view.container.setVisible(false);
           } else {
+            if (result.outcome === "landed") {
+              this.showSecondaryVfx(
+                "landing",
+                lastSample.position.x,
+                lastSample.position.y,
+              );
+            }
             this.setCreaturePose(view.data.id, "startled");
           }
           finishOne();
@@ -1767,6 +1821,11 @@ export class MatchScene extends Phaser.Scene {
         ease: "Quad.easeIn",
         onComplete: () => {
           if (resolution.state === "fall") {
+            this.showSecondaryVfx(
+              "landing",
+              view.worldPosition.x,
+              destinationY,
+            );
             this.tweens.add({
               targets: view.container,
               y: destinationY - 7,
@@ -2100,6 +2159,7 @@ export class MatchScene extends Phaser.Scene {
       button.text
         .setColor(selected ? COLORS.ink : COLORS.cream)
         .setAlpha(selected || canChooseWeapon ? 1 : 0.46);
+      button.icon.setAlpha(selected || canChooseWeapon ? 1 : 0.38);
     }
 
     if (this.actionState === "moving") {
@@ -2237,6 +2297,60 @@ export class MatchScene extends Phaser.Scene {
         onComplete: () => debris.destroy(),
       });
     }
+  }
+
+  private showLaunchExhaust(position: Vector2, velocity: Vector2): void {
+    const angle = Math.atan2(velocity.y, velocity.x);
+    const exhaust = this.registerWorldObject(
+      this.add
+        .sprite(
+          position.x - Math.cos(angle) * 24,
+          position.y - Math.sin(angle) * 24,
+          COMIC_VFX_TEXTURE_KEY,
+          comicVfxFrame("exhaust"),
+        )
+        .setDisplaySize(62, 62)
+        .setRotation(angle)
+        .setAlpha(0.92)
+        .setDepth(69),
+    );
+    this.tweens.add({
+      targets: exhaust,
+      scaleX: exhaust.scaleX * 1.24,
+      scaleY: exhaust.scaleY * 1.24,
+      alpha: 0,
+      duration: 250,
+      ease: "Quad.easeOut",
+      onComplete: () => exhaust.destroy(),
+    });
+  }
+
+  private showSecondaryVfx(
+    effect: SecondaryVfx,
+    worldX: number,
+    worldY: number,
+  ): void {
+    const [firstFrame, secondFrame] = secondaryVfxFrames(effect);
+    const displaySize = effect === "bounce" ? 70 : 92;
+    const sprite = this.registerWorldObject(
+      this.add
+        .sprite(worldX, worldY, SECONDARY_VFX_TEXTURE_KEY, firstFrame)
+        .setDisplaySize(displaySize, displaySize)
+        .setOrigin(0.5, effect === "landing" ? 0.66 : 0.58)
+        .setDepth(75),
+    );
+    this.time.delayedCall(70, () => sprite.setFrame(secondFrame));
+    this.tweens.add({
+      targets: sprite,
+      y: worldY - (effect === "landing" ? 8 : 4),
+      scaleX: sprite.scaleX * 1.14,
+      scaleY: sprite.scaleY * 1.14,
+      alpha: 0,
+      delay: 80,
+      duration: 260,
+      ease: "Sine.easeOut",
+      onComplete: () => sprite.destroy(),
+    });
   }
 
   private framePlanningCamera(): void {

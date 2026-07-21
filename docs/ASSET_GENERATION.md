@@ -2,6 +2,70 @@
 
 Stand: 21. Juli 2026. Alle hier aufgeführten finalen Assets wurden mit Built-in Imagegen erzeugt. Es wurde kein CLI-Fallback verwendet.
 
+## Feedback-Asset-Paket vom 22. Juli 2026
+
+Alle drei Atlanten wurden mit Built-in Imagegen und dem bestehenden
+`comic-vfx-sheet.png` als direkter Stilreferenz erzeugt. Die flachen
+Chroma-Key-Hintergründe wurden mit dem installierten Imagegen-Helfer,
+Soft-Matte und Despill entfernt. Das Chicken aus Task 020 wurde dabei bewusst
+nicht erzeugt.
+
+### Projektil-Sheet: `comic-projectile-sheet.png`
+
+**Technik:** transparentes 1254×1254-PNG, 2×2 Frames zu je 627×627 Pixeln.
+Rakete und Geländebrecher sind nach rechts normalisiert. Frame 1 und 3 bilden
+das kosmetische Zündflackern der Granate.
+
+```text
+Use case: stylized-concept
+Asset type: production-minded 2 by 2 projectile sprite atlas for the original side-view 2D comic artillery browser game Projekt Abriss
+Input image: use Image 1 only as the exact visual style reference for bold dark-teal outlines, restrained hand-painted cel shading, warm palette, clarity at small size, and modest browser-game polish.
+Primary request: exactly four isolated projectile sprites, one centered in each equal square cell. Top-left: a compact cream-and-coral demolition rocket with a blunt pointed nose, small navy band and tiny rear fins, pointing perfectly horizontally to the RIGHT, no exhaust or smoke. Top-right: a round charcoal-indigo timed grenade with a cream metal cap and short curved fuse ending in a small yellow-orange spark. Bottom-left: a chunky ochre-and-cyan terrain-breaker drill missile with a distinctive faceted drill tip, small coral rear fins, pointing perfectly horizontally to the RIGHT, no exhaust or smoke. Bottom-right: the exact same timed grenade as top-right, same placement and orientation, but with a larger bright fuse spark for a two-frame flicker.
+Scene/backdrop: perfectly flat uniform solid #ff00ff chroma-key background in every empty pixel; no floor, shadow, gradient, texture, grid lines, cell dividers or reflections.
+Composition: exact-feeling 2 columns by 2 rows, one centered object per equal cell, identical scale within relevant variants, generous padding, no object touches an edge. Side view. Rocket and breaker long axis exactly horizontal.
+Style/medium: original hand-drawn dimensional comic game art, confident dark-teal ink contour, simple cel-painted volume, slightly irregular and playful, crisp at 24-40 screen pixels; not papercut, pixel art, flat vector, glossy 3D, photorealistic or franchise-specific.
+Constraints: exactly four sprites; no characters, hands, text, UI, logos, watermark, scenery, explosions, motion streaks, cast shadows, extra marks, or magenta within any projectile.
+```
+
+**Imagegen-Original:** `C:\Users\madde\.codex\generated_images\019f859c-8d0d-73c0-89ac-43f40a2637a4\exec-285726a3-8c4f-423e-b010-2a7904609dc6.png`
+
+### Sekundär-VFX: `secondary-vfx-sheet.png`
+
+**Technik:** transparentes 1254×1254-PNG, 2×2 Frames zu je 627×627 Pixeln.
+Frames 0–1 zeigen Granatenkontakt, Frames 2–3 Landestaub.
+
+```text
+Use case: stylized-concept
+Asset type: production-minded 2 by 2 secondary VFX sprite atlas for the original side-view 2D comic artillery browser game Projekt Abriss
+Input image: use Image 1 as the exact visual style reference for bold dark-teal outlines, irregular comic shapes, restrained cel shading, clarity at small size and the established coral, cream, ochre and lavender palette.
+Primary request: exactly four isolated opaque comic effect sprites, one centered in each equal square cell. Top-left and top-right are two consecutive frames of one small grenade bounce effect: a low cream-yellow contact spark with two coral flecks and a tiny lavender dust curl, second frame slightly wider and dimmer. Bottom-left and bottom-right are two consecutive frames of one landing effect: a low horizontal pair of warm ochre-lavender dust puffs close to the ground, second frame wider, softer and breaking into three small motes.
+Scene/backdrop: perfectly flat uniform solid #00ff00 chroma-key background everywhere outside the effects; no floor, shadow, gradient, texture, grid lines, cell dividers or reflections.
+Composition: exact-feeling 2 columns by 2 rows, one centered effect per equal cell, consistent baseline and scale for each pair, generous padding, no effect touches an edge.
+Style/medium: original hand-drawn 2D comic game VFX, confident dark-teal contours, simple cel-painted volume, playful and readable at 24-60 screen pixels; not papercut, pixel art, flat vector, glossy, photorealistic or franchise-specific.
+Constraints: exactly four effects and nothing else; no text, characters, weapons, scenery, logos, frames, watermark, soft transparency, extra marks, or green within an effect.
+```
+
+**Imagegen-Original:** `C:\Users\madde\.codex\generated_images\019f859c-8d0d-73c0-89ac-43f40a2637a4\exec-c2d6c449-7b1c-49e2-8b58-9c6a455a51fd.png`
+
+### UI-Icons: `feedback-icon-sheet.png`
+
+**Technik:** transparentes 1536×1024-PNG, 3×2 Frames zu je 512×512 Pixeln.
+Die sechs Frames sind Rakete, Granate, Geländebrecher, Teamgesundheit,
+Zugreihenfolge und Managerkommando.
+
+```text
+Use case: stylized-concept
+Asset type: production-minded 3 columns by 2 rows UI icon atlas for the original side-view 2D comic artillery browser game Projekt Abriss
+Input image: use Image 1 as the exact visual style reference for bold dark-teal outlines, restrained hand-painted cel shading, warm friendly palette, slightly irregular shapes and crisp small-scale readability.
+Primary request: exactly six isolated compact icons, one centered in each equal cell. Top row left-to-right: demolition rocket pointing right, round timed grenade, chunky terrain-breaker drill missile pointing right. Bottom row left-to-right: sturdy coral heart for team health, cream-and-yellow curved turn-order arrow, small teal manager megaphone with a yellow mouth and one coral sound mark. Each icon must have a single strong silhouette and minimal internal detail.
+Scene/backdrop: perfectly flat uniform solid #ff00ff chroma-key background in every empty pixel; no floor, shadows, gradients, texture, grid lines, cell dividers or reflections.
+Composition: exact-feeling 3 columns by 2 rows, one centered icon per equal cell, consistent visual weight, generous padding, no icon touches an edge.
+Style/medium: original hand-drawn dimensional comic UI art, confident dark-teal ink contour, simple cel-painted volume, slightly irregular and playful, readable at 18-32 screen pixels; not papercut, pixel art, generic flat vector, emoji, glossy 3D, photorealistic or franchise-specific.
+Constraints: exactly six icons; no text, letters, numbers, characters, hands, scenery, logos, borders, watermark, extra marks or magenta within an icon.
+```
+
+**Imagegen-Original:** `C:\Users\madde\.codex\generated_images\019f859c-8d0d-73c0-89ac-43f40a2637a4\exec-6aa81298-3a5e-4816-a5e0-aebad997312d.png`
+
 Nicht zur Laufzeit verwendete ursprüngliche Karten-Styleframes liegen unter `source-assets/maps/`; nur die HD-Laufzeitfassungen werden über `public/assets/maps/` ausgeliefert.
 
 ## Verbindliche Referenzregel ab Task 013

@@ -2,11 +2,13 @@
 
 ## Status
 
-`bereit`
+`teilweise abgeschlossen`
 
 ## Hinweis
 
-Auf ausdrücklichen Nutzerwunsch nur vermerkt, noch nicht umzusetzen.
+Der Feedback-Asset-Teil wurde am 22. Juli 2026 ausdrücklich erneut priorisiert
+und umgesetzt. Das Chicken bleibt auf ausdrücklichen Nutzerwunsch weiterhin
+unverändert und ist nicht Teil dieser Lieferung.
 
 ## Ziel
 
@@ -19,13 +21,12 @@ Jitter-Sprünge besitzen.
 
 - referenznahes Chicken-Sheet mit Ruhe, hektischer Bewegung, Sprung,
   Waffenaktionen, Treffer und Sieg,
-- fehlende Projektil-Assets für Rakete, Granate und Geländebrecher,
-- Flugausrichtung jedes richtungsabhängigen Projektils entlang seiner aktuellen
+- [x] fehlende Projektil-Assets für Rakete, Granate und Geländebrecher,
+- [x] Flugausrichtung jedes richtungsabhängigen Projektils entlang seiner aktuellen
   Geschwindigkeit,
-- ein bis zwei fehlende Sekundär-VFX, etwa Granatenabpraller und Landestaub,
-- fünf bis sechs kleine, klar zugeordnete Assets für Menü, Manager, HUD oder
-  Kartenatmosphäre,
-- alle erzeugten Assets tatsächlich einbinden und im Browser prüfen.
+- [x] zwei fehlende Sekundär-VFX: Granatenabpraller und Landestaub,
+- [x] sechs kleine, klar zugeordnete Assets für Manager und Match-HUD,
+- [x] alle erzeugten Feedback-Assets tatsächlich einbinden und im Browser prüfen.
 
 ## Nichtziele
 
@@ -35,4 +36,5 @@ Jitter-Sprünge besitzen.
 
 ## Startbedingung
 
-Erst beginnen, wenn der Nutzer diesen Task erneut ausdrücklich priorisiert.
+Den noch offenen Chicken-Teil erst beginnen, wenn der Nutzer ihn erneut
+ausdrücklich priorisiert.

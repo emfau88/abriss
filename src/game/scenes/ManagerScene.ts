@@ -7,6 +7,10 @@ import {
 } from "../../content/characters/creatureKits";
 import { MAP_DEFINITIONS } from "../../content/maps/mapCatalog";
 import {
+  FEEDBACK_ICON_TEXTURE_KEY,
+  feedbackIconFrame,
+} from "../../content/ui/feedbackIconKit";
+import {
   FIGHTER_IDS,
   FIGHTER_ROSTER,
   type FighterId,
@@ -36,6 +40,7 @@ interface FighterCard {
     {
       readonly background: Phaser.GameObjects.Rectangle;
       readonly label: Phaser.GameObjects.Text;
+      readonly icon: Phaser.GameObjects.Sprite;
     }
   >;
 }
@@ -179,7 +184,11 @@ export class ManagerScene extends Phaser.Scene {
 
     const weaponButtons = new Map<
       WeaponId,
-      { background: Phaser.GameObjects.Rectangle; label: Phaser.GameObjects.Text }
+      {
+        background: Phaser.GameObjects.Rectangle;
+        label: Phaser.GameObjects.Text;
+        icon: Phaser.GameObjects.Sprite;
+      }
     >();
     WEAPON_IDS.forEach((weaponId, index) => {
       const y = 492 + index * 54;
@@ -188,19 +197,28 @@ export class ManagerScene extends Phaser.Scene {
         .setStrokeStyle(2, 0xfff5d6, 0.35)
         .setInteractive({ useHandCursor: true });
       const weaponLabel = this.add
-        .text(x, y, WEAPON_PROFILES[weaponId].displayName, {
+        .text(x + 16, y, WEAPON_PROFILES[weaponId].displayName, {
           fontFamily: "Consolas, ui-monospace, monospace",
           fontSize: "12px",
           fontStyle: "bold",
           color: "#fff5d6",
         })
         .setOrigin(0.5);
+      const weaponIcon = this.add
+        .sprite(
+          x - 108,
+          y,
+          FEEDBACK_ICON_TEXTURE_KEY,
+          feedbackIconFrame(weaponId),
+        )
+        .setDisplaySize(30, 30);
       weaponBackground.on("pointerdown", () =>
         this.chooseWeapon(fighterId, weaponId),
       );
       weaponButtons.set(weaponId, {
         background: weaponBackground,
         label: weaponLabel,
+        icon: weaponIcon,
       });
     });
 
@@ -291,6 +309,9 @@ export class ManagerScene extends Phaser.Scene {
               ? WEAPON_PROFILES[weaponId].displayName
               : `${WEAPON_PROFILES[weaponId].displayName} · GESPERRT`,
           );
+        button.icon.setAlpha(
+          selected ? (unlocked ? 1 : 0.4) : 0.25,
+        );
       }
     }
 

@@ -1,17 +1,24 @@
 import type { WeaponId } from "../simulation/ai/RocketActionPlanner";
 import {
   FIGHTER_IDS,
-  FIGHTER_ROSTER,
   type FighterId,
 } from "./fighterRoster";
+import { isMapId, type MapId } from "../content/maps/mapCatalog";
 
-export const MANAGER_STATE_VERSION = 1 as const;
-export const MANAGER_STORAGE_KEY = "projekt-abriss.manager.v1";
+export const MANAGER_STATE_VERSION = 2 as const;
+export const MANAGER_STORAGE_KEY = "projekt-abriss.manager.v2";
+const LEGACY_MANAGER_STORAGE_KEY = "projekt-abriss.manager.v1";
 export const WEAPON_IDS: readonly WeaponId[] = [
   "rocket",
   "grenade",
   "breaker",
 ];
+const DEFAULT_WEAPON_PREFERENCES: Readonly<Record<FighterId, WeaponId>> = {
+  slime: "rocket",
+  hornling: "rocket",
+  moki: "grenade",
+  ghost: "grenade",
+};
 
 export interface ManagerState {
   readonly version: typeof MANAGER_STATE_VERSION;
@@ -19,6 +26,7 @@ export interface ManagerState {
   readonly weaponPreferences: Readonly<Record<FighterId, WeaponId>>;
   readonly unlockedWeaponIds: readonly WeaponId[];
   readonly completedMissions: number;
+  readonly selectedMapId: MapId;
 }
 export interface MissionCompletion {
   readonly state: ManagerState;
@@ -28,16 +36,19 @@ export interface MissionCompletion {
 export function createInitialManagerState(): ManagerState {
   return {
     version: MANAGER_STATE_VERSION,
-    selectedFighterIds: ["slime", "moki", "vela"],
-    weaponPreferences: {
-      slime: FIGHTER_ROSTER.slime.preferredWeaponId,
-      hornling: FIGHTER_ROSTER.hornling.preferredWeaponId,
-      moki: FIGHTER_ROSTER.moki.preferredWeaponId,
-      vela: FIGHTER_ROSTER.vela.preferredWeaponId,
-    },
+    selectedFighterIds: ["slime", "moki", "ghost"],
+    weaponPreferences: { ...DEFAULT_WEAPON_PREFERENCES },
     unlockedWeaponIds: ["rocket", "grenade"],
     completedMissions: 0,
+    selectedMapId: "good-mood",
   };
+}
+
+export function withSelectedMap(
+  state: ManagerState,
+  mapId: MapId,
+): ManagerState {
+  return { ...state, selectedMapId: mapId };
 }
 
 export function withSelectedFighters(
@@ -104,7 +115,14 @@ export function deserializeManagerState(serialized: string | null): ManagerState
 
 export function loadManagerState(): ManagerState {
   try {
-    return deserializeManagerState(globalThis.localStorage?.getItem(MANAGER_STORAGE_KEY));
+    const stored = globalThis.localStorage?.getItem(MANAGER_STORAGE_KEY);
+    if (stored) {
+      return deserializeManagerState(stored);
+    }
+
+    return deserializeManagerState(
+      globalThis.localStorage?.getItem(LEGACY_MANAGER_STORAGE_KEY),
+    );
   } catch {
     return createInitialManagerState();
   }
@@ -121,19 +139,26 @@ export function saveManagerState(state: ManagerState): void {
 function normalizeManagerState(value: unknown): ManagerState {
   const fallback = createInitialManagerState();
 
-  if (!isRecord(value) || value.version !== MANAGER_STATE_VERSION) {
+  if (
+    !isRecord(value) ||
+    (value.version !== MANAGER_STATE_VERSION && value.version !== 1)
+  ) {
     return fallback;
   }
 
   const selected = Array.isArray(value.selectedFighterIds)
-    ? value.selectedFighterIds.filter(isFighterId)
+    ? value.selectedFighterIds
+        .map(normalizeFighterId)
+        .filter((fighterId): fighterId is FighterId => fighterId !== null)
     : fallback.selectedFighterIds;
   const uniqueSelected = [...new Set(selected)].slice(0, 3);
   const preferences = { ...fallback.weaponPreferences };
 
   if (isRecord(value.weaponPreferences)) {
     for (const fighterId of FIGHTER_IDS) {
-      const weaponId = value.weaponPreferences[fighterId];
+      const weaponId =
+        value.weaponPreferences[fighterId] ??
+        (fighterId === "ghost" ? value.weaponPreferences.vela : undefined);
       if (isWeaponId(weaponId)) {
         preferences[fighterId] = weaponId;
       }
@@ -151,7 +176,7 @@ function normalizeManagerState(value: unknown): ManagerState {
 
   for (const fighterId of FIGHTER_IDS) {
     if (!unlocked.includes(preferences[fighterId])) {
-      preferences[fighterId] = FIGHTER_ROSTER[fighterId].preferredWeaponId;
+      preferences[fighterId] = DEFAULT_WEAPON_PREFERENCES[fighterId];
     }
   }
 
@@ -161,6 +186,9 @@ function normalizeManagerState(value: unknown): ManagerState {
     value.completedMissions >= 0
       ? value.completedMissions
       : 0;
+  const selectedMapId = isMapId(value.selectedMapId)
+    ? value.selectedMapId
+    : fallback.selectedMapId;
 
   return {
     version: MANAGER_STATE_VERSION,
@@ -169,6 +197,7 @@ function normalizeManagerState(value: unknown): ManagerState {
     weaponPreferences: preferences,
     unlockedWeaponIds: unlocked,
     completedMissions,
+    selectedMapId,
   };
 }
 
@@ -176,8 +205,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-function isFighterId(value: unknown): value is FighterId {
-  return typeof value === "string" && FIGHTER_IDS.includes(value as FighterId);
+function normalizeFighterId(value: unknown): FighterId | null {
+  if (value === "vela") {
+    return "ghost";
+  }
+
+  return typeof value === "string" && FIGHTER_IDS.includes(value as FighterId)
+    ? (value as FighterId)
+    : null;
 }
 
 function isWeaponId(value: unknown): value is WeaponId {

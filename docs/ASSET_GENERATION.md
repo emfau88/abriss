@@ -149,3 +149,69 @@ Composition/framing: exact 16:9 landscape and exact original gameplay compositio
 Constraints: change only rendering fidelity and clarity; do not redesign, move, add or remove major terrain masses; no characters, weapons, buildings, construction props, UI, text, logos, border or watermark; no bright green inside the terrain; not paper-cut, flat vector or pixel art.
 Output intent: a clean chroma-key source suitable for alpha removal and final local resizing to 3200×1800 pixels.
 ```
+
+## Space-Resort-Hintergrund: `space-resort-background-hd.png`
+
+**Verfahren:** Built-in Imagegen, danach 16:9-Beschnitt, Lanczos-Skalierung auf
+3200×1800 und leichte Nachschärfung.
+
+```text
+Use case: stylized-concept
+Asset type: high-resolution wide background layer for an original side-view 2D comic artillery browser game
+Primary request: create a cheerful humorous outer-space holiday-resort backdrop, clearly different from a blue daytime fantasy sky. Show deep indigo and midnight-blue space, a huge softly painted lavender ringed planet partly off-frame, a peach-and-cyan nebula, star clusters, tiny distant vacation satellites, one absurdly small floating pool ring and a few remote domed resort modules that read only as far-away scenery.
+Scene/backdrop: distant non-playable scenery only. Keep the central and lower-middle area visually open and low-contrast for projectile arcs and a separate terrain layer. Nothing in the background may look like a solid playable platform.
+Style/medium: high-quality hand-drawn dimensional 2D comic game background with confident painted shapes, restrained ink accents, simple cel-painted volume, modest texture and crisp fullscreen detail. Friendly, playful and premium browser-game quality; not paper-cut, flat vector, pixel art, photorealistic, glossy 3D or grimdark.
+Composition/framing: exact-feeling 16:9 landscape, zoomed-out side view, open center, large ringed planet framing one upper corner, nebula flowing diagonally, small distant resort jokes around the perimeter.
+Lighting/mood: bright starlight and colorful nebula glow; adventurous holiday mood, never threatening.
+Color palette: deep indigo, midnight blue, lavender, dusty coral, peach, cream and restrained cyan; substantially darker and cooler than the existing sunny map.
+Constraints: no foreground terrain, no playable land masses, no characters, no weapons, no UI, no text, no logos, no borders, no watermark, no construction theme, no franchise-specific imagery.
+```
+
+**Imagegen-Original:** `C:\Users\madde\.codex\generated_images\019f859c-8d0d-73c0-89ac-43f40a2637a4\exec-3dbedad1-af7c-438e-8154-a9095eb7e2c5.png`
+
+## Space-Resort-Terrain: `space-resort-terrain-hd.png`
+
+**Verfahren:** Built-in Imagegen mit dem vorhandenen Terrain nur als technische
+Stilreferenz. Grüner Chroma-Key wurde mit Soft-Matte und Despill entfernt;
+anschließend 16:9-Beschnitt, Lanczos-Skalierung auf 3200×1800 und leichte
+Nachschärfung.
+
+```text
+Use case: stylized-concept
+Asset type: high-resolution destructible foreground terrain layer for an original side-view 2D comic artillery browser game
+Input image: Image 1 is a style and technical-layer reference only. Preserve its confident comic ink, readable chunky mass, cel-painted dimensionality and transparent-layer intent, but create a completely different terrain silhouette, setting, palette, platform arrangement and decorations.
+Primary request: create a humorous outer-space holiday-resort battlefield made from thick floating asteroids and moon-rock. The playable layout must contain one substantial irregular lower asteroid mass with two clearly different floor elevations, plus exactly three separate floating asteroid islands above it at varied heights. Provide at least six broad, almost-horizontal standing pads distributed across left, center and right.
+Scene/backdrop: perfectly flat uniform solid #00ff00 chroma-key background in every non-terrain pixel, including every gap beneath and between islands. No gradient, stars, shadows, lighting variation, texture or stray marks in the key background.
+Subject/materials: chunky dusty coral and lavender moon-rock, cream crater strata, deep indigo undersides, a thin cyan mineral/rim accent, embedded meteor pebbles. Tiny harmless resort jokes may be embedded into the terrain: one crooked beach umbrella, a deflated pool ring, a miniature luggage case and a sunscreen bottle. Keep all jokes small and non-blocking.
+Style/medium: high-quality hand-drawn dimensional 2D comic terrain, bold dark-navy ink contours, simple cel-painted volume, crisp fullscreen rock texture and modest detail. Friendly and premium browser-game quality; not paper-cut, layered paper, flat vector, pixel art, photorealistic, glossy 3D or over-polished concept art.
+Composition/framing: exact-feeling 16:9 side view, zoomed-out large battlefield. Lower mass spans most of the width but has a deep central bowl and asymmetric tall left and right shoulders. Three floating islands should not mirror Image 1 and should leave generous projectile lanes between tiers. Thick destructible masses only; no thin spikes.
+Color palette: dusty coral, mauve, lavender, cream, indigo and restrained cyan. Absolutely no green inside terrain or decorations.
+Constraints: no text, UI, characters, weapons, buildings, construction props, logos, border, frames or watermark; no separate background scenery; no bright green anywhere except the perfectly uniform key background.
+```
+
+**Imagegen-Original:** `C:\Users\madde\.codex\generated_images\019f859c-8d0d-73c0-89ac-43f40a2637a4\exec-d29ff169-000c-482a-83c9-99f25dd7e4f0.png`
+
+## Flüssiger Ghost: `ghost-fluid-sheet.png`
+
+**Verfahren:** Built-in Imagegen mit `beispiele figuren/2.jpg` als direkte
+projektspezifische Designvorlage. Verwendet wurde nur der helle Ghost oben,
+zweite Figur von links. Der Magenta-Key wurde mit Soft-Matte und Despill
+entfernt. Das 8×4-Ergebnis wurde in 32 Frames zu je 256×256 Pixeln geteilt;
+eine helle Kernmaske stabilisiert die horizontale Körpermitte und bei
+Schwebezyklen die vertikale Achse. Das finale Sheet misst 2048×1024 Pixel.
+
+```text
+Use case: game-asset sprite sheet
+Create one production-ready 8 columns × 4 rows sprite sheet (exactly 32 equal square cells) for the original 2D comic artillery browser game "Projekt Abriss". The character must closely reproduce the specific GHOST design in the supplied reference image: the pale mint-white rounded sheet ghost in the top row, second character from the left. Preserve its simple bulbous head/body silhouette, two narrow dark mischievous eyes, tiny confident curved smile, faint mint/cyan underside shading, and several soft trailing scalloped wisps. No clothing, no arms unless briefly needed to hold a weapon, no accessories, no branding. Ignore every title, label, logo, and all other characters in the reference.
+Character direction: simple, charming, a little sly rather than cute or sugary. Hand-drawn dimensional comic style, clean dark teal-navy ink contour, restrained cel-painted volume and subtle paperless brush texture. It must visually belong beside the existing Projekt Abriss slime/mushroom characters, not look like papercut, pixel art, glossy 3D, photorealism, emoji, mascot merchandise or a known franchise character.
+Sheet layout and animation, left-to-right with exactly eight cells per row:
+- Row 1, frames 0–7: seamless idle hover loop. Stable head/eye height, subtle inhale/exhale, wisps rhythmically curling, only a very small deliberate vertical bob.
+- Row 2, frames 8–15: seamless lateral glide/walk equivalent. Body leans gently into motion, underside wisps flow backward then recover. Stable visual body center across frames; no translation drift.
+- Row 3, frames 16–23: jump/dodge/float cycle. Compress slightly, lift, stretch, apex, drift, descend, soft squash, recover. Keep face and silhouette consistent.
+- Row 4: frames 24–26 fire a compact coral-and-indigo cartoon rocket launcher; frames 27–29 toss a round timed grenade; frame 30 reacts to a hit with a readable squashed/shocked expression; frame 31 celebrates with a proud upward curl and cheeky grin. Weapons appear only in their assigned action frames.
+Technical consistency: every cell has the same character scale and camera, straight side/three-quarter game view facing right, fully visible with generous transparent-safe padding. Keep the face identity, body width, ink weight, palette and apparent lighting identical in all 32 frames. Use a stable hover anchor and stable horizontal body center so animation does not jitter. No frame dividers and no cast shadows.
+Background: perfectly uniform solid #ff00ff magenta chroma-key in every non-character pixel and every gap, with no gradient, texture, shadow, antialias contamination, text or marks. Do not use magenta anywhere on the character or weapons.
+Output constraints: wide 2:1 sheet, exact-feeling 8×4 grid, no text, labels, numbers, arrows, borders, gutters, UI, logos, watermark, scenery or additional characters.
+```
+
+**Imagegen-Original:** `C:\Users\madde\.codex\generated_images\019f859c-8d0d-73c0-89ac-43f40a2637a4\exec-ed84c96c-1b04-4e23-b85e-5649451c8cd2.png`

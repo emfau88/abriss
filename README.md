@@ -8,7 +8,7 @@ Der Spieler führt eine Crew eigenwilliger Spezialisten. Er stellt Team, Ausrüs
 
 ## Projektstatus
 
-Die Produktvision und der erste Vertical Slice sind festgelegt. Das interne 3-gegen-3-Match ist spielbar: Figuren laufen oder springen lokal, wählen zwischen Panzerfaust, zeitgezündeter Wurfgranate und Geländebrecher, verändern Terrain und werden von Explosionen zurückgeschleudert. GLIB zeigt mit 32 Frames, höheren Bildraten und elastischen Übergängen die flüssigere Zielqualität für Figuren. Ein dünner Manager-Loop führt vom Hauptmenü über Auswahl von drei Wesen und deren Waffenpräferenzen ins Match und danach in einen humorvollen Einsatzbericht mit einer kleinen Freischaltung. „Lass das!“ und ein einmaliger Waffenbefehl bleiben die direkten Managerinterventionen im Match.
+Die Produktvision und der erste Vertical Slice sind festgelegt. Das interne 3-gegen-3-Match ist spielbar: Figuren laufen oder springen lokal, wählen zwischen Panzerfaust, zeitgezündeter Wurfgranate und Geländebrecher, verändern Terrain und werden von Explosionen zurückgeschleudert. Zwei Fullscreen-HD-Karten – Sonneninseln und ein humorvoller Space-Resort – sind im Hauptmenü wählbar. GLIB und Ghost zeigen mit je 32 Frames, höheren Bildraten und stabilen Ankern die flüssigere Zielqualität für Figuren. Ein dünner Manager-Loop führt vom Hauptmenü über Auswahl von drei Wesen und deren Waffenpräferenzen ins Match und danach in einen humorvollen Einsatzbericht mit einer kleinen Freischaltung. „Lass das!“ und ein einmaliger Waffenbefehl bleiben die direkten Managerinterventionen im Match.
 
 ## Lokal starten
 
@@ -47,6 +47,8 @@ Aktueller spielbarer Ablauf:
 - `R`: Szene mit demselben Seed neu starten,
 - `Pfeiltasten`: Kamera schwenken,
 - `Q` / `E` oder Mausrad: Kamera zoomen,
+- `1 Finger`: Kamera auf Touch-Geräten schwenken,
+- `2 Finger`: um den Gestenmittelpunkt zoomen,
 - `O`: Weltübersicht,
 - `C`: sanfte Kamerafahrten oder direkte Schnitte.
 - `H`: kompakte Hilfe ein-/ausblenden.

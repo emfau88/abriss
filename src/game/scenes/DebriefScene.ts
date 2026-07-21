@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 
+import { MAP_DEFINITIONS } from "../../content/maps/mapCatalog";
 import {
   completeMission,
   loadManagerState,
@@ -26,13 +27,19 @@ export class DebriefScene extends Phaser.Scene {
   }
 
   public create(): void {
-    drawMenuBackdrop(this, RENDER_WIDTH, RENDER_HEIGHT);
     const report = this.report;
 
     if (!report) {
       this.scene.start("MainMenuScene");
       return;
     }
+
+    drawMenuBackdrop(
+      this,
+      RENDER_WIDTH,
+      RENDER_HEIGHT,
+      MAP_DEFINITIONS[report.mapId].backgroundTextureKey,
+    );
 
     const completion = completeMission(loadManagerState());
     saveManagerState(completion.state);

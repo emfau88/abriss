@@ -45,7 +45,7 @@ src/
 
 Abhängigkeiten zeigen nach innen: `game` und `ui` dürfen `simulation` verwenden. `simulation` darf Phaser, DOM, Audio, Systemzeit und Browserzustand nicht importieren.
 
-Der dünne Managerzustand unter `src/manager/` ist eine eigene serialisierbare TypeScript-Grenze ohne Phaser-Abhängigkeit. Browser-Speicherung ist ein fehlertoleranter Adapter; vor einem Match wird daraus eine explizite `MatchLaunchConfig` mit Crew, Waffenpräferenzen und Seed erzeugt. Die Matchszene liest keine verdeckten Menü- oder DOM-Zustände. Die Szenen unter `src/game/scenes/` bilden Hauptmenü, Einsatzplanung, Match und Einsatzbericht; `src/game/session/` enthält ausschließlich die Übergabedaten dieses Loops.
+Der dünne Managerzustand unter `src/manager/` ist eine eigene serialisierbare TypeScript-Grenze ohne Phaser-Abhängigkeit. Browser-Speicherung ist ein fehlertoleranter Adapter; vor einem Match wird daraus eine explizite `MatchLaunchConfig` mit Crew, Waffenpräferenzen, Karten-ID und Seed erzeugt. Die Matchszene liest keine verdeckten Menü- oder DOM-Zustände. Karten werden über einen typisierten Katalog mit Assetpfaden, Maskenauflösung und Spawnpunkten beschrieben. Die Szenen unter `src/game/scenes/` bilden Hauptmenü, Einsatzplanung, Match und Einsatzbericht; `src/game/session/` enthält ausschließlich die Übergabedaten dieses Loops.
 
 ## Simulationsmodell
 
@@ -160,7 +160,7 @@ Figuren behalten ihre fachliche Weltgröße. Sie werden nicht dauerhaft verklein
 - **Übersicht:** ungefähr 0,4 Zoom; zeigt große Teile oder die gesamte Karte und Figuren mit etwa 40–50 Bildschirmpixeln Höhe,
 - **Planung:** ungefähr 0,6–0,75 Zoom; rahmt aktive Figur, Ziel, relevante Flugbahn und Wirkungszone gemeinsam,
 - **Ausführung:** ungefähr 0,85–1,0 Zoom; folgt Projektil oder Aktion weich und hält den Einschlag kurz im Bild,
-- **manuell:** Spieler darf außerhalb gesperrter Aktionsmomente schwenken und zoomen,
+- **manuell:** Spieler darf außerhalb gesperrter Aktionsmomente per Tastatur/Maus oder Ein-Finger-Pan und Zwei-Finger-Pinch schwenken und zoomen,
 - **barrierearm:** automatische Bewegung kann reduziert, beschleunigt oder durch direkte Schnitte ersetzt werden.
 
 UI bleibt im Screen-Space und bewegt sich nicht mit der Weltkamera. Kamerazustand ist Darstellung und verändert weder Simulation, Seed, KI-Bewertung noch Ballistik. Automatische Frames werden aus fachlichen Punkten wie Akteur, Ziel, Trajektoriengrenzen und Einschlag berechnet und anschließend an die Weltgrenzen geklemmt.

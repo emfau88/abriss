@@ -191,3 +191,47 @@ Dieses Dokument hält verbindliche, projektweite Entscheidungen fest. Neue Eintr
 **Grund:** Das 3-gegen-3-Match, die Initiative und der Ausgang sind stabil genug, um das große Ganze erstmals als kleinen vollständigen Produktloop zu erleben. Die eine Freischaltung beweist Persistenz und Rückkehrschleife, ohne bereits eine wirtschaftliche Metaebene zu bauen.
 
 **Konsequenz:** Eine Präferenz beeinflusst nur den ersten gültigen Plan der Figur und sperrt spätere Waffen nicht. Shop, Währungen, Rekrutierungsmarkt, Basisbau, große Ausrüstungsbäume und tiefere Karrierewerte bleiben bis zu echten Spieltests ausgeschlossen. Das schnelle Testmatch bleibt als Entwicklungsweg erhalten.
+
+## 2026-07-21 – D-026: Kartenkatalog und explizite Kartenwahl
+
+**Entscheidung:** Karten werden über einen typisierten Katalog mit Hintergrund,
+Terrain, Maskenauflösung und Spawnpunkten beschrieben. Die persistente Auswahl
+wird über die `MatchLaunchConfig` an das Match übergeben. Der Space-Resort ist
+die zweite Karte und verwendet dieselben Simulationsregeln wie die
+Sonneninseln.
+
+**Grund:** Eine zweite Karte soll Variation beweisen, ohne die Matchszene durch
+Setting-Sonderfälle oder versteckten Menüstatus zu koppeln.
+
+**Konsequenz:** Neue Karten ergänzen Daten und Assets statt eigener
+Terrain-/Kameralogik. Manager- und Testmatch starten dieselbe gewählte Karte.
+
+## 2026-07-21 – D-027: Touch-Gesten bleiben reine Kameradarstellung
+
+**Entscheidung:** Ein Finger verschiebt die Weltkamera; zwei Finger skalieren
+sie um den gemeinsamen Weltanker. Pointer-Wechsel setzen die Gestenbasis neu.
+HUD, Hilfe und laufende Aktionen sperren Gesten. Zoomgrenzen entsprechen der
+Desktop-Kamera.
+
+**Grund:** Mobile Tests brauchen Navigation durch die große Karte, ohne
+direkte Figurensteuerung oder geräteabhängige Simulation einzuführen.
+
+**Konsequenz:** Gestenmathematik bleibt Phaser-unabhängig getestet. Sie ändert
+weder Seed, KI-Planung, Ballistik noch Matchzustand. Hochformat bleibt
+funktional, Querformat empfohlen.
+
+## 2026-07-21 – D-028: Ghost ersetzt Vela im aktiven Kader
+
+**Entscheidung:** Der helle Ghost aus `beispiele figuren/2.jpg` ersetzt Vela im
+aktiven Vierer-Kader. Er verwendet ein referenznahes 32-Frame-Sheet mit
+achtphasigem Schweben, Gleiten und Ausweichen sowie eigenen Aktions- und
+Reaktionssequenzen. Vela-IDs und Waffenpräferenzen werden beim Laden zu Ghost
+migriert.
+
+**Grund:** Das alte Vela-Sheet behandelte das Mockup nur als lose Inspiration
+und war mit vier Phasen sichtbar stockender. Ghost soll Referenztreue und
+flüssige, jitterfreie Bewegung gemeinsam belegen.
+
+**Konsequenz:** Das historische Vela-Asset bleibt dokumentiert, wird aber nicht
+mehr geladen. Die rechnerische Frame-Stabilisierung und kosmetische
+Hover-Bewegung besitzen keine Gameplay-Autorität.

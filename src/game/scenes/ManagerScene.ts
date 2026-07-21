@@ -5,6 +5,7 @@ import {
   creatureAnimationKey,
   registerCreatureAnimations,
 } from "../../content/characters/creatureKits";
+import { MAP_DEFINITIONS } from "../../content/maps/mapCatalog";
 import {
   FIGHTER_IDS,
   FIGHTER_ROSTER,
@@ -52,9 +53,14 @@ export class ManagerScene extends Phaser.Scene {
   }
 
   public create(): void {
-    drawMenuBackdrop(this, RENDER_WIDTH, RENDER_HEIGHT);
-    registerCreatureAnimations(this);
     this.managerState = loadManagerState();
+    drawMenuBackdrop(
+      this,
+      RENDER_WIDTH,
+      RENDER_HEIGHT,
+      MAP_DEFINITIONS[this.managerState.selectedMapId].backgroundTextureKey,
+    );
+    registerCreatureAnimations(this);
     this.cards = [];
 
     this.add

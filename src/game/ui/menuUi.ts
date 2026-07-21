@@ -57,9 +57,14 @@ export function createMenuButton(
   };
 }
 
-export function drawMenuBackdrop(scene: Phaser.Scene, width: number, height: number): void {
+export function drawMenuBackdrop(
+  scene: Phaser.Scene,
+  width: number,
+  height: number,
+  textureKey = "good-mood-background",
+): void {
   scene.add
-    .image(width / 2, height / 2, "good-mood-background")
+    .image(width / 2, height / 2, textureKey)
     .setDisplaySize(width, height)
     .setTint(0x8ac9d0);
   scene.add.rectangle(width / 2, height / 2, width, height, 0x102a36, 0.38);

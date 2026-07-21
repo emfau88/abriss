@@ -47,7 +47,9 @@ Die Crew soll langfristig aus verschiedenen Wesen bestehen. Spezies teilen eine 
 
 Das aktuelle blaue Hornwesen ist nur ein technischer Platzhalter und als Stilziel zu niedlich und kitschig. Künftige Wesen bleiben freundlich und comicartig, sollen aber weniger wie polierte Maskottchen wirken: etwas eigenwilligere Proportionen, trockenere oder verschmitztere Mimik, mehr asymmetrische Merkmale, weniger glatte Rundungen und eine etwas gedämpftere Farbigkeit. Diese Korrektur bedeutet ausdrücklich nicht grimdark, realistisch oder aggressiv.
 
-Moki und Vela bilden den ersten bewegten Stiltest dieser Korrektur. Moki ist ein gedrungenes Pilzwesen mit asymmetrischer rostorangefarbener Kappe, moosigem Umhang und trockener Mimik. Vela ist ein blaugrauer Geist mit länglicher, schwebender Silhouette und pflaumenfarbenem Schal. Beide verwenden ein transparentes 4×4-Raster mit je vier Frames für Ruhe, Lauf/Gleiten, Sprung und Aktion. Die funktionalen Anker sind stabilisiert; die Einzelillustrationen bleiben Testassets und noch kein Maßstab für finale Animationskonsistenz.
+Moki bleibt der frühe bewegte Stiltest mit asymmetrischer rostorangefarbener Kappe, moosigem Umhang und trockener Mimik. GLIB und Ghost sind die aktuellen Animationsreferenzen: Beide rekonstruieren konkrete Designs aus `beispiele figuren/2.jpg` in transparenten 8×4-Sheets. Ghost übernimmt die einfache mintweiße Tuchsilhouette, schmale verschmitzte Augen und weiche Unterkanten der Vorlage. Achtphasige Zyklen, stabile Anker und zurückhaltende kosmetische Deformation sind wichtiger als übertriebene Einzelposen. Das frühere Vela-Sheet bleibt nur historische Entstehungsgeschichte.
+
+Karten dürfen stark unterschiedliche Settings und Helligkeiten verwenden. Die sonnigen Inseln und der dunklere Space-Resort teilen dicke organische Terrainmassen, mehrere Stockwerke, fliegende Inseln und offene Projektilkorridore; Silhouette, Materialpalette, Dekoration und Höhenrhythmus müssen sich je Karte klar unterscheiden.
 
 Spezies dürfen moderate Tendenzen vermitteln, bestimmen aber nicht automatisch Rolle oder Charakter.
 

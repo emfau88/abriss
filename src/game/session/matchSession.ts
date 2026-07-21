@@ -2,6 +2,7 @@ import type { WeaponId } from "../../simulation/ai/RocketActionPlanner";
 import type { TeamId } from "../../simulation/state/matchState";
 import { FIGHTER_ROSTER, type FighterId } from "../../manager/fighterRoster";
 import type { ManagerState } from "../../manager/managerState";
+import type { MapId } from "../../content/maps/mapCatalog";
 
 export type MatchMode = "manager" | "quick";
 
@@ -12,6 +13,7 @@ export interface FighterLoadout {
 export interface MatchLaunchConfig {
   readonly mode: MatchMode;
   readonly seed: number;
+  readonly mapId: MapId;
   readonly crew: readonly FighterLoadout[];
 }
 
@@ -19,6 +21,7 @@ export interface MatchReport {
   readonly mode: MatchMode;
   readonly outcome: TeamId | "draw";
   readonly seed: number;
+  readonly mapId: MapId;
   readonly turnNumber: number;
   readonly survivingCrew: number;
   readonly survivingRivals: number;
@@ -34,6 +37,7 @@ export function createManagerMatchConfig(state: ManagerState): MatchLaunchConfig
   return {
     mode: "manager",
     seed: DEFAULT_SEED + state.completedMissions * 101,
+    mapId: state.selectedMapId,
     crew: state.selectedFighterIds.map((fighterId) => ({
       fighterId,
       preferredWeaponId:
@@ -43,14 +47,17 @@ export function createManagerMatchConfig(state: ManagerState): MatchLaunchConfig
   };
 }
 
-export function createQuickMatchConfig(): MatchLaunchConfig {
+export function createQuickMatchConfig(
+  mapId: MapId = "good-mood",
+): MatchLaunchConfig {
   return {
     mode: "quick",
     seed: DEFAULT_SEED,
+    mapId,
     crew: [
       { fighterId: "slime", preferredWeaponId: "rocket" },
       { fighterId: "moki", preferredWeaponId: "grenade" },
-      { fighterId: "vela", preferredWeaponId: "grenade" },
+      { fighterId: "ghost", preferredWeaponId: "grenade" },
     ],
   };
 }

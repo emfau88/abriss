@@ -4,7 +4,7 @@ import type {
   WeaponId,
 } from "../simulation/ai/RocketActionPlanner";
 
-export type FighterId = "slime" | "hornling" | "moki" | "vela";
+export type FighterId = "slime" | "hornling" | "moki" | "ghost";
 
 export interface FighterDefinition {
   readonly id: FighterId;
@@ -20,7 +20,7 @@ export const FIGHTER_IDS: readonly FighterId[] = [
   "slime",
   "hornling",
   "moki",
-  "vela",
+  "ghost",
 ];
 
 export const FIGHTER_ROSTER: Readonly<Record<FighterId, FighterDefinition>> = {
@@ -51,13 +51,13 @@ export const FIGHTER_ROSTER: Readonly<Record<FighterId, FighterDefinition>> = {
     preferredWeaponId: "grenade",
     description: "Findet größere Krater grundsätzlich besser.",
   },
-  vela: {
-    id: "vela",
-    displayName: "VELA",
+  ghost: {
+    id: "ghost",
+    displayName: "GHOST",
     species: "GEISTWESEN",
-    visualId: "vela",
+    visualId: "ghost",
     personality: "showboat",
     preferredWeaponId: "grenade",
-    description: "Ein guter Plan braucht eine gute Flugkurve.",
+    description: "Schwebt elegant. Landet Erklärungen eher selten.",
   },
 };

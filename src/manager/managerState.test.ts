@@ -5,6 +5,7 @@ import {
   createInitialManagerState,
   deserializeManagerState,
   serializeManagerState,
+  withSelectedMap,
   withSelectedFighters,
   withWeaponPreference,
 } from "./managerState";
@@ -12,13 +13,40 @@ import {
 describe("managerState", () => {
   it("round-trips a versioned state independently of Phaser", () => {
     const initial = createInitialManagerState();
-    const changed = withWeaponPreference(
-      withSelectedFighters(initial, ["slime", "hornling", "moki"]),
-      "slime",
-      "grenade",
+    const changed = withSelectedMap(
+      withWeaponPreference(
+        withSelectedFighters(initial, ["slime", "hornling", "moki"]),
+        "slime",
+        "grenade",
+      ),
+      "space-resort",
     );
 
     expect(deserializeManagerState(serializeManagerState(changed))).toEqual(changed);
+  });
+
+  it("migrates the original local manager save and keeps its progress", () => {
+    const migrated = deserializeManagerState(
+      JSON.stringify({
+        ...createInitialManagerState(),
+        version: 1,
+        selectedFighterIds: ["slime", "moki", "vela"],
+        weaponPreferences: {
+          slime: "rocket",
+          hornling: "rocket",
+          moki: "grenade",
+          vela: "rocket",
+        },
+        selectedMapId: undefined,
+        completedMissions: 4,
+      }),
+    );
+
+    expect(migrated.version).toBe(2);
+    expect(migrated.completedMissions).toBe(4);
+    expect(migrated.selectedMapId).toBe("good-mood");
+    expect(migrated.selectedFighterIds).toEqual(["slime", "moki", "ghost"]);
+    expect(migrated.weaponPreferences.ghost).toBe("rocket");
   });
 
   it("recovers safely from invalid or future data", () => {

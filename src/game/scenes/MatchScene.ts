@@ -8,11 +8,8 @@ import {
   type CreaturePose,
   type CreatureVisualId,
 } from "../../content/characters/creatureKits";
-import {
-  createGoodMoodTerrainMask,
-  GOOD_MOOD_BACKGROUND_TEXTURE_KEY,
-  GOOD_MOOD_TERRAIN_SOURCE_TEXTURE_KEY,
-} from "../../content/maps/goodMoodMap";
+import { MAP_DEFINITIONS } from "../../content/maps/mapCatalog";
+import { createTerrainMaskFromImage } from "../../content/maps/terrainMaskFromImage";
 import {
   COMIC_VFX_TEXTURE_KEY,
   comicVfxFrame,
@@ -64,6 +61,13 @@ import {
   WORLD_HEIGHT,
   WORLD_WIDTH,
 } from "../config";
+import {
+  cameraCenterForGestureAnchor,
+  nextPinchZoom,
+  touchDistance,
+  touchMidpoint,
+  type TouchPoint,
+} from "../input/TouchCameraGesture";
 import { summarizeTeamStatus } from "../hud/TeamStatus";
 import { TerrainMaskRenderer } from "../rendering/TerrainMaskRenderer";
 import {
@@ -119,6 +123,7 @@ interface UnitView {
   readonly visualId: CreatureVisualId;
   readonly baseSpriteScaleX: number;
   readonly baseSpriteScaleY: number;
+  readonly baseSpriteY: number;
   personality: Personality;
   hitPoints: number;
 }
@@ -210,6 +215,10 @@ export class MatchScene extends Phaser.Scene {
   private launchConfig: MatchLaunchConfig = createQuickMatchConfig();
   private preferredWeaponByUnitId = new Map<string, WeaponId>();
   private preferenceConsumedByUnitId = new Set<string>();
+  private touchPointers = new Map<number, TouchPoint>();
+  private touchGestureMidpoint: TouchPoint | null = null;
+  private touchGestureDistance = 0;
+  private touchGesturePointerCount = 0;
 
   public constructor() {
     super("MatchScene");
@@ -220,13 +229,15 @@ export class MatchScene extends Phaser.Scene {
   }
 
   public create(): void {
+    const map = MAP_DEFINITIONS[this.launchConfig.mapId];
     const terrainSource = this.textures
-      .get(GOOD_MOOD_TERRAIN_SOURCE_TEXTURE_KEY)
+      .get(map.terrainTextureKey)
       .getSourceImage() as CanvasImageSource;
-    this.terrainMask = createGoodMoodTerrainMask(
+    this.terrainMask = createTerrainMaskFromImage(
       terrainSource,
       WORLD_WIDTH,
       WORLD_HEIGHT,
+      map.terrainCellSize,
     );
     this.personality = "cautious";
     this.rejectedCandidateIds = [];
@@ -252,14 +263,18 @@ export class MatchScene extends Phaser.Scene {
     this.projectileParts = new Map();
     this.preferredWeaponByUnitId = new Map();
     this.preferenceConsumedByUnitId = new Set();
+    this.touchPointers = new Map();
+    this.touchGestureMidpoint = null;
+    this.touchGestureDistance = 0;
+    this.touchGesturePointerCount = 0;
 
     this.configureWorldCamera();
     this.drawBackdrop();
     this.terrainRenderer = new TerrainMaskRenderer(
       this,
       this.terrainMask,
-      TERRAIN_TEXTURE_KEY,
-      GOOD_MOOD_TERRAIN_SOURCE_TEXTURE_KEY,
+      `${TERRAIN_TEXTURE_KEY}:${map.id}`,
+      map.terrainTextureKey,
     );
     this.terrainRenderer.image.setDepth(10);
     this.pathGraphics = this.add.graphics().setDepth(26);
@@ -361,8 +376,9 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private drawBackdrop(): void {
+    const map = MAP_DEFINITIONS[this.launchConfig.mapId];
     this.add
-      .image(0, 0, GOOD_MOOD_BACKGROUND_TEXTURE_KEY)
+      .image(0, 0, map.backgroundTextureKey)
       .setOrigin(0, 0)
       .setDisplaySize(WORLD_WIDTH, WORLD_HEIGHT)
       .setDepth(0);
@@ -561,13 +577,14 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private createUnits(): void {
-    const crewPositions = [420, 930, 2700] as const;
+    const map = MAP_DEFINITIONS[this.launchConfig.mapId];
+    const crewPositions = map.crewSpawnXs;
     const rivalFighters = [
       FIGHTER_ROSTER.hornling,
       FIGHTER_ROSTER.slime,
-      FIGHTER_ROSTER.vela,
+      FIGHTER_ROSTER.ghost,
     ] as const;
-    const rivalPositions = [1480, 2100, 700] as const;
+    const rivalPositions = map.rivalSpawnXs;
     const definitions: {
       readonly id: string;
       readonly displayName: string;
@@ -730,6 +747,7 @@ export class MatchScene extends Phaser.Scene {
       visualId,
       baseSpriteScaleX: sprite.scaleX,
       baseSpriteScaleY: sprite.scaleY,
+      baseSpriteY: sprite.y,
       personality,
       hitPoints: data.hitPoints,
     };
@@ -967,8 +985,8 @@ export class MatchScene extends Phaser.Scene {
           "P            Persönlichkeit im Prototyp wechseln",
           "",
           "KAMERA",
-          "Pfeile       Ausschnitt verschieben",
-          "Q / E        heraus- / hineinzoomen",
+          "Pfeile / 1 Finger   Ausschnitt verschieben",
+          "Q / E / 2 Finger   heraus- / hineinzoomen",
           "O            Weltübersicht",
           "C            sanfte Kamera / direkte Schnitte",
           "",
@@ -1030,6 +1048,10 @@ export class MatchScene extends Phaser.Scene {
     }
 
     this.input.on("wheel", this.handleMouseWheel, this);
+    this.input.on("pointerdown", this.handleTouchPointerDown, this);
+    this.input.on("pointermove", this.handleTouchPointerMove, this);
+    this.input.on("pointerup", this.handleTouchPointerUp, this);
+    this.input.on("pointerupoutside", this.handleTouchPointerUp, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       keyboard?.off("keydown-SPACE", this.executeSelected, this);
       keyboard?.off("keydown-X", this.rejectCurrentPlan, this);
@@ -1045,6 +1067,11 @@ export class MatchScene extends Phaser.Scene {
       keyboard?.off("keydown-E", this.zoomIn, this);
       keyboard?.off("keydown-H", this.toggleHelp, this);
       this.input.off("wheel", this.handleMouseWheel, this);
+      this.input.off("pointerdown", this.handleTouchPointerDown, this);
+      this.input.off("pointermove", this.handleTouchPointerMove, this);
+      this.input.off("pointerup", this.handleTouchPointerUp, this);
+      this.input.off("pointerupoutside", this.handleTouchPointerUp, this);
+      this.clearTouchGesture();
       this.autoActionTimer?.remove(false);
       this.autoActionTimer = undefined;
     });
@@ -1365,6 +1392,8 @@ export class MatchScene extends Phaser.Scene {
     ) {
       return;
     }
+
+    this.clearTouchGesture();
 
     const active = this.activeUnit();
 
@@ -1940,6 +1969,7 @@ export class MatchScene extends Phaser.Scene {
         mode: this.launchConfig.mode,
         outcome,
         seed: this.launchConfig.seed,
+        mapId: this.launchConfig.mapId,
         turnNumber: this.matchState.turnNumber,
         survivingCrew: this.units.filter(
           (view) => view.data.team === "crew" && view.hitPoints > 0,
@@ -2458,6 +2488,143 @@ export class MatchScene extends Phaser.Scene {
     this.adjustManualZoom(deltaY > 0 ? -0.08 : 0.08);
   }
 
+  private handleTouchPointerDown(
+    pointer: Phaser.Input.Pointer,
+    currentlyOver: Phaser.GameObjects.GameObject[],
+  ): void {
+    if (
+      !pointer.wasTouch ||
+      this.actionState !== "planning" ||
+      this.helpVisible ||
+      currentlyOver.length > 0 ||
+      this.isTouchHudRegion(pointer)
+    ) {
+      return;
+    }
+
+    this.touchPointers.set(pointer.id, { x: pointer.x, y: pointer.y });
+    this.resetTouchGestureBaseline();
+  }
+
+  private handleTouchPointerMove(pointer: Phaser.Input.Pointer): void {
+    if (!pointer.wasTouch || !this.touchPointers.has(pointer.id)) {
+      return;
+    }
+    if (this.actionState !== "planning" || this.helpVisible) {
+      this.clearTouchGesture();
+      return;
+    }
+
+    this.touchPointers.set(pointer.id, { x: pointer.x, y: pointer.y });
+    const points = [...this.touchPointers.entries()]
+      .sort(([leftId], [rightId]) => leftId - rightId)
+      .slice(0, 2)
+      .map(([, point]) => point);
+
+    if (
+      points.length === 0 ||
+      !this.touchGestureMidpoint ||
+      this.touchGesturePointerCount !== points.length
+    ) {
+      this.resetTouchGestureBaseline();
+      return;
+    }
+
+    const camera = this.cameras.main;
+    camera.panEffect.reset();
+    camera.zoomEffect.reset();
+
+    if (points.length === 1) {
+      const current = points[0]!;
+      this.setManualCamera(
+        camera.midPoint.x -
+          (current.x - this.touchGestureMidpoint.x) / camera.zoom,
+        camera.midPoint.y -
+          (current.y - this.touchGestureMidpoint.y) / camera.zoom,
+        camera.zoom / RENDER_SCALE,
+      );
+      this.touchGestureMidpoint = current;
+      return;
+    }
+
+    const currentMidpoint = touchMidpoint(points[0]!, points[1]!);
+    const currentDistance = touchDistance(points[0]!, points[1]!);
+    const nextLogicalZoom = nextPinchZoom(
+      camera.zoom / RENDER_SCALE,
+      this.touchGestureDistance,
+      currentDistance,
+      0.4,
+      1.05,
+    );
+    const nextRenderZoom = nextLogicalZoom * RENDER_SCALE;
+    const nextCenter = cameraCenterForGestureAnchor({
+      previousMidpoint: this.touchGestureMidpoint,
+      currentMidpoint,
+      previousCameraCenter: {
+        x: camera.midPoint.x,
+        y: camera.midPoint.y,
+      },
+      previousRenderZoom: camera.zoom,
+      nextRenderZoom,
+      viewportWidth: RENDER_WIDTH,
+      viewportHeight: RENDER_HEIGHT,
+    });
+
+    this.setManualCamera(nextCenter.x, nextCenter.y, nextLogicalZoom);
+    this.touchGestureMidpoint = currentMidpoint;
+    this.touchGestureDistance = currentDistance;
+  }
+
+  private handleTouchPointerUp(pointer: Phaser.Input.Pointer): void {
+    if (!pointer.wasTouch) {
+      return;
+    }
+
+    this.touchPointers.delete(pointer.id);
+    this.resetTouchGestureBaseline();
+  }
+
+  private isTouchHudRegion(pointer: Phaser.Input.Pointer): boolean {
+    const logicalX = pointer.x / RENDER_SCALE;
+    const logicalY = pointer.y / RENDER_SCALE;
+
+    return (
+      logicalY <= 88 ||
+      logicalY >= 668 ||
+      (logicalX >= 958 && logicalY >= 90 && logicalY <= 520)
+    );
+  }
+
+  private resetTouchGestureBaseline(): void {
+    const points = [...this.touchPointers.entries()]
+      .sort(([leftId], [rightId]) => leftId - rightId)
+      .slice(0, 2)
+      .map(([, point]) => point);
+    this.touchGesturePointerCount = points.length;
+
+    if (points.length === 0) {
+      this.touchGestureMidpoint = null;
+      this.touchGestureDistance = 0;
+      return;
+    }
+
+    if (points.length === 1) {
+      this.touchGestureMidpoint = points[0]!;
+      this.touchGestureDistance = 0;
+      return;
+    }
+
+    this.touchGestureMidpoint = touchMidpoint(points[0]!, points[1]!);
+    this.touchGestureDistance = touchDistance(points[0]!, points[1]!);
+  }
+
+  private clearTouchGesture(): void {
+    this.touchPointers.clear();
+    this.touchGestureMidpoint = null;
+    this.touchGestureDistance = 0;
+    this.touchGesturePointerCount = 0;
+  }
+
   private toggleReducedCameraMovement(): void {
     this.cameraMovementReduced = !this.cameraMovementReduced;
     this.updateDebugText();
@@ -2565,12 +2732,53 @@ export class MatchScene extends Phaser.Scene {
     view: UnitView,
     animation: CreatureMotion | CreaturePose,
   ): void {
-    if (view.visualId !== "slime") {
+    if (view.visualId !== "slime" && view.visualId !== "ghost") {
       return;
     }
 
     this.tweens.killTweensOf(view.sprite);
-    view.sprite.setScale(view.baseSpriteScaleX, view.baseSpriteScaleY).setAngle(0);
+    view.sprite
+      .setScale(view.baseSpriteScaleX, view.baseSpriteScaleY)
+      .setAngle(0)
+      .setY(view.baseSpriteY);
+
+    if (view.visualId === "ghost") {
+      const isLooping =
+        animation === "idle" ||
+        animation === "ready" ||
+        animation === "planning" ||
+        animation === "walk" ||
+        animation === "jump" ||
+        animation === "victory";
+      const lift =
+        animation === "jump"
+          ? 7
+          : animation === "walk"
+            ? 4
+            : animation === "action" || animation === "grenade"
+              ? 3
+              : 2.5;
+      const duration =
+        animation === "jump"
+          ? 180
+          : animation === "walk"
+            ? 150
+            : animation === "victory"
+              ? 240
+              : 340;
+
+      this.tweens.add({
+        targets: view.sprite,
+        y: view.baseSpriteY - lift,
+        scaleX: view.baseSpriteScaleX * 1.018,
+        scaleY: view.baseSpriteScaleY * 0.988,
+        duration,
+        ease: "Sine.easeInOut",
+        yoyo: true,
+        repeat: isLooping ? -1 : 0,
+      });
+      return;
+    }
 
     const isLooping =
       animation === "idle" ||

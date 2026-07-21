@@ -3,12 +3,7 @@ import Phaser from "phaser";
 import {
   CREATURE_VISUALS,
 } from "../../content/characters/creatureKits";
-import {
-  GOOD_MOOD_BACKGROUND_PATH,
-  GOOD_MOOD_BACKGROUND_TEXTURE_KEY,
-  GOOD_MOOD_TERRAIN_PATH,
-  GOOD_MOOD_TERRAIN_SOURCE_TEXTURE_KEY,
-} from "../../content/maps/goodMoodMap";
+import { MAP_DEFINITIONS } from "../../content/maps/mapCatalog";
 import {
   COMIC_VFX_FRAME_HEIGHT,
   COMIC_VFX_FRAME_WIDTH,
@@ -28,14 +23,10 @@ export class BootScene extends Phaser.Scene {
         frameHeight: visual.frameHeight,
       });
     }
-    this.load.image(
-      GOOD_MOOD_BACKGROUND_TEXTURE_KEY,
-      GOOD_MOOD_BACKGROUND_PATH,
-    );
-    this.load.image(
-      GOOD_MOOD_TERRAIN_SOURCE_TEXTURE_KEY,
-      GOOD_MOOD_TERRAIN_PATH,
-    );
+    for (const map of Object.values(MAP_DEFINITIONS)) {
+      this.load.image(map.backgroundTextureKey, map.backgroundPath);
+      this.load.image(map.terrainTextureKey, map.terrainPath);
+    }
     this.load.spritesheet(COMIC_VFX_TEXTURE_KEY, COMIC_VFX_SHEET_PATH, {
       frameWidth: COMIC_VFX_FRAME_WIDTH,
       frameHeight: COMIC_VFX_FRAME_HEIGHT,

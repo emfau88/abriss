@@ -10,7 +10,7 @@ Der Vertical Slice beweist nicht die Menge späterer Inhalte. Er beantwortet ein
 
 ### Match
 
-- eine bewusst entworfene zerstörbare Karte, deren Welt ungefähr 2–3 sichtbare Ausschnitte pro Achse umfasst,
+- zwei bewusst entworfene zerstörbare Karten, deren Welten ungefähr 2–3 sichtbare Ausschnitte pro Achse umfassen,
 - zwei Teams mit je drei Figuren,
 - stabile rundenweise Aktivierung,
 - Sieg durch Ausschalten des gegnerischen Teams,
@@ -18,7 +18,7 @@ Der Vertical Slice beweist nicht die Menge späterer Inhalte. Er beantwortet ein
 
 ### Figuren
 
-- ein technischer Hornwesen-Platzhalter, die animierten Testwesen Moki und Vela sowie GLIB als flüssiger 32-Frame-Slime aus der konkreten Projektvorlage; noch keine finale Produktionspalette,
+- ein technischer Hornwesen-Platzhalter, Moki sowie GLIB und Ghost als flüssige 32-Frame-Wesen aus den konkreten Projektvorlagen; noch keine finale Produktionspalette,
 - die Merkmale Vorsichtig, Sprengfreudig und Angeberisch,
 - Lebenspunkte, Team, Position und begrenzte lokale Bewegung,
 - klarer aktiver Zustand und erkennbare Teamzugehörigkeit.

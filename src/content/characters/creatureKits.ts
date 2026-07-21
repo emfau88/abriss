@@ -9,7 +9,7 @@ import {
   BLUE_HORNLING_TEXTURE_KEY,
 } from "./blueHornlingKit";
 
-export type CreatureVisualId = "hornling" | "moki" | "vela" | "slime";
+export type CreatureVisualId = "hornling" | "moki" | "ghost" | "slime";
 export type CreaturePose =
   | "ready"
   | "planning"
@@ -85,25 +85,55 @@ export const CREATURE_VISUALS: Readonly<
       jump: [8, 9, 10, 11],
     },
   },
-  vela: {
-    id: "vela",
-    textureKey: "vela-ghost-kit",
-    sheetPath: publicAssetPath("assets/characters/vela-ghost-sheet.png"),
+  ghost: {
+    id: "ghost",
+    textureKey: "ghost-fluid-kit",
+    sheetPath: publicAssetPath("assets/characters/ghost-fluid-sheet.png"),
     frameWidth: STANDARD_FRAME_SIZE,
     frameHeight: STANDARD_FRAME_SIZE,
-    displaySize: 148,
+    displaySize: 150,
     poseFrames: {
       ready: 0,
-      planning: 1,
-      action: 12,
-      grenade: 13,
-      startled: 14,
-      victory: 15,
+      planning: 3,
+      action: 24,
+      grenade: 27,
+      startled: 30,
+      victory: 31,
     },
     motionFrames: {
-      idle: [0, 1, 2, 3],
-      walk: [4, 5, 6, 7],
-      jump: [8, 9, 10, 11],
+      idle: [0, 1, 2, 3, 4, 5, 6, 7],
+      walk: [8, 9, 10, 11, 12, 13, 14, 15],
+      jump: [16, 17, 18, 19, 20, 21, 22, 23],
+    },
+    poseAnimationFrames: {
+      ready: [0, 1, 2, 3, 4, 5, 6, 7],
+      planning: [1, 2, 3, 4, 3, 2],
+      action: [24, 25, 26],
+      grenade: [27, 28, 29],
+      startled: [30, 30, 0],
+      victory: [31, 31, 0, 31],
+    },
+    animationFrameRates: {
+      idle: 12,
+      ready: 12,
+      planning: 11,
+      walk: 16,
+      jump: 14,
+      action: 15,
+      grenade: 14,
+      startled: 11,
+      victory: 9,
+    },
+    animationRepeats: {
+      idle: -1,
+      ready: -1,
+      planning: -1,
+      walk: -1,
+      jump: -1,
+      action: 0,
+      grenade: 0,
+      startled: 0,
+      victory: -1,
     },
   },
   slime: {

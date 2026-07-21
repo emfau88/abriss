@@ -1,35 +1,36 @@
-# Figuren-Styleframe
+# Figuren-Assets
 
-`blue-hornling-sheet.png` ist ein durch Built-in Imagegen erzeugter und lokal freigestellter technischer Platzhalter. Er ist kein endgültiger Hauptcharakter und ausdrücklich kein verbindlicher Stilanker.
+## Laufzeit-Sheets
 
-## Bewertung
+- `blue-hornling-sheet.png`: technischer 2×2-Platzhalter; kein Stilanker.
+- `moki-mushroom-sheet.png`: 4×4-Testsheet zu je 256×256 Pixeln.
+- `slime-fluid-sheet.png`: 8×4-Sheet mit 32 Frames zu je 256×256 Pixeln.
+- `ghost-fluid-sheet.png`: 8×4-Sheet mit 32 Frames zu je 256×256 Pixeln.
 
-Die vier Posen und die technische Freistellung sind brauchbar. Das Design ist für die gewünschte Figurenrichtung jedoch zu niedlich und kitschig. Künftige Wesen sollen eigenwilliger, etwas asymmetrischer, weniger glatt und farblich weniger maskottchenhaft werden, ohne in Grimdark oder realistische Gewaltästhetik zu kippen.
+`vela-ghost-sheet.png` bleibt als historisches Testasset im Repository, wird
+aber nicht mehr geladen. Alte Vela-Kaderdaten werden beim Laden zu Ghost
+migriert.
 
-## Aufbau
+## Aktuelle Qualitätsreferenzen
 
-- Bildgröße: 1254×1254 Pixel
-- Raster: 2 Spalten × 2 Zeilen
-- Framegröße: 627×627 Pixel
-- Frames: bereit, planen, Aktion, erschrocken/getroffen
+GLIB rekonstruiert den grünen Slime unten rechts aus `beispiele figuren/2.jpg`.
+Ghost rekonstruiert den hellen Geist oben, zweite Figur von links, aus demselben
+projektspezifischen Mockup. Fantasietitel, Logo und andere Figuren wurden nicht
+übernommen.
 
-Weitere Wesen sollen dieselbe ungefähre Bildschirmgröße und funktionale Ankerpunkte verwenden, sich in Silhouette, Körperbau und Bewegung aber klar unterscheiden.
+Beide 2048×1024-Sheets enthalten achtphasige Ruhe-, Bewegungs- und
+Sprungzyklen sowie Panzerfaust-, Granaten-, Treffer- und Jubelbilder. Sie laufen
+im Spiel mit 8–16 fps. Ghost verwendet zusätzlich eine stabilisierte
+Schwebeachse und ein sehr kleines kosmetisches Hover-Tween; Bewegung, Kollision
+und Physik bleiben rendererunabhängig.
 
-## Animierte Testwesen
-
-- `moki-mushroom-sheet.png`: 1024×1024 Pixel, 4×4 Frames zu je 256×256 Pixeln; Zeilen für Ruhe, Laufen, Sprung und Aktion.
-- `vela-ghost-sheet.png`: 1024×1024 Pixel, 4×4 Frames zu je 256×256 Pixeln; Zeilen für Ruhe, Gleiten, Sprung/Schweben und Aktion.
-- `slime-fluid-sheet.png`: 2048×1024 Pixel, 8×4 Frames zu je 256×256 Pixeln; achtphasige Ruhe-, Hüpf- und Sprungzyklen sowie Panzerfaust-, Granaten-, Treffer- und Jubelbilder.
-
-Beide Sheets wurden mit Built-in Imagegen als eigenständige Designs aus den lokalen Moodboards abgeleitet, per Magenta-Chroma-Key freigestellt und anschließend pro Frame auf eine gemeinsame Fuß-/Schwebeachse stabilisiert. Moki und Vela sind hochwertige Vertical-Slice-Testassets, aber keine zugesagte finale Produktionsqualität.
-
-Der Slime rekonstruiert dagegen bewusst die konkrete projektspezifische Vorlage unten rechts aus `beispiele figuren/2.jpg`. Seine 32 Bilder laufen mit 8–16 fps und werden im Spiel durch rein kosmetisches Squash-and-Stretch ergänzt. Damit ist er der aktuelle Qualitätsbeweis für flüssigere Figurenanimation; die Physik bleibt unverändert rendererunabhängig.
+Moki bleibt ein brauchbares Vertical-Slice-Testasset. Das blaue Hornwesen ist
+für die gewünschte Richtung zu niedlich und kitschig und wird nicht als
+verbindliche Vorlage fortgeführt.
 
 ## Generierung
 
-- Modus: Built-in Imagegen
-- Anwendungsfall: `stylized-concept`
-- Freistellung: grüner Chroma-Key, danach Soft-Matte und Despill
-- Kernausrichtung: ein kompaktes blaues Hornwesen mit cremefarbenem Bauch, Flossenohren und gelbem Schal; vier konsistente Posen; gezeichnete Comic-Kontur, einfache Cel-Schattierung und moderate Textur; ausdrücklich keine Berufsuniform, Baustellenausrüstung, Papercut-Optik oder bestehende Franchise-Figur.
-
-Der vollständige verwendete Prompt ist in `docs/ASSET_GENERATION.md` dokumentiert.
+Die transparenten Sheets wurden mit Built-in Imagegen auf einheitlichem
+Magenta-Chroma-Key erzeugt, mit Soft-Matte und Despill freigestellt und lokal in
+256×256-Zellen normalisiert. Der vollständige Prompt und die technische
+Aufbereitung sind in `docs/ASSET_GENERATION.md` dokumentiert.

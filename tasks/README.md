@@ -19,6 +19,6 @@ Tasks werden in numerischer Reihenfolge bearbeitet, sofern der Nutzer keine ande
 | `011_PLAYER_CONTROL_EXPERIMENT.md` | bereit | direkter Bewegungs-/Ziel-Prototyp gegen autonome Variante |
 | `012_AUTONOMY_MOVEMENT_AND_CREATURES.md` | abgeschlossen | fairer 3-gegen-3-Autonomietest mit Bewegung, Wesen und drei Waffen |
 | `013_KNOCKBACK_GRENADES_AND_WEAPON_COMMAND.md` | abgeschlossen | Rückstoß, zeitgezündete Granate und einmalige Waffenwahl |
-| `014_GITHUB_PAGES_AND_MOBILE_SHELL.md` | in Arbeit | GitHub-Pages-Veröffentlichung und mobile Spielhülle |
+| `014_GITHUB_PAGES_AND_MOBILE_SHELL.md` | abgeschlossen | GitHub-Pages-Veröffentlichung und mobile Spielhülle |
 
 Ein Status wird erst nach überprüfter Abnahme geändert. Scope-Erweiterungen gehören in einen neuen Task, nicht stillschweigend in einen bestehenden.

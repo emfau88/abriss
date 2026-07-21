@@ -6,7 +6,7 @@ Dieses Dokument ist der Einstiegspunkt und die Karte der verbindlichen Projektdo
 
 ## Aktuelle Phase
 
-Technischer Vertical Slice. M1 bis M3.5 sind abgeschlossen; M4 ist als interner 3-gegen-3-Test spielbar. Der Build enthält zerstörbares HD-Terrain, gemeinsame Ballistik, fortlaufende Initiative, lokale Lauf-/Sprungpositionierung, drei Waffenprofile, zeitgezündete Abprallgranaten, begrenzten Explosionsrückstoß, die Testwesen Moki und Vela sowie automatische Kamera- und Gegneraktionen. Ein einmaliges Managerkommando kann die nächste Waffenplanung festlegen. Als Nächstes werden vollständige Matches auf Spielspaß und Verständlichkeit geprüft. Task 011 bleibt danach als direkter Steuerungsvergleich bereit; eine umfassende Manager-Metaebene beginnt erst nach diesem Produkttest.
+Technischer Vertical Slice. M1 bis M3.5 sind abgeschlossen; M4 ist als interner 3-gegen-3-Test spielbar und über GitHub Pages extern erreichbar. Der Build enthält zerstörbares HD-Terrain, gemeinsame Ballistik, fortlaufende Initiative, lokale Lauf-/Sprungpositionierung, drei Waffenprofile, zeitgezündete Abprallgranaten, begrenzten Explosionsrückstoß, die Testwesen Moki und Vela sowie automatische Kamera- und Gegneraktionen. Ein einmaliges Managerkommando kann die nächste Waffenplanung festlegen. Als Nächstes werden vollständige Matches auf Spielspaß und Verständlichkeit geprüft. Task 011 bleibt danach als direkter Steuerungsvergleich bereit; eine umfassende Manager-Metaebene beginnt erst nach diesem Produkttest.
 
 ## Verbindliche Dokumente
 

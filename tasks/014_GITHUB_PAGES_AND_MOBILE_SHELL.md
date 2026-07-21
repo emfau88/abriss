@@ -2,7 +2,7 @@
 
 ## Status
 
-`in Arbeit`
+`abgeschlossen`
 
 ## Ziel
 
@@ -51,4 +51,9 @@ Der bestehende Vertical Slice wird ohne Gameplayänderungen als reproduzierbarer
 
 ## Abschlussbericht
 
-Wird nach erfolgreicher Verifikation ergänzt.
+- Vite und sämtliche Laufzeitassets verwenden portable relative Pfade; derselbe Build funktioniert an der Domainwurzel und unter `/abriss/`.
+- Der Workflow installiert aus dem Lockfile, führt Tests und Build aus, aktiviert Pages bei einem leeren Repository und veröffentlicht das geprüfte `dist/`-Artefakt.
+- Die Browserhülle nutzt `100dvh`, Notch-Safe-Areas, randlosen mobilen Platz und einen Vollbildschalter auf unterstützten Touch-Browsern.
+- Desktop, 844×390 und 390×844 wurden visuell geprüft. Hochformat zeigt das vollständige 16:9-Spiel, bleibt wegen der kleineren HUD-Schrift aber eine sekundäre Darstellung.
+- Ungenutzte kleinere Karten-Styleframes bleiben unter `source-assets/maps/` erhalten und werden nicht mehr an Spieler ausgeliefert.
+- Verifiziert am 21. Juli 2026 mit 44 Vitest-Tests, erfolgreicher Typprüfung und Produktionsbuild sowie erfolgreichem GitHub-Pages-Deployment unter `https://emfau88.github.io/abriss/`.

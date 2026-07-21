@@ -2,6 +2,8 @@
 
 Stand: 21. Juli 2026. Alle hier aufgeführten finalen Assets wurden mit Built-in Imagegen erzeugt. Es wurde kein CLI-Fallback verwendet.
 
+Nicht zur Laufzeit verwendete ursprüngliche Karten-Styleframes liegen unter `source-assets/maps/`; nur die HD-Laufzeitfassungen werden über `public/assets/maps/` ausgeliefert.
+
 ## Verbindliche Referenzregel ab Task 013
 
 `beispiele figuren/1.jpg`, `2.jpg` und `3.jpg` sind keine fremden oder nur losen Moodboards, sondern eigens für dieses Spiel erzeugte konkrete Figuren-Mockups. Bei der nächsten Figurengeneration sollen die ausgewählten Designs so genau wie möglich rekonstruiert werden; lediglich von der Bild-KI hinzugefügte Fantasietitel, Schriftzüge und Logos werden weggelassen. Die weiter unten dokumentierten Moki-/Vela-Prompts verwendeten die Bilder historisch nur als breite Inspiration und entsprechen deshalb ausdrücklich noch nicht dieser neuen Vorgabe.

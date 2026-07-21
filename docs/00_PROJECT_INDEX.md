@@ -1,6 +1,6 @@
 # Projektindex
 
-Stand: 21. Juli 2026
+Stand: 22. Juli 2026
 
 Dieses Dokument ist der Einstiegspunkt und die Karte der verbindlichen Projektdokumentation. Die Dokumente sollen kompakt bleiben. Inhalte werden nicht in mehreren Dateien parallel gepflegt.
 
@@ -25,6 +25,8 @@ Technischer Vertical Slice. M1 bis M3.5 sind abgeschlossen; M4 ist als interner 
 ## Arbeitsdokumente
 
 - `../AGENTS.md`: dauerhafte Arbeitsregeln für Coding-Agenten.
+- `07_CORE_GAMEPLAY_REVIEW.md`: festgehaltene Kernloop-Kritik, Gegencheck,
+  Lösungsreihenfolge und messbare Abnahmekriterien.
 - `../tasks/TASK_TEMPLATE.md`: Vorlage für kleine, überprüfbare Aufgaben.
 - `../tasks/`: priorisierte Implementierungsaufträge.
 

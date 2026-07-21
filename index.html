@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+    />
+    <meta name="theme-color" content="#071820" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="description"
+      content="Projekt Abriss – ein rundenartig inszenierter Auto-Artillery-Teammanager."
+    />
+    <title>Projekt Abriss</title>
+  </head>
+  <body>
+    <main class="app-shell" aria-label="Projekt Abriss">
+      <p class="sr-only" id="game-description">
+        Technischer Projektstart des browserbasierten Spiels Projekt Abriss.
+      </p>
+      <div id="game" aria-describedby="game-description"></div>
+      <button id="fullscreen-toggle" class="fullscreen-toggle" type="button" hidden>
+        <span aria-hidden="true">⛶</span>
+        <span class="fullscreen-label">Vollbild</span>
+      </button>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

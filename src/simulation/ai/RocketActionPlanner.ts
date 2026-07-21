@@ -1,0 +1,544 @@
+import {
+  simulateRocketTrajectory,
+  type BallisticTerrain,
+  type RocketTrajectoryInput,
+  type RocketTrajectoryResult,
+  type Vector2,
+} from "../ballistics/Ballistics";
+import { keyedSignedVariation } from "../random/SeededRandom";
+
+export type Personality = "cautious" | "explosive" | "showboat";
+export type WeaponId = "rocket" | "grenade" | "breaker";
+
+export interface WeaponProfile {
+  readonly id: WeaponId;
+  readonly displayName: string;
+  readonly flightTimesSeconds: readonly number[];
+  readonly explosionRadius: number;
+  readonly maximumDamage: number;
+  readonly maximumKnockbackSpeed: number;
+}
+
+export const WEAPON_PROFILES: Readonly<Record<WeaponId, WeaponProfile>> = {
+  rocket: {
+    id: "rocket",
+    displayName: "PANZERFAUST",
+    flightTimesSeconds: [1.6, 1.8, 2.0],
+    explosionRadius: 62,
+    maximumDamage: 100,
+    maximumKnockbackSpeed: 430,
+  },
+  grenade: {
+    id: "grenade",
+    displayName: "WURFGRANATE",
+    flightTimesSeconds: [2.25, 2.55, 2.85],
+    explosionRadius: 54,
+    maximumDamage: 86,
+    maximumKnockbackSpeed: 370,
+  },
+  breaker: {
+    id: "breaker",
+    displayName: "GELÄNDEBRECHER",
+    flightTimesSeconds: [1.7, 2.0, 2.3],
+    explosionRadius: 82,
+    maximumDamage: 70,
+    maximumKnockbackSpeed: 480,
+  },
+};
+
+export interface PlannerUnit {
+  readonly id: string;
+  readonly displayName: string;
+  readonly team: string;
+  readonly position: Vector2;
+  readonly hitPoints: number;
+}
+
+export interface RocketPlannerTerrain extends BallisticTerrain {
+  isSolidCell(cellX: number, cellY: number): boolean;
+}
+
+export interface RocketCandidateMetrics {
+  readonly enemyDamage: number;
+  readonly targetDamage: number;
+  readonly friendlyDamage: number;
+  readonly selfDamage: number;
+  readonly terrainEffect: number;
+  readonly showmanship: number;
+  readonly aimError: number;
+}
+
+export type UtilityReasonCode =
+  | "enemy-effect"
+  | "friendly-risk"
+  | "self-risk"
+  | "demolition"
+  | "showmanship"
+  | "aim-error"
+  | "seed-variation";
+
+export interface UtilityComponent {
+  readonly code: UtilityReasonCode;
+  readonly label: string;
+  readonly rawValue: number;
+  readonly weight: number;
+  readonly contribution: number;
+}
+
+export interface RocketCandidate {
+  readonly id: string;
+  readonly weaponId: WeaponId;
+  readonly weaponName: string;
+  readonly maximumDamage: number;
+  readonly maximumKnockbackSpeed: number;
+  readonly targetId: string;
+  readonly targetName: string;
+  readonly flightTimeSeconds: number;
+  readonly input: RocketTrajectoryInput;
+  readonly trajectory: RocketTrajectoryResult;
+  readonly valid: boolean;
+  readonly invalidReason: string | null;
+  readonly metrics: RocketCandidateMetrics;
+  readonly components: readonly UtilityComponent[];
+  readonly score: number;
+}
+
+export interface RocketActionPlan {
+  readonly seed: number;
+  readonly personality: Personality;
+  readonly candidates: readonly RocketCandidate[];
+  readonly rankedCandidates: readonly RocketCandidate[];
+  readonly selected: RocketCandidate | null;
+  readonly rejectedCandidateIds: readonly string[];
+}
+
+export interface RocketPlannerInput {
+  readonly terrain: RocketPlannerTerrain;
+  readonly units: readonly PlannerUnit[];
+  readonly activeUnitId: string;
+  readonly personality: Personality;
+  readonly seed: number;
+  readonly rejectedCandidateIds?: readonly string[];
+  readonly candidateFlightTimesSeconds?: readonly number[];
+  readonly gravity?: Vector2;
+  readonly fixedStepSeconds?: number;
+  readonly maximumDurationSeconds?: number;
+  readonly explosionRadius?: number;
+  readonly weaponIds?: readonly WeaponId[];
+}
+
+interface PersonalityWeights {
+  readonly enemyEffect: number;
+  readonly friendlyRisk: number;
+  readonly selfRisk: number;
+  readonly demolition: number;
+  readonly showmanship: number;
+  readonly aimError: number;
+}
+
+const PERSONALITY_WEIGHTS: Record<Personality, PersonalityWeights> = {
+  cautious: {
+    enemyEffect: 1,
+    friendlyRisk: -2.2,
+    selfRisk: -2.8,
+    demolition: 0.08,
+    showmanship: -0.1,
+    aimError: -0.22,
+  },
+  explosive: {
+    enemyEffect: 0.9,
+    friendlyRisk: -0.9,
+    selfRisk: -1.2,
+    demolition: 0.62,
+    showmanship: 0.1,
+    aimError: -0.15,
+  },
+  showboat: {
+    enemyEffect: 0.8,
+    friendlyRisk: -1.15,
+    selfRisk: -1.35,
+    demolition: 0.12,
+    showmanship: 0.9,
+    aimError: -0.18,
+  },
+};
+
+const REASON_LABELS: Record<UtilityReasonCode, string> = {
+  "enemy-effect": "Trefferwirkung",
+  "friendly-risk": "Kameradenrisiko",
+  "self-risk": "Eigenrisiko",
+  demolition: "Geländewirkung",
+  showmanship: "Showfaktor",
+  "aim-error": "Zielabweichung",
+  "seed-variation": "Spontaneität",
+};
+
+const DEFAULT_GRAVITY = { x: 0, y: 510 } as const;
+const MINIMUM_TARGET_DAMAGE = 8;
+const VARIATION_MAGNITUDE = 1.25;
+
+export function planRocketAction(input: RocketPlannerInput): RocketActionPlan {
+  validatePlannerInput(input);
+
+  const activeUnit = input.units.find((unit) => unit.id === input.activeUnitId);
+
+  if (!activeUnit) {
+    throw new Error(`Unknown active unit: ${input.activeUnitId}`);
+  }
+
+  const targets = input.units.filter(
+    (unit) => unit.team !== activeUnit.team && unit.hitPoints > 0,
+  );
+  const gravity = input.gravity ?? DEFAULT_GRAVITY;
+  const weaponIds = input.weaponIds ?? ["rocket"];
+  const rejected = new Set(input.rejectedCandidateIds ?? []);
+  const candidates: RocketCandidate[] = [];
+
+  for (const target of targets) {
+    for (const weaponId of weaponIds) {
+      const weapon = WEAPON_PROFILES[weaponId];
+      const flightTimes =
+        weaponId === "rocket" && input.candidateFlightTimesSeconds
+          ? input.candidateFlightTimesSeconds
+          : weapon.flightTimesSeconds;
+      const explosionRadius =
+        weaponId === "rocket" && input.explosionRadius
+          ? input.explosionRadius
+          : weapon.explosionRadius;
+
+      for (let index = 0; index < flightTimes.length; index += 1) {
+        const flightTime = flightTimes[index];
+
+        if (flightTime === undefined || flightTime <= 0) {
+          throw new Error("Candidate flight times must be positive.");
+        }
+
+        const id = `${weapon.id}:${target.id}:arc-${index + 1}`;
+        const launchPosition = {
+          x:
+            activeUnit.position.x +
+            Math.sign(target.position.x - activeUnit.position.x) * 18,
+          y: activeUnit.position.y - 46,
+        };
+        const trajectoryInput: RocketTrajectoryInput = {
+          startPosition: launchPosition,
+          startVelocity: velocityForArrival(
+            launchPosition,
+            target.position,
+            gravity,
+            flightTime,
+          ),
+          gravity,
+          fixedStepSeconds: input.fixedStepSeconds ?? 1 / 60,
+          maximumDurationSeconds:
+            input.maximumDurationSeconds ?? Math.max(4, flightTime + 1.1),
+          explosionRadius,
+          ...(weaponId === "grenade"
+            ? {
+                collisionBehavior: "bounce" as const,
+                fuseSeconds: flightTime + 0.65,
+                maximumBounces: 2,
+                bounceRestitution: 0.44,
+                surfaceFriction: 0.68,
+              }
+            : {}),
+        };
+        const trajectory = simulateRocketTrajectory(
+          trajectoryInput,
+          input.terrain,
+        );
+        const metrics = measureCandidate(
+          trajectory,
+          target,
+          activeUnit,
+          input.units,
+          input.terrain,
+          explosionRadius,
+          weapon.maximumDamage,
+        );
+        const invalidReason = candidateInvalidReason(
+          trajectory,
+          metrics,
+          weapon.id,
+        );
+        const components = scoreRocketMetrics(
+          metrics,
+          input.personality,
+          keyedSignedVariation(input.seed, id) * VARIATION_MAGNITUDE,
+        );
+
+        candidates.push({
+          id,
+          weaponId: weapon.id,
+          weaponName: weapon.displayName,
+          maximumDamage: weapon.maximumDamage,
+          maximumKnockbackSpeed: weapon.maximumKnockbackSpeed,
+          targetId: target.id,
+          targetName: target.displayName,
+          flightTimeSeconds: flightTime,
+          input: trajectoryInput,
+          trajectory,
+          valid: invalidReason === null,
+          invalidReason,
+          metrics,
+          components,
+          score: sumContributions(components),
+        });
+      }
+    }
+  }
+
+  const rankedCandidates = candidates
+    .filter((candidate) => candidate.valid && !rejected.has(candidate.id))
+    .sort(compareCandidates);
+
+  return {
+    seed: input.seed,
+    personality: input.personality,
+    candidates,
+    rankedCandidates,
+    selected: rankedCandidates[0] ?? null,
+    rejectedCandidateIds: [...rejected],
+  };
+}
+
+export function scoreRocketMetrics(
+  metrics: RocketCandidateMetrics,
+  personality: Personality,
+  seedVariation = 0,
+): readonly UtilityComponent[] {
+  const weights = PERSONALITY_WEIGHTS[personality];
+  const values: readonly [UtilityReasonCode, number, number][] = [
+    ["enemy-effect", metrics.enemyDamage, weights.enemyEffect],
+    ["friendly-risk", metrics.friendlyDamage, weights.friendlyRisk],
+    ["self-risk", metrics.selfDamage, weights.selfRisk],
+    ["demolition", metrics.terrainEffect, weights.demolition],
+    ["showmanship", metrics.showmanship, weights.showmanship],
+    ["aim-error", metrics.aimError, weights.aimError],
+    ["seed-variation", 1, seedVariation],
+  ];
+
+  return values.map(([code, rawValue, weight]) => ({
+    code,
+    label: REASON_LABELS[code],
+    rawValue,
+    weight,
+    contribution: rawValue * weight,
+  }));
+}
+
+export function topUtilityReasons(
+  candidate: RocketCandidate,
+): { positive: UtilityComponent | null; negative: UtilityComponent | null } {
+  const meaningful = candidate.components.filter(
+    (component) => component.code !== "seed-variation",
+  );
+  const positive = meaningful
+    .filter((component) => component.weight > 0)
+    .sort((left, right) => right.contribution - left.contribution)[0] ?? null;
+  const negative = meaningful
+    .filter((component) => component.weight < 0)
+    .sort((left, right) => left.contribution - right.contribution)[0] ?? null;
+
+  return { positive, negative };
+}
+
+function velocityForArrival(
+  start: Vector2,
+  destination: Vector2,
+  gravity: Vector2,
+  durationSeconds: number,
+): Vector2 {
+  return {
+    x:
+      (destination.x - start.x -
+        0.5 * gravity.x * durationSeconds * durationSeconds) /
+      durationSeconds,
+    y:
+      (destination.y - start.y -
+        0.5 * gravity.y * durationSeconds * durationSeconds) /
+      durationSeconds,
+  };
+}
+
+function measureCandidate(
+  trajectory: RocketTrajectoryResult,
+  target: PlannerUnit,
+  activeUnit: PlannerUnit,
+  units: readonly PlannerUnit[],
+  terrain: RocketPlannerTerrain,
+  explosionRadius: number,
+  maximumDamage: number,
+): RocketCandidateMetrics {
+  const center = trajectory.explosion?.center;
+
+  if (!center) {
+    return {
+      enemyDamage: 0,
+      targetDamage: 0,
+      friendlyDamage: 0,
+      selfDamage: 0,
+      terrainEffect: 0,
+      showmanship: trajectory.samples.length,
+      aimError: terrain.worldWidth,
+    };
+  }
+
+  let enemyDamage = 0;
+  let targetDamage = 0;
+  let friendlyDamage = 0;
+  let selfDamage = 0;
+
+  for (const unit of units) {
+    if (unit.hitPoints <= 0) {
+      continue;
+    }
+
+    const damage = calculateBlastDamage(
+      center,
+      unit.position,
+      explosionRadius,
+      maximumDamage,
+    );
+
+    if (unit.id === target.id) {
+      targetDamage = damage;
+    }
+
+    if (unit.team !== activeUnit.team) {
+      enemyDamage += damage;
+    } else if (unit.id === activeUnit.id) {
+      selfDamage += damage;
+    } else {
+      friendlyDamage += damage;
+    }
+  }
+
+  const lastSample = trajectory.samples[trajectory.samples.length - 1];
+  const maximumArcHeight = trajectory.samples.reduce(
+    (minimumY, sample) => Math.min(minimumY, sample.position.y),
+    activeUnit.position.y,
+  );
+  const arcRise = Math.max(0, activeUnit.position.y - maximumArcHeight);
+  const duration = lastSample?.timeSeconds ?? 0;
+
+  return {
+    enemyDamage,
+    targetDamage,
+    friendlyDamage,
+    selfDamage,
+    terrainEffect: estimateTerrainEffect(center, explosionRadius, terrain),
+    showmanship: Math.min(100, duration * 26 + arcRise * 0.16),
+    aimError: Math.hypot(center.x - target.position.x, center.y - target.position.y),
+  };
+}
+
+export function calculateBlastDamage(
+  center: Vector2,
+  unitPosition: Vector2,
+  radius: number,
+  maximumDamage = 100,
+): number {
+  const distance = Math.hypot(
+    center.x - unitPosition.x,
+    center.y - unitPosition.y,
+  );
+  return Math.max(0, maximumDamage * (1 - distance / radius));
+}
+
+function estimateTerrainEffect(
+  center: Vector2,
+  radius: number,
+  terrain: RocketPlannerTerrain,
+): number {
+  const minimumCellX = Math.max(0, Math.floor((center.x - radius) / terrain.cellSize));
+  const maximumCellX = Math.min(
+    Math.ceil(terrain.worldWidth / terrain.cellSize) - 1,
+    Math.floor((center.x + radius) / terrain.cellSize),
+  );
+  const minimumCellY = Math.max(0, Math.floor((center.y - radius) / terrain.cellSize));
+  const maximumCellY = Math.min(
+    Math.ceil(terrain.worldHeight / terrain.cellSize) - 1,
+    Math.floor((center.y + radius) / terrain.cellSize),
+  );
+  let solidCells = 0;
+
+  for (let cellY = minimumCellY; cellY <= maximumCellY; cellY += 1) {
+    const worldY = (cellY + 0.5) * terrain.cellSize;
+    const deltaY = worldY - center.y;
+
+    for (let cellX = minimumCellX; cellX <= maximumCellX; cellX += 1) {
+      if (!terrain.isSolidCell(cellX, cellY)) {
+        continue;
+      }
+
+      const worldX = (cellX + 0.5) * terrain.cellSize;
+      const deltaX = worldX - center.x;
+
+      if (deltaX * deltaX + deltaY * deltaY <= radius * radius) {
+        solidCells += 1;
+      }
+    }
+  }
+
+  const area = solidCells * terrain.cellSize * terrain.cellSize;
+  return Math.min(100, (area / (Math.PI * radius * radius)) * 100);
+}
+
+function candidateInvalidReason(
+  trajectory: RocketTrajectoryResult,
+  metrics: RocketCandidateMetrics,
+  weaponId: WeaponId,
+): string | null {
+  const expectedImpact =
+    trajectory.outcome === "terrain-impact" ||
+    (weaponId === "grenade" && trajectory.outcome === "fuse-expired");
+
+  if (!expectedImpact) {
+    return trajectory.outcome === "out-of-bounds"
+      ? "Flugbahn verlässt das Einsatzgebiet"
+      : "Flugbahn endet ohne Einschlag";
+  }
+
+  if (metrics.targetDamage < MINIMUM_TARGET_DAMAGE) {
+    if (weaponId === "breaker" && metrics.terrainEffect >= 8) {
+      return null;
+    }
+    return "Ziel liegt außerhalb wirksamer Reichweite";
+  }
+
+  return null;
+}
+
+function sumContributions(components: readonly UtilityComponent[]): number {
+  return components.reduce(
+    (total, component) => total + component.contribution,
+    0,
+  );
+}
+
+function compareCandidates(left: RocketCandidate, right: RocketCandidate): number {
+  const scoreDifference = right.score - left.score;
+
+  if (Math.abs(scoreDifference) > 1e-9) {
+    return scoreDifference;
+  }
+
+  return left.id.localeCompare(right.id);
+}
+
+function validatePlannerInput(input: RocketPlannerInput): void {
+  if (!Number.isSafeInteger(input.seed)) {
+    throw new Error("Rocket planning requires an integer seed.");
+  }
+
+  const ids = new Set<string>();
+
+  for (const unit of input.units) {
+    if (ids.has(unit.id)) {
+      throw new Error(`Duplicate unit id: ${unit.id}`);
+    }
+
+    ids.add(unit.id);
+  }
+}

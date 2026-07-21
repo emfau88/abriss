@@ -1,6 +1,9 @@
 import Phaser from "phaser";
 
 import { BootScene } from "./scenes/BootScene";
+import { DebriefScene } from "./scenes/DebriefScene";
+import { MainMenuScene } from "./scenes/MainMenuScene";
+import { ManagerScene } from "./scenes/ManagerScene";
 import { MatchScene } from "./scenes/MatchScene";
 
 export const LOGICAL_WIDTH = 1280;
@@ -27,6 +30,6 @@ export function createGameConfig(): Phaser.Types.Core.GameConfig {
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
-    scene: [BootScene, MatchScene],
+    scene: [BootScene, MainMenuScene, ManagerScene, MatchScene, DebriefScene],
   };
 }

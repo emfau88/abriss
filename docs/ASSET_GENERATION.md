@@ -86,6 +86,24 @@ Constraints: no text, UI, logos, watermark, extra characters, scenery, construct
 
 **Imagegen-Original:** `C:\Users\madde\.codex\generated_images\019f859c-8d0d-73c0-89ac-43f40a2637a4\exec-d706aa24-94ad-4b8f-81da-91060c7067a5.png`
 
+## Flüssiger Slime: `slime-fluid-sheet.png`
+
+**Verfahren:** Built-in Imagegen mit `beispiele figuren/2.jpg` als direkte projektspezifische Designvorlage. Verwendet wurde ausschließlich der grüne Slime unten rechts; Fantasietitel, Logo und andere Figuren des Mockups wurden nicht übernommen. Der einheitliche Magenta-Hintergrund wurde mit dem Chroma-Key-Helfer des Imagegen-Skills (`--auto-key border`, Soft-Matte und Despill) entfernt. Das 8×4-Ergebnis wurde in 32 quadratische Frames zu je 256×256 Pixeln geteilt und als transparentes 2048×1024-PNG zusammengesetzt.
+
+```text
+Use case: stylized-concept
+Asset type: production-minded 8-column by 4-row sprite sheet for one animated 2D comic artillery character
+Input image: use the supplied project-owned character mockup as a direct design reference. Reproduce specifically the small green slime creature at the lower right as closely as possible: rounded translucent pea-green blob body, darker green lower rim, two tall white eyes with tiny dark pupils, wide friendly open mouth, tiny cheek/bubble details and simple charming proportions. Ignore every fantasy title, logo, text and all other characters in the mockup.
+Primary request: exactly thirty-two isolated full-body sprites of the same single slime in a precise 8×4 grid. Keep anatomy, face, color, outline weight, scale and baseline consistent. Motion must read as very fluid through clear in-between shapes, elastic squash-and-stretch and stable contact with the ground.
+Animation rows: row 1 eight subtle idle/breathing and blinking frames; row 2 eight forward hop/walk frames with compression, push-off, airborne stretch and soft landing; row 3 eight jump frames from anticipation through ascent, apex, fall, impact squash and recovery; row 4 eight action frames grouped left to right: launcher anticipation/fire/recoil, grenade hold/throw/follow-through, comic splat hit and cheerful victory.
+Scene/backdrop: perfectly flat uniform solid #ff00ff chroma-key background in every empty pixel; no floor, shadow, texture, gradient, grid lines or cell dividers.
+Style/medium: dimensional hand-drawn comic game sprite with confident dark green ink contour, simple cel-painted volume and modest glossy slime highlights. Friendly and charming, simple rather than over-polished; not paper-cut, pixel art, flat vector, photorealistic, 3D render or copied franchise art.
+Composition: one centered character per equal cell, generous padding, stable bottom anchor, nothing touching cell edges or another cell.
+Constraints: exactly 32 sprites; no text, logo, UI, scenery, extra creatures, construction clothing, watermark or magenta inside the slime.
+```
+
+**Imagegen-Original:** `C:\Users\madde\.codex\generated_images\019f859c-8d0d-73c0-89ac-43f40a2637a4\exec-3df46c5c-1569-41f5-aa5f-b47022d31265.png`
+
 ## VFX: `comic-vfx-sheet.png`
 
 **Technische Aufbereitung:** Der einheitliche grüne Hintergrund wurde lokal mit dem Chroma-Key-Helfer des Imagegen-Skills, Soft-Matte und Despill entfernt. Das Ergebnis ist ein transparentes 1254×1254-PNG mit vier Frames zu je 627×627 Pixeln.

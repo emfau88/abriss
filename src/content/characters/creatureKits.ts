@@ -9,7 +9,7 @@ import {
   BLUE_HORNLING_TEXTURE_KEY,
 } from "./blueHornlingKit";
 
-export type CreatureVisualId = "hornling" | "moki" | "vela";
+export type CreatureVisualId = "hornling" | "moki" | "vela" | "slime";
 export type CreaturePose =
   | "ready"
   | "planning"
@@ -18,6 +18,7 @@ export type CreaturePose =
   | "startled"
   | "victory";
 export type CreatureMotion = "idle" | "walk" | "jump";
+export type CreatureAnimationId = CreatureMotion | CreaturePose;
 
 export interface CreatureVisualSpec {
   readonly id: CreatureVisualId;
@@ -29,6 +30,15 @@ export interface CreatureVisualSpec {
   readonly poseFrames: Readonly<Record<CreaturePose, number>>;
   readonly motionFrames: Readonly<
     Partial<Record<CreatureMotion, readonly number[]>>
+  >;
+  readonly poseAnimationFrames?: Readonly<
+    Partial<Record<CreaturePose, readonly number[]>>
+  >;
+  readonly animationFrameRates?: Readonly<
+    Partial<Record<CreatureAnimationId, number>>
+  >;
+  readonly animationRepeats?: Readonly<
+    Partial<Record<CreatureAnimationId, number>>
   >;
 }
 
@@ -96,25 +106,81 @@ export const CREATURE_VISUALS: Readonly<
       jump: [8, 9, 10, 11],
     },
   },
+  slime: {
+    id: "slime",
+    textureKey: "slime-fluid-kit",
+    sheetPath: publicAssetPath("assets/characters/slime-fluid-sheet.png"),
+    frameWidth: STANDARD_FRAME_SIZE,
+    frameHeight: STANDARD_FRAME_SIZE,
+    displaySize: 146,
+    poseFrames: {
+      ready: 0,
+      planning: 2,
+      action: 24,
+      grenade: 27,
+      startled: 30,
+      victory: 31,
+    },
+    motionFrames: {
+      idle: [0, 1, 2, 3, 4, 5, 6, 7],
+      walk: [8, 9, 10, 11, 12, 13, 14, 15],
+      jump: [16, 17, 18, 19, 20, 21, 22, 23],
+    },
+    poseAnimationFrames: {
+      ready: [0, 1, 2, 3, 4, 5, 6, 7],
+      planning: [1, 2, 3, 4, 3, 2],
+      action: [24, 25, 26, 25],
+      grenade: [27, 28, 29, 28],
+      startled: [30, 30, 0],
+      victory: [31, 31, 0, 31],
+    },
+    animationFrameRates: {
+      idle: 12,
+      ready: 12,
+      planning: 10,
+      walk: 16,
+      jump: 14,
+      action: 14,
+      grenade: 13,
+      startled: 10,
+      victory: 8,
+    },
+    animationRepeats: {
+      idle: -1,
+      ready: -1,
+      planning: -1,
+      walk: -1,
+      jump: -1,
+      action: 0,
+      grenade: 0,
+      startled: 0,
+      victory: -1,
+    },
+  },
 };
 
 export function creatureAnimationKey(
   visualId: CreatureVisualId,
-  motion: CreatureMotion,
+  animation: CreatureAnimationId,
 ): string {
-  return `${CREATURE_VISUALS[visualId].textureKey}:${motion}`;
+  return `${CREATURE_VISUALS[visualId].textureKey}:${animation}`;
 }
 
 export function registerCreatureAnimations(scene: Phaser.Scene): void {
   for (const visual of Object.values(CREATURE_VISUALS)) {
-    for (const [motion, frames] of Object.entries(visual.motionFrames)) {
+    const animations: Partial<Record<CreatureAnimationId, readonly number[]>> = {
+      ...visual.motionFrames,
+      ...visual.poseAnimationFrames,
+    };
+
+    for (const [animation, frames] of Object.entries(animations)) {
       if (!frames || frames.length < 2) {
         continue;
       }
 
       const key = creatureAnimationKey(
         visual.id,
-        motion as CreatureMotion,
+        animation as CreatureAnimationId,
       );
       if (scene.anims.exists(key)) {
         continue;
@@ -126,8 +192,12 @@ export function registerCreatureAnimations(scene: Phaser.Scene): void {
           key: visual.textureKey,
           frame,
         })),
-        frameRate: motion === "idle" ? 3.2 : motion === "walk" ? 8 : 7,
-        repeat: motion === "jump" ? 0 : -1,
+        frameRate:
+          visual.animationFrameRates?.[animation as CreatureAnimationId] ??
+          (animation === "idle" ? 3.2 : animation === "walk" ? 8 : 7),
+        repeat:
+          visual.animationRepeats?.[animation as CreatureAnimationId] ??
+          (animation === "jump" ? 0 : -1),
       });
     }
   }

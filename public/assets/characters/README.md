@@ -19,8 +19,11 @@ Weitere Wesen sollen dieselbe ungefähre Bildschirmgröße und funktionale Anker
 
 - `moki-mushroom-sheet.png`: 1024×1024 Pixel, 4×4 Frames zu je 256×256 Pixeln; Zeilen für Ruhe, Laufen, Sprung und Aktion.
 - `vela-ghost-sheet.png`: 1024×1024 Pixel, 4×4 Frames zu je 256×256 Pixeln; Zeilen für Ruhe, Gleiten, Sprung/Schweben und Aktion.
+- `slime-fluid-sheet.png`: 2048×1024 Pixel, 8×4 Frames zu je 256×256 Pixeln; achtphasige Ruhe-, Hüpf- und Sprungzyklen sowie Panzerfaust-, Granaten-, Treffer- und Jubelbilder.
 
 Beide Sheets wurden mit Built-in Imagegen als eigenständige Designs aus den lokalen Moodboards abgeleitet, per Magenta-Chroma-Key freigestellt und anschließend pro Frame auf eine gemeinsame Fuß-/Schwebeachse stabilisiert. Moki und Vela sind hochwertige Vertical-Slice-Testassets, aber keine zugesagte finale Produktionsqualität.
+
+Der Slime rekonstruiert dagegen bewusst die konkrete projektspezifische Vorlage unten rechts aus `beispiele figuren/2.jpg`. Seine 32 Bilder laufen mit 8–16 fps und werden im Spiel durch rein kosmetisches Squash-and-Stretch ergänzt. Damit ist er der aktuelle Qualitätsbeweis für flüssigere Figurenanimation; die Physik bleibt unverändert rendererunabhängig.
 
 ## Generierung
 

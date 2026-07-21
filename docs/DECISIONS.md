@@ -175,3 +175,19 @@ Dieses Dokument hält verbindliche, projektweite Entscheidungen fest. Neue Eintr
 **Grund:** Externe Tests brauchen einen ohne Installation erreichbaren, reproduzierbaren Build. Relative Pfade vermeiden eine zweite lokale und eine abweichende Pages-Konfiguration. Eine schlanke responsive Hülle macht denselben Teststand auf Mobilgeräten erreichbar, ohne vor der Kernloop-Validierung einen kostspieligen zweiten HUD-Entwurf zu beginnen.
 
 **Konsequenz:** Mobiles Querformat ist die empfohlene Ansicht; Hochformat zeigt weiterhin das vollständige 16:9-Spiel mit entsprechend kleinerer Schrift. Ein späterer echter Touch-/Portrait-HUD-Umbau bleibt eine eigene Produktentscheidung. Der Pages-Workflow führt Tests und Build vor jeder Veröffentlichung aus.
+
+## 2026-07-21 – D-024: Slime als Animations-Qualitätsbeweis
+
+**Entscheidung:** GLIB rekonstruiert den grünen Slime aus `beispiele figuren/2.jpg` eng in einem 32-Frame-Sheet. Idle, Hüpfen und Sprung erhalten je acht Phasen bei 12–16 Bildern pro Sekunde; Waffenaktion, Treffer und Sieg besitzen eigene Sequenzen. Rein kosmetisches Squash-and-Stretch ergänzt die Frames, besitzt aber keine Autorität über Bewegung oder Kollision.
+
+**Grund:** Die vierphasigen Testwesen belegen die Zustände, wirken in Bewegung aber noch stockend. Ein einzelnes bewusst einfaches Wesen kann mit stabiler Fußachse, mehr Zwischenbildern und elastischen Übergängen kostengünstig zeigen, welches Bewegungsniveau im Browser erreichbar ist.
+
+**Konsequenz:** GLIB ist der aktuelle Referenzfall für Animationsrhythmus und Übergänge, nicht automatisch für jede Anatomie. Weitere Figuren dürfen andere Framezahlen nutzen, müssen aber denselben stabilen Anker und die Trennung von Simulation und Darstellung einhalten.
+
+## 2026-07-21 – D-025: Dünner Manager-Loop vor tiefer Meta-Progression
+
+**Entscheidung:** Der Vertical Slice erhält jetzt Hauptmenü, Auswahl von drei aus vier Wesen, genau eine Waffenpräferenz pro Crewmitglied, Match und Einsatzbericht. Der Managerzustand ist versioniert und lokal serialisierbar; eine explizite Matchkonfiguration übergibt Crew, Präferenzen und Seed. Nach dem ersten abgeschlossenen Einsatz wird einmalig der Geländebrecher freigeschaltet.
+
+**Grund:** Das 3-gegen-3-Match, die Initiative und der Ausgang sind stabil genug, um das große Ganze erstmals als kleinen vollständigen Produktloop zu erleben. Die eine Freischaltung beweist Persistenz und Rückkehrschleife, ohne bereits eine wirtschaftliche Metaebene zu bauen.
+
+**Konsequenz:** Eine Präferenz beeinflusst nur den ersten gültigen Plan der Figur und sperrt spätere Waffen nicht. Shop, Währungen, Rekrutierungsmarkt, Basisbau, große Ausrüstungsbäume und tiefere Karrierewerte bleiben bis zu echten Spieltests ausgeschlossen. Das schnelle Testmatch bleibt als Entwicklungsweg erhalten.

@@ -44,6 +44,6 @@ export class BootScene extends Phaser.Scene {
 
   public create(): void {
     this.cameras.main.setBackgroundColor("#102a36");
-    this.scene.start("MatchScene");
+    this.scene.start("MainMenuScene");
   }
 }

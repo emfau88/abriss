@@ -21,7 +21,7 @@ Große Aktionen finden nacheinander statt. Kleine Reaktionen wie Fallen, Zurück
 
 ### Vor dem Match
 
-Später wählt der Spieler Crew, Ausrüstung, Rollen und eine grobe Doktrin. Im Vertical Slice sind Teams vorgegeben, damit zuerst der Kampfloop bewertet wird.
+Der dünne Manager-Slice lässt den Spieler genau drei aus vier Wesen wählen und pro Crewmitglied eine Waffenpräferenz festlegen. Diese Präferenz bestimmt den ersten gültigen Plan der Figur, sperrt ihr Arsenal in späteren Zügen aber nicht. Rollen, Doktrinen und tiefe Ausrüstungsbäume bleiben spätere Entscheidungen.
 
 ### Während des Matches
 
@@ -50,13 +50,13 @@ Diese Form vollständiger Autonomie gilt deshalb nicht mehr als bestätigte Ziel
 
 ### Nach dem Match
 
-Der Vertical Slice zeigt nur eine kompakte Zusammenfassung wichtiger Ereignisse. Dauerhafte Beziehungen, Verletzungen, Beförderungen und Karriereprogression sind spätere Systeme.
+Der Vertical Slice zeigt einen kompakten humorvollen Einsatzbericht. Nach dem ersten abgeschlossenen Manager-Einsatz wird einmalig der Geländebrecher als neue Waffenpräferenz freigeschaltet; dies beweist den Loop technisch, ohne bereits Shop oder Karriereprogression vorzutäuschen. Beziehungen, Verletzungen und Beförderungen bleiben spätere Systeme.
 
 ## Zeitpunkt und Umfang der Manager-Ebene
 
 Die Manager-Ebene wird nicht vor dem vollständigen 3-gegen-3-Match gebaut. Zuerst müssen Zugfolge, Bewegung, Waffenfolgen, Eliminierung, Sieg/Niederlage und Kameraführung stabil sein; andernfalls würde eine frühe Meta-UI auf Regeln aufbauen, die sich noch stark verändern.
 
-Nach erfolgreichem Match- und Verständlichkeitstest folgt ein bewusst dünner Manager-Slice:
+Der bewusst dünne Manager-Slice ist nach Stabilisierung des 3-gegen-3-Matches nun umgesetzt:
 
 1. eine kleine Crew ansehen und drei Wesen für das nächste Match auswählen,
 2. Persönlichkeit, erwartbares Verhalten und eine Stärke/Schwäche pro Wesen verstehen,

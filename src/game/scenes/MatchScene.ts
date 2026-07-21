@@ -17,6 +17,7 @@ import {
   COMIC_VFX_TEXTURE_KEY,
   comicVfxFrame,
 } from "../../content/vfx/comicVfxKit";
+import { FIGHTER_ROSTER } from "../../manager/fighterRoster";
 import {
   calculateBlastDamage,
   planRocketAction,
@@ -65,9 +66,13 @@ import {
 } from "../config";
 import { summarizeTeamStatus } from "../hud/TeamStatus";
 import { TerrainMaskRenderer } from "../rendering/TerrainMaskRenderer";
+import {
+  createQuickMatchConfig,
+  type MatchLaunchConfig,
+  type MatchReport,
+} from "../session/matchSession";
 
 const TERRAIN_TEXTURE_KEY = "autonomous-action-terrain";
-const PLAN_SEED = 21_072_026;
 const CAMERA_SAFE_INSETS = {
   left: 24,
   right: 320,
@@ -112,6 +117,8 @@ interface UnitView {
   readonly activeRing: Phaser.GameObjects.Arc;
   readonly sprite: Phaser.GameObjects.Sprite;
   readonly visualId: CreatureVisualId;
+  readonly baseSpriteScaleX: number;
+  readonly baseSpriteScaleY: number;
   personality: Personality;
   hitPoints: number;
 }
@@ -200,9 +207,16 @@ export class MatchScene extends Phaser.Scene {
   private lastDirtyUpdateMilliseconds = 0;
   private autoActionTimer: Phaser.Time.TimerEvent | undefined;
   private opponentAutoReady = false;
+  private launchConfig: MatchLaunchConfig = createQuickMatchConfig();
+  private preferredWeaponByUnitId = new Map<string, WeaponId>();
+  private preferenceConsumedByUnitId = new Set<string>();
 
   public constructor() {
     super("MatchScene");
+  }
+
+  public init(data: { readonly launchConfig?: MatchLaunchConfig }): void {
+    this.launchConfig = data.launchConfig ?? createQuickMatchConfig();
   }
 
   public create(): void {
@@ -236,6 +250,8 @@ export class MatchScene extends Phaser.Scene {
     this.weaponCommandButtons = new Map();
     this.helpVisible = false;
     this.projectileParts = new Map();
+    this.preferredWeaponByUnitId = new Map();
+    this.preferenceConsumedByUnitId = new Set();
 
     this.configureWorldCamera();
     this.drawBackdrop();
@@ -252,7 +268,7 @@ export class MatchScene extends Phaser.Scene {
     registerCreatureAnimations(this);
     this.createUnits();
     this.matchState = createInitialMatchState({
-      seed: PLAN_SEED,
+      seed: this.launchConfig.seed,
       combatants: this.units.map((unit) => ({
         id: unit.data.id,
         team: unit.data.team as TeamId,
@@ -270,7 +286,9 @@ export class MatchScene extends Phaser.Scene {
     this.createUiCamera(worldObjects);
     this.bindControls();
     this.showOverview(false);
-    this.replan("Bruno prüft reproduzierbare Raketenpläne in der großen Welt.");
+    this.replan(
+      `${this.activeUnit().data.displayName} prüft den ersten Plan in der großen Welt.`,
+    );
   }
 
   public override update(_time: number, deltaMilliseconds: number): void {
@@ -543,58 +561,46 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private createUnits(): void {
-    const definitions = [
-      {
-        id: "bruno",
-        displayName: "BRUNO",
-        team: "crew",
-        x: 420,
-        personality: "cautious",
-        visualId: "hornling",
-      },
-      {
-        id: "rival-a",
-        displayName: "RIVALE A",
-        team: "rivals",
-        x: 1480,
-        personality: "explosive",
-        visualId: "hornling",
-      },
-      {
-        id: "mara",
-        displayName: "MARA",
-        team: "crew",
-        x: 930,
-        personality: "showboat",
-        visualId: "hornling",
-      },
-      {
-        id: "rival-b",
-        displayName: "RIVALE B",
-        team: "rivals",
-        x: 2100,
-        personality: "cautious",
-        visualId: "hornling",
-      },
-      {
-        id: "moki",
-        displayName: "MOKI",
-        team: "crew",
-        x: 2700,
-        personality: "explosive",
-        visualId: "moki",
-      },
-      {
-        id: "vela",
-        displayName: "VELA",
-        team: "rivals",
-        x: 700,
-        personality: "showboat",
-        visualId: "vela",
-      },
+    const crewPositions = [420, 930, 2700] as const;
+    const rivalFighters = [
+      FIGHTER_ROSTER.hornling,
+      FIGHTER_ROSTER.slime,
+      FIGHTER_ROSTER.vela,
     ] as const;
+    const rivalPositions = [1480, 2100, 700] as const;
+    const definitions: {
+      readonly id: string;
+      readonly displayName: string;
+      readonly team: TeamId;
+      readonly x: number;
+      readonly personality: Personality;
+      readonly visualId: CreatureVisualId;
+      readonly preferredWeaponId?: WeaponId;
+    }[] = [];
 
-    for (const definition of definitions) {
+    this.launchConfig.crew.forEach((loadout, index) => {
+      const fighter = FIGHTER_ROSTER[loadout.fighterId];
+      const rival = rivalFighters[index] ?? rivalFighters[0];
+      definitions.push({
+        id: `crew-${fighter.id}`,
+        displayName: fighter.displayName,
+        team: "crew",
+        x: crewPositions[index] ?? crewPositions[0],
+        personality: fighter.personality,
+        visualId: fighter.visualId,
+        preferredWeaponId: loadout.preferredWeaponId,
+      });
+      definitions.push({
+        id: `rival-${index + 1}`,
+        displayName: `RIVALE ${String.fromCharCode(65 + index)}`,
+        team: "rivals",
+        x: rivalPositions[index] ?? rivalPositions[0],
+        personality: rival.personality,
+        visualId: rival.visualId,
+      });
+    });
+
+    for (const [definitionIndex, definition] of definitions.entries()) {
       const groundY = this.terrainMask.findGroundY(
         definition.x,
         80,
@@ -617,11 +623,17 @@ export class MatchScene extends Phaser.Scene {
         this.drawUnit(
           data,
           position,
-          definition.id === "bruno",
+          definitionIndex === 0,
           definition.personality,
           definition.visualId,
         ),
       );
+      if (definition.preferredWeaponId) {
+        this.preferredWeaponByUnitId.set(
+          definition.id,
+          definition.preferredWeaponId,
+        );
+      }
     }
   }
 
@@ -716,6 +728,8 @@ export class MatchScene extends Phaser.Scene {
       activeRing,
       sprite,
       visualId,
+      baseSpriteScaleX: sprite.scaleX,
+      baseSpriteScaleY: sprite.scaleY,
       personality,
       hitPoints: data.hitPoints,
     };
@@ -1045,7 +1059,18 @@ export class MatchScene extends Phaser.Scene {
         position: { ...view.worldPosition },
         hitPoints: view.hitPoints,
       }));
-    const turnSeed = PLAN_SEED + this.matchState.turnNumber * 9_973;
+    const turnSeed = this.launchConfig.seed + this.matchState.turnNumber * 9_973;
+    const preferredWeaponId =
+      active.data.team === "crew" &&
+      !this.preferenceConsumedByUnitId.has(active.data.id) &&
+      !this.forcedWeaponId
+        ? this.preferredWeaponByUnitId.get(active.data.id)
+        : undefined;
+    const planningWeaponIds: readonly WeaponId[] = this.forcedWeaponId
+      ? [this.forcedWeaponId]
+      : preferredWeaponId
+        ? [preferredWeaponId]
+        : ["rocket", "grenade", "breaker"];
     const movementCandidates = planLocalMovement({
       terrain: this.terrainMask,
       units: plannerUnits,
@@ -1075,9 +1100,7 @@ export class MatchScene extends Phaser.Scene {
         personality: this.personality,
         seed: turnSeed,
         rejectedCandidateIds: this.rejectedCandidateIds,
-        weaponIds: this.forcedWeaponId
-          ? [this.forcedWeaponId]
-          : ["rocket", "grenade", "breaker"],
+        weaponIds: planningWeaponIds,
       });
       fallbackPlan ??= weaponPlan;
 
@@ -1094,6 +1117,19 @@ export class MatchScene extends Phaser.Scene {
       ) {
         best = { movement, plan: weaponPlan, combinedScore };
       }
+    }
+
+    if (preferredWeaponId && !best) {
+      this.preferenceConsumedByUnitId.add(active.data.id);
+      this.replan(
+        `${active.data.displayName} findet mit ${WEAPON_PROFILES[preferredWeaponId].displayName} keinen sicheren Plan und weicht auf das freie Arsenal aus.`,
+      );
+      return;
+    }
+
+    if (preferredWeaponId) {
+      this.preferenceConsumedByUnitId.add(active.data.id);
+      status = `${status} Loadout-Präferenz: ${WEAPON_PROFILES[preferredWeaponId].displayName}.`;
     }
 
     this.movementPlan = best?.movement ?? movementCandidates[0]!;
@@ -1857,15 +1893,63 @@ export class MatchScene extends Phaser.Scene {
           ? "DIE RIVALEN GEWINNEN."
           : "UNENTSCHIEDEN.";
     this.headlineText.setText(result);
-    this.turnQueueText.setText("R  ·  MATCH NEU STARTEN");
+    this.turnQueueText.setText(
+      this.launchConfig.mode === "manager"
+        ? "EINSATZBERICHT BEREIT"
+        : "R  ·  MATCH NEU STARTEN",
+    );
     this.intentHeaderText.setText("MATCH BEENDET");
     this.intentText.setText(
       `${result}\n\nR startet dieselbe deterministische Begegnung neu.`,
     );
     this.interventionText.setText("ALLE AKTIONEN UND TERRAINFOLGEN SIND AUFGELÖST");
     this.updateTeamHud();
-    this.updateStatus("Match beendet. Mit R kannst du die Begegnung neu starten.");
+    this.updateStatus(
+      this.launchConfig.mode === "manager"
+        ? "Match beendet. Der Einsatzbericht fasst Ergebnis und Freischaltungen zusammen."
+        : "Match beendet. Mit R kannst du die Begegnung neu starten.",
+    );
     this.updateButtons();
+    this.createMatchEndButton(outcome);
+  }
+
+  private createMatchEndButton(outcome: TeamId | "draw"): void {
+    const managerMode = this.launchConfig.mode === "manager";
+    const background = this.add
+      .rectangle(640, 623, managerMode ? 320 : 250, 50, COLORS.yellow, 1)
+      .setStrokeStyle(3, COLORS.night, 0.9)
+      .setInteractive({ useHandCursor: true })
+      .setDepth(135);
+    const label = this.add
+      .text(640, 623, managerMode ? "EINSATZBERICHT" : "HAUPTMENÜ", {
+        fontFamily: "Segoe UI, Arial, sans-serif",
+        fontSize: "17px",
+        fontStyle: "bold",
+        color: COLORS.ink,
+      })
+      .setOrigin(0.5)
+      .setDepth(136);
+    this.cameras.main.ignore([background, label]);
+    background.on("pointerdown", () => {
+      if (!managerMode) {
+        this.scene.start("MainMenuScene");
+        return;
+      }
+
+      const report: MatchReport = {
+        mode: this.launchConfig.mode,
+        outcome,
+        seed: this.launchConfig.seed,
+        turnNumber: this.matchState.turnNumber,
+        survivingCrew: this.units.filter(
+          (view) => view.data.team === "crew" && view.hitPoints > 0,
+        ).length,
+        survivingRivals: this.units.filter(
+          (view) => view.data.team === "rivals" && view.hitPoints > 0,
+        ).length,
+      };
+      this.scene.start("DebriefScene", { report });
+    });
   }
 
   private rejectCurrentPlan(): void {
@@ -1955,7 +2039,7 @@ export class MatchScene extends Phaser.Scene {
 
   private resetScene(): void {
     this.terrainRenderer.destroy();
-    this.scene.restart();
+    this.scene.restart({ launchConfig: this.launchConfig });
   }
 
   private updateButtons(): void {
@@ -2450,7 +2534,15 @@ export class MatchScene extends Phaser.Scene {
     }
 
     const visual = CREATURE_VISUALS[view.visualId];
-    view.sprite.stop().setFrame(visual.poseFrames[pose]);
+    const frames = visual.poseAnimationFrames?.[pose];
+
+    if (frames && frames.length > 1) {
+      view.sprite.play(creatureAnimationKey(view.visualId, pose), true);
+    } else {
+      view.sprite.stop().setFrame(visual.poseFrames[pose]);
+    }
+
+    this.animateCreatureTransition(view, pose);
   }
 
   private playCreatureMotion(view: UnitView, motion: CreatureMotion): void {
@@ -2466,6 +2558,49 @@ export class MatchScene extends Phaser.Scene {
     }
 
     view.sprite.play(creatureAnimationKey(view.visualId, motion), true);
+    this.animateCreatureTransition(view, motion);
+  }
+
+  private animateCreatureTransition(
+    view: UnitView,
+    animation: CreatureMotion | CreaturePose,
+  ): void {
+    if (view.visualId !== "slime") {
+      return;
+    }
+
+    this.tweens.killTweensOf(view.sprite);
+    view.sprite.setScale(view.baseSpriteScaleX, view.baseSpriteScaleY).setAngle(0);
+
+    const isLooping =
+      animation === "idle" ||
+      animation === "ready" ||
+      animation === "planning" ||
+      animation === "walk" ||
+      animation === "jump" ||
+      animation === "victory";
+    const stretch =
+      animation === "jump"
+        ? { x: 0.9, y: 1.13, duration: 165 }
+        : animation === "walk"
+          ? { x: 1.055, y: 0.94, duration: 120 }
+          : animation === "startled"
+            ? { x: 1.16, y: 0.74, duration: 85 }
+            : animation === "action" || animation === "grenade"
+              ? { x: 1.09, y: 0.9, duration: 95 }
+              : animation === "victory"
+                ? { x: 1.07, y: 0.93, duration: 220 }
+                : { x: 1.025, y: 0.98, duration: 340 };
+
+    this.tweens.add({
+      targets: view.sprite,
+      scaleX: view.baseSpriteScaleX * stretch.x,
+      scaleY: view.baseSpriteScaleY * stretch.y,
+      duration: stretch.duration,
+      ease: "Sine.easeInOut",
+      yoyo: true,
+      repeat: isLooping ? -1 : 0,
+    });
   }
 }
 

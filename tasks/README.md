@@ -20,5 +20,7 @@ Tasks werden in numerischer Reihenfolge bearbeitet, sofern der Nutzer keine ande
 | `012_AUTONOMY_MOVEMENT_AND_CREATURES.md` | abgeschlossen | fairer 3-gegen-3-Autonomietest mit Bewegung, Wesen und drei Waffen |
 | `013_KNOCKBACK_GRENADES_AND_WEAPON_COMMAND.md` | abgeschlossen | Rückstoß, zeitgezündete Granate und einmalige Waffenwahl |
 | `014_GITHUB_PAGES_AND_MOBILE_SHELL.md` | abgeschlossen | GitHub-Pages-Veröffentlichung und mobile Spielhülle |
+| `015_FLUID_SLIME_CHARACTER.md` | abgeschlossen | GLIB als 32-Frame-Qualitätsbeweis für flüssige Figurenanimation |
+| `016_THIN_MANAGER_LOOP.md` | abgeschlossen | Hauptmenü, Crew-/Ausrüstungswahl, Match, Einsatzbericht und Loop-Freischaltung |
 
 Ein Status wird erst nach überprüfter Abnahme geändert. Scope-Erweiterungen gehören in einen neuen Task, nicht stillschweigend in einen bestehenden.

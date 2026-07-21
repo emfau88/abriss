@@ -18,7 +18,7 @@ Der Vertical Slice beweist nicht die Menge späterer Inhalte. Er beantwortet ein
 
 ### Figuren
 
-- ein technischer Hornwesen-Platzhalter sowie die animierten Testwesen Moki und Vela; noch keine finalen Produktionsfiguren,
+- ein technischer Hornwesen-Platzhalter, die animierten Testwesen Moki und Vela sowie GLIB als flüssiger 32-Frame-Slime aus der konkreten Projektvorlage; noch keine finale Produktionspalette,
 - die Merkmale Vorsichtig, Sprengfreudig und Angeberisch,
 - Lebenspunkte, Team, Position und begrenzte lokale Bewegung,
 - klarer aktiver Zustand und erkennbare Teamzugehörigkeit.
@@ -26,7 +26,7 @@ Der Vertical Slice beweist nicht die Menge späterer Inhalte. Er beantwortet ein
 ### Aktionen
 
 - Abrissrakete,
-- kontaktgezündete Wurfgranate,
+- abprallende zeitgezündete Wurfgranate,
 - Geländebrecher,
 - kurze lokale Bewegung als Teil eines Aktionsplans,
 - Explosion, Schaden, begrenzter Rückstoß, Fallen und Terrainentfernung.
@@ -51,13 +51,21 @@ Der Vertical Slice beweist nicht die Menge späterer Inhalte. Er beantwortet ein
 - Debugansichten für Terrainmaske, Trajektorie, Seed und KI-Wertung.
 - responsive Browserhülle für Desktop sowie mobile Hoch- und Querformate; Querformat bleibt die empfohlene mobile Darstellung.
 
+### Dünner Manager-Loop
+
+- Hauptmenü mit Einsatzplanung und direktem Testmatch,
+- Auswahl von genau drei aus vier Wesen,
+- eine Waffenpräferenz je Crewmitglied als Einfluss auf den ersten gültigen Plan,
+- versionierter lokaler Managerzustand und explizite Matchkonfiguration,
+- kompakter Einsatzbericht und einmalige Freischaltung des Geländebrechers als Loop-Beweis.
+
 ## Explizit ausgeschlossen
 
-- Karriere, Shop, Rekrutierung und dauerhafte Progression,
+- Karriere, Shop, Rekrutierungsmarkt und Progression über die einzelne Loop-Beweis-Freischaltung hinaus,
 - Beziehungen, Verletzungen und Erinnerungen,
-- weitere Spezies oder finale Figurenproduktion über Moki und Vela hinaus,
+- finale Figurenproduktion für die gesamte Crew,
 - mehr als drei Waffen,
-- frei wählbare Doktrinen und Loadouts,
+- Doktrinen und mehrteilige Loadouts über die einzelne Waffenpräferenz hinaus,
 - Online- oder lokaler Multiplayer,
 - prozedurale Karten,
 - Seile, Fahrzeuge, Jetpacks und komplexes Klettern,

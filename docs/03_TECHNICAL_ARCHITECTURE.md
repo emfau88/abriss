@@ -45,6 +45,8 @@ src/
 
 Abhängigkeiten zeigen nach innen: `game` und `ui` dürfen `simulation` verwenden. `simulation` darf Phaser, DOM, Audio, Systemzeit und Browserzustand nicht importieren.
 
+Der dünne Managerzustand unter `src/manager/` ist eine eigene serialisierbare TypeScript-Grenze ohne Phaser-Abhängigkeit. Browser-Speicherung ist ein fehlertoleranter Adapter; vor einem Match wird daraus eine explizite `MatchLaunchConfig` mit Crew, Waffenpräferenzen und Seed erzeugt. Die Matchszene liest keine verdeckten Menü- oder DOM-Zustände. Die Szenen unter `src/game/scenes/` bilden Hauptmenü, Einsatzplanung, Match und Einsatzbericht; `src/game/session/` enthält ausschließlich die Übergabedaten dieses Loops.
+
 ## Simulationsmodell
 
 Der fachliche Zustand besteht aus serialisierbaren Daten:

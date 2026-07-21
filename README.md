@@ -8,7 +8,7 @@ Der Spieler führt eine Crew eigenwilliger Spezialisten. Er stellt Team, Ausrüs
 
 ## Projektstatus
 
-Die Produktvision und der erste Vertical Slice sind festgelegt. Das interne 3-gegen-3-Match ist spielbar: Figuren laufen oder springen lokal, wählen zwischen Panzerfaust, zeitgezündeter Wurfgranate und Geländebrecher, verändern Terrain und werden von Explosionen zurückgeschleudert. Moki und Vela ergänzen den technischen Hornwesen-Platzhalter als animierte Testfiguren. „Lass das!“ und ein einmaliger Waffenbefehl bilden die ersten Managerinterventionen. Als Nächstes wird diese autonome Fassung auf Spielspaß geprüft; der direkte Steuerungsprototyp bleibt als Vergleich vorbereitet.
+Die Produktvision und der erste Vertical Slice sind festgelegt. Das interne 3-gegen-3-Match ist spielbar: Figuren laufen oder springen lokal, wählen zwischen Panzerfaust, zeitgezündeter Wurfgranate und Geländebrecher, verändern Terrain und werden von Explosionen zurückgeschleudert. GLIB zeigt mit 32 Frames, höheren Bildraten und elastischen Übergängen die flüssigere Zielqualität für Figuren. Ein dünner Manager-Loop führt vom Hauptmenü über Auswahl von drei Wesen und deren Waffenpräferenzen ins Match und danach in einen humorvollen Einsatzbericht mit einer kleinen Freischaltung. „Lass das!“ und ein einmaliger Waffenbefehl bleiben die direkten Managerinterventionen im Match.
 
 ## Lokal starten
 
@@ -37,6 +37,8 @@ Die Spielhülle passt das feste 16:9-Sichtfenster an Desktop, mobiles Querformat
 
 Aktueller spielbarer Ablauf:
 
+- `Einsatz planen`: drei aus vier Wesen wählen, Waffenpräferenzen setzen und nach dem Match den Bericht öffnen,
+- `Schnelles Testmatch`: Manager-Ebene für die Entwicklung überspringen,
 - `P`: Persönlichkeit wechseln,
 - `D`: alle bewerteten Kandidaten anzeigen,
 - `X`: den aktuellen Plan genau einmal ablehnen,

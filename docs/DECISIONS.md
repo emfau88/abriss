@@ -245,3 +245,13 @@ Hover-Bewegung besitzen keine Gameplay-Autorität.
 **Konsequenz:** Neue fachliche Regeln entstehen zuerst in `simulation/match` samt Test und erst danach in der Darstellung. Für headless Tests dekodiert `src/testing/pngTerrain.ts` die echten Terrain-PNGs über Node-Bordmittel (`node:zlib`, devDependency `@types/node`); der Alpha-Mittelwert je Zellblock ersetzt das Canvas-Downscaling des Browsers, minimale Randzellenabweichungen sind akzeptiert. Bewusste fachliche Abweichung: Figuren außerhalb der Welt werden bei der Fallauflösung übersprungen, statt wie zuvor eine Exception in `findGroundY` auszulösen (latenter Absturz nach Out-of-world-Ereignissen). Referenzlauf Seed 21072026: Sonneninseln → Sieg der Rivalen nach 29 Zügen, Space-Resort → Sieg der Crew nach 17 Zügen.
 
 **Umsetzung:** Task 021, ausgeführt von Claude Fable 5 (Anthropic) am 22. Juli 2026; Golden Master, Engine-Module, Szenen-Umbau und Szenariotests stammen aus dieser Sitzung.
+
+## 2026-07-22 – D-030: Messwerkzeuge vor Balanceänderungen
+
+**Entscheidung:** Balancefragen werden ab jetzt zuerst gemessen, dann verändert. Dafür liefert die Match-Engine zwei Werkzeuge (Task 022): `diagnoseTurn()` erzeugt pro Zug ein serialisierbares Kandidatenprotokoll mit Rängen, Scores und dem jeweils stärksten Pro-/Kontra-Faktor; `simulateMatches()` verdichtet deterministische Matrix-Läufe (Karte × Seed) zu Kennzahlen über Ausgänge, Zuglängen, Waffenanteile, Trefferbild und Erstzug-Divergenz der Persönlichkeiten. `npm run simulate` schreibt den eingecheckten Bericht `reports/simulation-report.md`; der Metrik-Snapshot im Test macht jede Balanceverschiebung zu einer ausdrücklichen, sichtbaren Entscheidung.
+
+**Grund:** `docs/07_CORE_GAMEPLAY_REVIEW.md` fordert Messbarkeit (Phasen A und C), bevor Waffenwerte oder Persönlichkeitsgewichte angefasst werden. Ohne Kennzahlen wären Balanceänderungen Behauptungen.
+
+**Konsequenz:** Der erste Bericht bestätigt die Review-Vermutung messbar: Der Geländebrecher dominiert die Zugwahl (67 % der Angriffe auf den Sonneninseln, 51 % im Space-Resort) bei geringem Schadensbeitrag, die Wurfgranate ist mit 5–6 % marginal, und auf den Sonneninseln wählen alle drei Persönlichkeiten in allen vier Eröffnungssonden denselben Kandidaten (Divergenz nur in der Bewegung). Diese Befunde sind bewusst NICHT in Task 022 korrigiert worden; Waffen- und Persönlichkeitsbalance sind eigene Folgeaufgaben mit diesem Bericht als Vorher-Messung.
+
+**Umsetzung:** Task 022, ausgeführt von Claude Fable 5 (Anthropic) am 22. Juli 2026.

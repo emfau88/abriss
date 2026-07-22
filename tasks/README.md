@@ -28,6 +28,7 @@ andere Priorität bestätigt. Es darf höchstens ein Task als `in Arbeit` gelten
 | `019_FLUID_GHOST_CHARACTER.md` | abgeschlossen | referenznaher Ghost als jitterfreies 32-Frame-Sheet |
 | `020_CHICKEN_AND_FEEDBACK_ASSET_PACK.md` | bereit | Chicken, Projektil-/Sekundär-VFX und kleine Zusatzassets |
 | `021_HEADLESS_MATCH_ENGINE.md` | umgesetzt (Claude Fable 5, 22.07.2026) – Browserprüfung ausstehend | rendererunabhängige Zug-Orchestrierung unter `src/simulation/match/`; headless Matches deterministisch in Vitest |
+| `022_TURN_DIAGNOSTICS_AND_MASS_SIMULATOR.md` | umgesetzt (Claude Fable 5, 22.07.2026) | Zugdiagnose je Kandidat und deterministischer Massen-Simulator mit `reports/simulation-report.md` |
 
 Ein Status wird erst nach überprüfter Abnahme geändert. Scope-Erweiterungen
 gehören in einen neuen Task, nicht stillschweigend in einen bestehenden.

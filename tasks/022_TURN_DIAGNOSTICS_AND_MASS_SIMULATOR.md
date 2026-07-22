@@ -2,7 +2,7 @@
 
 ## Status
 
-`in Arbeit`
+`umgesetzt` (zuvor: `in Arbeit`)
 
 ## Ziel
 
@@ -88,3 +88,49 @@ Testschicht (echte Karten über `src/testing/pngTerrain.ts`).
 
 Der Bearbeiter berichtet Ergebnis, geänderte Dateien, Prüfungen, gemessene
 Kernzahlen und neue Einträge in `docs/DECISIONS.md`.
+
+## Abschlussbericht vom 22. Juli 2026
+
+Bearbeitet und verfasst von **Claude Fable 5** (Anthropic, Claude Code).
+
+### Ergebnis
+
+- `src/simulation/match/turnDiagnostics.ts`: `diagnoseTurn()` mit
+  Kandidatenrängen (Top 5), gerundeten Scores, stärkstem Pro-/Kontra-Faktor,
+  Ungültigkeitsgründen und Manager-Einflüssen; `runMatch()` sammelt die
+  Diagnosen über `collectDiagnostics`, das Ereignisprotokoll bleibt
+  byte-identisch (per Test belegt).
+- `src/simulation/match/matchSimulator.ts`: `simulateMatches()` über
+  injizierte Szenarien (Engine bleibt frei von `game/`- und Node-Importen)
+  plus `renderSimulationReport()`; Metrik-Snapshot als Balance-Wächter.
+- `npm run simulate` schreibt `reports/simulation-report.md`
+  (eingecheckt); `SIM_FULL=1` erweitert auf 10 Seeds pro Karte.
+
+### Prüfungen
+
+`npm run typecheck`, `npm test` (72 Tests, 1 übersprungener
+SIM_FULL-Lauf), `npm run build` grün; Bericht zweifach erzeugt und
+byte-identisch.
+
+### Gemessene Kernzahlen (kleine Matrix)
+
+- Sonneninseln: Crew 2 · Rivalen 1, Züge 18–29 (Median 22);
+  Space-Resort: Crew 3 · Rivalen 0, Züge 17–23 (Median 17).
+- Waffenanteile der Angriffe: Geländebrecher 66,7 % / 50,9 %,
+  Panzerfaust 27,5 % / 43,9 %, Wurfgranate 5,8 % / 5,3 % –
+  die im Review vermutete Geländebrecher-Dominanz ist damit belegt.
+- Erstzug-Divergenz: Sonneninseln 0 von 4 Sonden mit unterschiedlichen
+  Kandidaten (nur Bewegungen divergieren), Space-Resort 4 von 4 im
+  Kandidaten, 0 in der Waffe.
+
+### Bekannte Einschränkungen
+
+- Kleine Standardmatrix (3 Seeds pro Karte) hält die Testsuite schnell;
+  belastbarere Aussagen liefert `SIM_FULL=1`.
+- Befunde wurden bewusst nicht korrigiert (Nichtziel); Waffen- und
+  Persönlichkeitsbalance sind Folgeaufgaben mit diesem Bericht als
+  Vorher-Messung.
+
+### Neue Einträge in `docs/DECISIONS.md`
+
+- **D-030**: Messwerkzeuge vor Balanceänderungen.

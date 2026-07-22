@@ -248,3 +248,29 @@ Noch offen aus diesem Review: Zugdiagnose-Berichte (Phase A im Sinne
 auswertbarer Kandidatenprotokolle pro Zug), Massen-Simulator mit
 Diversitätsmetriken (Phase C) sowie die inhaltlichen Balancefragen
 (Waffendominanz, spürbare Persönlichkeitsunterschiede).
+
+## Fortschritt vom 22. Juli 2026, zweiter Teil: Phasen A und C umgesetzt (Task 022)
+
+Ergänzt von Claude Fable 5 (Anthropic). Zugdiagnose und Massen-Simulator
+existieren jetzt auf Basis der Engine aus Task 021:
+
+- `diagnoseTurn()` erklärt jeden Zug maschinenlesbar (Kandidatenränge,
+  Scores, stärkster Pro-/Kontra-Faktor, Manager-Einflüsse); `runMatch()`
+  sammelt diese Diagnosen optional pro Match.
+- `npm run simulate` erzeugt deterministisch `reports/simulation-report.md`
+  (2 Karten × 3 Seeds; mit `SIM_FULL=1` 10 Seeds pro Karte).
+
+**Erste Messergebnisse** (kleine Matrix, Seeds 21072026/21072127/21072228):
+
+- Ausgänge: Sonneninseln 2:1 für die Crew, Space-Resort 3:0 für die Crew.
+- Zuglängen 17–29, Median 22 bzw. 17; ausnahmslos Angriffszüge.
+- **Waffendominanz bestätigt:** Geländebrecher 66,7 % bzw. 50,9 % der
+  Angriffe bei geringem Schadensbeitrag; Wurfgranate nur 5,8 % bzw. 5,3 %.
+- **Persönlichkeitsdivergenz unvollständig:** Auf den Sonneninseln wählen
+  alle drei Persönlichkeiten in allen vier Eröffnungssonden denselben
+  Kandidaten (Divergenz nur in der Bewegung); im Space-Resort divergieren
+  alle vier Sonden im Kandidaten, aber keine in der Waffe.
+
+Damit sind die verbleibenden offenen Punkte dieses Reviews inhaltlicher
+Natur (Waffenbalance, spürbarere Persönlichkeiten) und besitzen jetzt eine
+reproduzierbare Vorher-Messung.

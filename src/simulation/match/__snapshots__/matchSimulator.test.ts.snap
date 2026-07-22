@@ -1,0 +1,114 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`mass simulator (Task 022, Teil B) > aggregates a deterministic report over the default matrix 1`] = `
+{
+  "maps": [
+    {
+      "firstTurnDivergence": {
+        "divergentMovements": 4,
+        "divergentSelections": 0,
+        "divergentWeapons": 0,
+        "probes": 4,
+      },
+      "friendlyHits": 0,
+      "mapId": "good-mood",
+      "matches": 3,
+      "outOfWorldKnockouts": 0,
+      "outcomes": {
+        "crew": 2,
+        "draw": 0,
+        "rivals": 1,
+      },
+      "planKinds": {
+        "attack": 69,
+        "reposition": 0,
+        "skip": 0,
+      },
+      "seeds": [
+        21072026,
+        21072127,
+        21072228,
+      ],
+      "selfHits": 1,
+      "turnStats": {
+        "maximum": 29,
+        "median": 22,
+        "minimum": 18,
+      },
+      "weaponUsage": [
+        {
+          "attacks": 19,
+          "share": 0.2754,
+          "totalDamage": 1900,
+          "weaponId": "rocket",
+        },
+        {
+          "attacks": 4,
+          "share": 0.058,
+          "totalDamage": 313,
+          "weaponId": "grenade",
+        },
+        {
+          "attacks": 46,
+          "share": 0.6667,
+          "totalDamage": 550,
+          "weaponId": "breaker",
+        },
+      ],
+    },
+    {
+      "firstTurnDivergence": {
+        "divergentMovements": 4,
+        "divergentSelections": 4,
+        "divergentWeapons": 0,
+        "probes": 4,
+      },
+      "friendlyHits": 0,
+      "mapId": "space-resort",
+      "matches": 3,
+      "outOfWorldKnockouts": 2,
+      "outcomes": {
+        "crew": 3,
+        "draw": 0,
+        "rivals": 0,
+      },
+      "planKinds": {
+        "attack": 57,
+        "reposition": 0,
+        "skip": 0,
+      },
+      "seeds": [
+        21072026,
+        21072127,
+        21072228,
+      ],
+      "selfHits": 0,
+      "turnStats": {
+        "maximum": 23,
+        "median": 17,
+        "minimum": 17,
+      },
+      "weaponUsage": [
+        {
+          "attacks": 25,
+          "share": 0.4386,
+          "totalDamage": 2500,
+          "weaponId": "rocket",
+        },
+        {
+          "attacks": 3,
+          "share": 0.0526,
+          "totalDamage": 134,
+          "weaponId": "grenade",
+        },
+        {
+          "attacks": 29,
+          "share": 0.5088,
+          "totalDamage": 117,
+          "weaponId": "breaker",
+        },
+      ],
+    },
+  ],
+}
+`;

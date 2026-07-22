@@ -5,6 +5,7 @@ import {
 } from "./matchSimulationState";
 import { planTurn, type TurnPlanKind } from "./planTurn";
 import { concludeTurn, resolveTurn, type MatchTurnEvent } from "./resolveTurn";
+import { diagnoseTurn, type TurnDiagnostic } from "./turnDiagnostics";
 
 /**
  * Headless-Matchschleife: führt planTurn/resolveTurn/concludeTurn ohne
@@ -26,11 +27,15 @@ export interface MatchRunResult {
   readonly turnCount: number;
   readonly turns: readonly MatchTurnRecord[];
   readonly finalState: object;
+  /** Nur gefüllt, wenn `collectDiagnostics` gesetzt war (Task 022). */
+  readonly diagnostics?: readonly TurnDiagnostic[];
 }
 
 export interface RunMatchOptions {
   /** Sicherheitsgrenze gegen endlose Matches; danach schlägt der Lauf fehl. */
   readonly maximumTurns?: number;
+  /** Sammelt pro Zug eine serialisierbare Diagnose (Review-Phase A). */
+  readonly collectDiagnostics?: boolean;
 }
 
 const DEFAULT_MAXIMUM_TURNS = 200;
@@ -41,10 +46,16 @@ export function runMatch(
 ): MatchRunResult {
   const maximumTurns = options.maximumTurns ?? DEFAULT_MAXIMUM_TURNS;
   const turns: MatchTurnRecord[] = [];
+  const diagnostics: TurnDiagnostic[] = [];
 
   for (let turnIndex = 0; turnIndex < maximumTurns; turnIndex += 1) {
     const turnNumber = state.matchState.turnNumber;
     const turnPlan = planTurn(state);
+
+    if (options.collectDiagnostics) {
+      diagnostics.push(diagnoseTurn(state, turnPlan));
+    }
+
     const events = resolveTurn(state, turnPlan);
     turns.push({
       turnNumber,
@@ -62,6 +73,7 @@ export function runMatch(
         turnCount: turns.length,
         turns,
         finalState: serializeMatchSimulation(state),
+        ...(options.collectDiagnostics ? { diagnostics } : {}),
       };
     }
   }

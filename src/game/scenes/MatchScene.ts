@@ -28,18 +28,22 @@ import {
   secondaryVfxFrames,
   type SecondaryVfx,
 } from "../../content/vfx/secondaryVfxKit";
-import { FIGHTER_ROSTER } from "../../manager/fighterRoster";
 import {
   calculateBlastDamage,
   planRocketAction,
   topUtilityReasons,
   WEAPON_PROFILES,
   type Personality,
-  type PlannerUnit,
   type RocketActionPlan,
   type RocketCandidate,
   type WeaponId,
 } from "../../simulation/ai/RocketActionPlanner";
+import {
+  createMatchSimulation,
+  plannerUnitsFromSimulation,
+  type MatchSimulationState,
+  type SimulationUnit,
+} from "../../simulation/match/matchSimulationState";
 import {
   sampleTrajectoryAtElapsed,
   type Vector2,
@@ -55,7 +59,6 @@ import {
 import { resolveTerrainFall } from "../../simulation/movement/TerrainFall";
 import {
   advanceTurn,
-  createInitialMatchState,
   determineMatchOutcome,
   upcomingLivingCombatants,
   updateCombatantHitPoints,
@@ -92,6 +95,10 @@ import {
   type MatchLaunchConfig,
   type MatchReport,
 } from "../session/matchSession";
+import {
+  buildMatchUnitDefinitions,
+  type MatchSetupUnit,
+} from "../session/matchSetup";
 
 const TERRAIN_TEXTURE_KEY = "autonomous-action-terrain";
 const CAMERA_SAFE_INSETS = {
@@ -123,14 +130,9 @@ const COLORS = {
   paper: 0xfff5d6,
 } as const;
 
-interface MutablePosition {
-  x: number;
-  y: number;
-}
-
 interface UnitView {
-  readonly data: PlannerUnit;
-  readonly worldPosition: MutablePosition;
+  /** Fachliche Wahrheit der Figur – gehört der Match-Engine, nicht der Szene. */
+  readonly unit: SimulationUnit;
   readonly container: Phaser.GameObjects.Container;
   readonly healthText: Phaser.GameObjects.Text;
   readonly healthBarFill: Phaser.GameObjects.Rectangle;
@@ -141,8 +143,6 @@ interface UnitView {
   readonly baseSpriteScaleX: number;
   readonly baseSpriteScaleY: number;
   readonly baseSpriteY: number;
-  personality: Personality;
-  hitPoints: number;
 }
 
 interface CameraKeys {
@@ -210,14 +210,11 @@ export class MatchScene extends Phaser.Scene {
     zoom: 0.4,
   };
   private units: UnitView[] = [];
-  private matchState!: MatchState;
+  private simulation!: MatchSimulationState;
+  private setupUnits: readonly MatchSetupUnit[] = [];
   private plan!: RocketActionPlan;
   private movementPlan!: LocalMovementPlan;
   private personality: Personality = "cautious";
-  private rejectedCandidateIds: string[] = [];
-  private interventionUsed = false;
-  private weaponCommandUsed = false;
-  private forcedWeaponId: WeaponId | null = null;
   private debugEnabled = false;
   private cameraMovementReduced = false;
   private actionState: ActionState = "planning";
@@ -228,8 +225,6 @@ export class MatchScene extends Phaser.Scene {
   private autoActionTimer: Phaser.Time.TimerEvent | undefined;
   private opponentAutoReady = false;
   private launchConfig: MatchLaunchConfig = createQuickMatchConfig();
-  private preferredWeaponByUnitId = new Map<string, WeaponId>();
-  private preferenceConsumedByUnitId = new Set<string>();
   private touchPointers = new Map<number, TouchPoint>();
   private touchGestureMidpoint: TouchPoint | null = null;
   private touchGestureDistance = 0;
@@ -237,6 +232,11 @@ export class MatchScene extends Phaser.Scene {
 
   public constructor() {
     super("MatchScene");
+  }
+
+  /** Fachliche Wahrheit liegt in der Match-Engine; die Szene liest nur. */
+  private get matchState(): MatchState {
+    return this.simulation.matchState;
   }
 
   public init(data: { readonly launchConfig?: MatchLaunchConfig }): void {
@@ -255,10 +255,12 @@ export class MatchScene extends Phaser.Scene {
       map.terrainCellSize,
     );
     this.personality = "cautious";
-    this.rejectedCandidateIds = [];
-    this.interventionUsed = false;
-    this.weaponCommandUsed = false;
-    this.forcedWeaponId = null;
+    this.setupUnits = buildMatchUnitDefinitions(this.launchConfig);
+    this.simulation = createMatchSimulation({
+      seed: this.launchConfig.seed,
+      terrain: this.terrainMask,
+      unitDefinitions: this.setupUnits,
+    });
     this.debugEnabled = false;
     this.cameraMovementReduced = false;
     this.actionState = "planning";
@@ -276,8 +278,6 @@ export class MatchScene extends Phaser.Scene {
     this.weaponCommandButtons = new Map();
     this.helpVisible = false;
     this.nextGrenadeBounceIndex = 0;
-    this.preferredWeaponByUnitId = new Map();
-    this.preferenceConsumedByUnitId = new Set();
     this.touchPointers = new Map();
     this.touchGestureMidpoint = null;
     this.touchGestureDistance = 0;
@@ -297,14 +297,6 @@ export class MatchScene extends Phaser.Scene {
     this.cameraDebugGraphics = this.add.graphics().setDepth(95).setVisible(false);
     registerCreatureAnimations(this);
     this.createUnits();
-    this.matchState = createInitialMatchState({
-      seed: this.launchConfig.seed,
-      combatants: this.units.map((unit) => ({
-        id: unit.data.id,
-        team: unit.data.team as TeamId,
-        hitPoints: unit.hitPoints,
-      })),
-    });
     this.createProjectile();
 
     const worldObjects = [...this.children.list];
@@ -317,7 +309,7 @@ export class MatchScene extends Phaser.Scene {
     this.bindControls();
     this.showOverview(false);
     this.replan(
-      `${this.activeUnit().data.displayName} prüft den ersten Plan in der großen Welt.`,
+      `${this.activeUnit().unit.displayName} prüft den ersten Plan in der großen Welt.`,
     );
   }
 
@@ -457,7 +449,7 @@ export class MatchScene extends Phaser.Scene {
 
   private updateTurnHud(): void {
     const upcoming = upcomingLivingCombatants(this.matchState, 4)
-      .map((id) => this.units.find((unit) => unit.data.id === id))
+      .map((id) => this.units.find((unit) => unit.unit.id === id))
       .filter((unit): unit is UnitView => Boolean(unit));
     const current = upcoming[0];
 
@@ -468,11 +460,11 @@ export class MatchScene extends Phaser.Scene {
     }
 
     this.headlineText.setText(
-      `ZUG ${this.matchState.turnNumber}  ·  ${current.data.displayName}`,
+      `ZUG ${this.matchState.turnNumber}  ·  ${current.unit.displayName}`,
     );
     const following = upcoming
       .slice(1)
-      .map((unit) => unit.data.displayName)
+      .map((unit) => unit.unit.displayName)
       .join("  ›  ");
     this.turnQueueText.setText(
       following.length > 0 ? `DANACH  ${following}` : "LETZTE FIGUR IM MATCH",
@@ -521,7 +513,7 @@ export class MatchScene extends Phaser.Scene {
       this.teamHudTotalTexts.set(layout.team, totalText);
 
       const teamUnits = this.units.filter(
-        (unit) => unit.data.team === layout.team,
+        (unit) => unit.unit.team === layout.team,
       );
       for (const [index, unit] of teamUnits.entries()) {
         const unitText = this.add
@@ -532,7 +524,7 @@ export class MatchScene extends Phaser.Scene {
             color: COLORS.cream,
           })
           .setDepth(100);
-        this.teamHudUnitTexts.set(unit.data.id, unitText);
+        this.teamHudUnitTexts.set(unit.unit.id, unitText);
       }
     }
 
@@ -564,11 +556,11 @@ export class MatchScene extends Phaser.Scene {
     ];
     const status = summarizeTeamStatus(
       this.units.map((unit) => ({
-        id: unit.data.id,
-        displayName: unit.data.displayName,
-        team: unit.data.team as TeamId,
-        hitPoints: unit.hitPoints,
-        maximumHitPoints: unit.data.hitPoints,
+        id: unit.unit.id,
+        displayName: unit.unit.displayName,
+        team: unit.unit.team,
+        hitPoints: unit.unit.hitPoints,
+        maximumHitPoints: unit.unit.maximumHitPoints,
       })),
     );
     const showActive = this.actionState !== "match-over";
@@ -577,7 +569,7 @@ export class MatchScene extends Phaser.Scene {
     for (const layout of layouts) {
       const teamStatus = status[layout.team];
       const activeTeam =
-        showActive && this.activeUnit().data.team === layout.team;
+        showActive && this.activeUnit().unit.team === layout.team;
       this.teamHudGraphics.fillStyle(layout.background, 0.94);
       this.teamHudGraphics.fillRoundedRect(layout.x, 10, 388, 68, 13);
       this.teamHudGraphics.lineStyle(
@@ -628,88 +620,20 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private createUnits(): void {
-    const map = MAP_DEFINITIONS[this.launchConfig.mapId];
-    const crewPositions = map.crewSpawnXs;
-    const rivalFighters = [
-      FIGHTER_ROSTER.hornling,
-      FIGHTER_ROSTER.slime,
-      FIGHTER_ROSTER.ghost,
-    ] as const;
-    const rivalPositions = map.rivalSpawnXs;
-    const definitions: {
-      readonly id: string;
-      readonly displayName: string;
-      readonly team: TeamId;
-      readonly x: number;
-      readonly personality: Personality;
-      readonly visualId: CreatureVisualId;
-      readonly preferredWeaponId?: WeaponId;
-    }[] = [];
+    for (const [index, unit] of this.simulation.units.entries()) {
+      const setup = this.setupUnits[index];
 
-    this.launchConfig.crew.forEach((loadout, index) => {
-      const fighter = FIGHTER_ROSTER[loadout.fighterId];
-      const rival = rivalFighters[index] ?? rivalFighters[0];
-      definitions.push({
-        id: `crew-${fighter.id}`,
-        displayName: fighter.displayName,
-        team: "crew",
-        x: crewPositions[index] ?? crewPositions[0],
-        personality: fighter.personality,
-        visualId: fighter.visualId,
-        preferredWeaponId: loadout.preferredWeaponId,
-      });
-      definitions.push({
-        id: `rival-${index + 1}`,
-        displayName: `RIVALE ${String.fromCharCode(65 + index)}`,
-        team: "rivals",
-        x: rivalPositions[index] ?? rivalPositions[0],
-        personality: rival.personality,
-        visualId: rival.visualId,
-      });
-    });
-
-    for (const [definitionIndex, definition] of definitions.entries()) {
-      const groundY = this.terrainMask.findGroundY(
-        definition.x,
-        80,
-        WORLD_HEIGHT - 20,
-      );
-
-      if (groundY === null) {
-        throw new Error(`No terrain below unit ${definition.id}.`);
+      if (!setup || setup.id !== unit.id) {
+        throw new Error(`Setup definition mismatch for unit ${unit.id}.`);
       }
 
-      const position = { x: definition.x, y: groundY };
-      const data: PlannerUnit = {
-        id: definition.id,
-        displayName: definition.displayName,
-        team: definition.team,
-        position,
-        hitPoints: 140,
-      };
-      this.units.push(
-        this.drawUnit(
-          data,
-          position,
-          definitionIndex === 0,
-          definition.personality,
-          definition.visualId,
-        ),
-      );
-      if (definition.preferredWeaponId) {
-        this.preferredWeaponByUnitId.set(
-          definition.id,
-          definition.preferredWeaponId,
-        );
-      }
+      this.units.push(this.drawUnit(unit, index === 0, setup.visualId));
     }
   }
 
   private drawUnit(
-    data: PlannerUnit,
-    worldPosition: MutablePosition,
+    unit: SimulationUnit,
     active: boolean,
-    personality: Personality,
     visualId: CreatureVisualId,
   ): UnitView {
     const visual = CREATURE_VISUALS[visualId];
@@ -727,13 +651,13 @@ export class MatchScene extends Phaser.Scene {
       .setDisplaySize(visual.displaySize, visual.displaySize);
 
     const name = this.add
-      .text(0, -133, data.displayName, {
+      .text(0, -133, unit.displayName, {
         fontFamily: "Consolas, ui-monospace, monospace",
         fontSize: active ? "13px" : "11px",
         fontStyle: "bold",
         color: active ? "#16343b" : COLORS.cream,
         backgroundColor:
-          active ? "#ffcd5d" : data.team === "crew" ? "#176f6b" : "#b8463c",
+          active ? "#ffcd5d" : unit.team === "crew" ? "#176f6b" : "#b8463c",
         padding: { x: 7, y: 4 },
       })
       .setOrigin(0.5);
@@ -752,12 +676,12 @@ export class MatchScene extends Phaser.Scene {
         -108,
         76,
         8,
-        data.team === "crew" ? COLORS.tealBright : COLORS.coral,
+        unit.team === "crew" ? COLORS.tealBright : COLORS.coral,
         1,
       )
       .setOrigin(0, 0.5);
     const healthText = this.add
-      .text(0, -109, String(data.hitPoints), {
+      .text(0, -109, String(unit.hitPoints), {
         fontFamily: "Consolas, ui-monospace, monospace",
         fontSize: "8px",
         fontStyle: "bold",
@@ -766,7 +690,7 @@ export class MatchScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     const container = this.add
-      .container(worldPosition.x, worldPosition.y, [
+      .container(unit.position.x, unit.position.y, [
         shadow,
         activeRing,
         sprite,
@@ -787,8 +711,7 @@ export class MatchScene extends Phaser.Scene {
     });
 
     return {
-      data,
-      worldPosition,
+      unit,
       container,
       healthText,
       healthBarFill,
@@ -799,8 +722,6 @@ export class MatchScene extends Phaser.Scene {
       baseSpriteScaleX: sprite.scaleX,
       baseSpriteScaleY: sprite.scaleY,
       baseSpriteY: sprite.y,
-      personality,
-      hitPoints: data.hitPoints,
     };
   }
 
@@ -1114,29 +1035,25 @@ export class MatchScene extends Phaser.Scene {
 
   private replan(status: string): void {
     const active = this.activeUnit();
-    this.personality = active.personality;
+    this.personality = active.unit.personality;
     this.opponentAutoReady = false;
-    const plannerUnits = this.units.map((view) => ({
-        ...view.data,
-        position: { ...view.worldPosition },
-        hitPoints: view.hitPoints,
-      }));
+    const plannerUnits = plannerUnitsFromSimulation(this.simulation);
     const turnSeed = this.launchConfig.seed + this.matchState.turnNumber * 9_973;
     const preferredWeaponId =
-      active.data.team === "crew" &&
-      !this.preferenceConsumedByUnitId.has(active.data.id) &&
-      !this.forcedWeaponId
-        ? this.preferredWeaponByUnitId.get(active.data.id)
+      active.unit.team === "crew" &&
+      !this.simulation.preferenceConsumedByUnitId.has(active.unit.id) &&
+      !this.simulation.forcedWeaponId
+        ? this.simulation.preferredWeaponByUnitId.get(active.unit.id)
         : undefined;
-    const planningWeaponIds: readonly WeaponId[] = this.forcedWeaponId
-      ? [this.forcedWeaponId]
+    const planningWeaponIds: readonly WeaponId[] = this.simulation.forcedWeaponId
+      ? [this.simulation.forcedWeaponId]
       : preferredWeaponId
         ? [preferredWeaponId]
         : ["rocket", "grenade", "breaker"];
     const movementCandidates = planLocalMovement({
       terrain: this.terrainMask,
       units: plannerUnits,
-      activeUnitId: active.data.id,
+      activeUnitId: active.unit.id,
       personality: this.personality,
       seed: turnSeed,
     });
@@ -1151,17 +1068,17 @@ export class MatchScene extends Phaser.Scene {
 
     for (const movement of movementCandidates) {
       const movedUnits = plannerUnits.map((unit) =>
-        unit.id === active.data.id
+        unit.id === active.unit.id
           ? { ...unit, position: { ...movement.destination } }
           : unit,
       );
       const weaponPlan = planRocketAction({
         terrain: this.terrainMask,
         units: movedUnits,
-        activeUnitId: active.data.id,
+        activeUnitId: active.unit.id,
         personality: this.personality,
         seed: turnSeed,
-        rejectedCandidateIds: this.rejectedCandidateIds,
+        rejectedCandidateIds: this.simulation.rejectedCandidateIds,
         weaponIds: planningWeaponIds,
       });
       fallbackPlan ??= weaponPlan;
@@ -1182,15 +1099,15 @@ export class MatchScene extends Phaser.Scene {
     }
 
     if (preferredWeaponId && !best) {
-      this.preferenceConsumedByUnitId.add(active.data.id);
+      this.simulation.preferenceConsumedByUnitId.add(active.unit.id);
       this.replan(
-        `${active.data.displayName} findet mit ${WEAPON_PROFILES[preferredWeaponId].displayName} keinen sicheren Plan und weicht auf das freie Arsenal aus.`,
+        `${active.unit.displayName} findet mit ${WEAPON_PROFILES[preferredWeaponId].displayName} keinen sicheren Plan und weicht auf das freie Arsenal aus.`,
       );
       return;
     }
 
     if (preferredWeaponId) {
-      this.preferenceConsumedByUnitId.add(active.data.id);
+      this.simulation.preferenceConsumedByUnitId.add(active.unit.id);
       status = `${status} Loadout-Präferenz: ${WEAPON_PROFILES[preferredWeaponId].displayName}.`;
     }
 
@@ -1202,7 +1119,7 @@ export class MatchScene extends Phaser.Scene {
     this.framePlanningCamera();
     this.updateStatus(status);
 
-    if (active.data.team === "rivals") {
+    if (active.unit.team === "rivals") {
       this.scheduleOpponentAction();
     } else if (!this.plan.selected && this.movementPlan.kind === "hold") {
       this.scheduleTurnAdvance(1_000, "Kein gültiger Plan – Zug wird übersprungen.");
@@ -1332,7 +1249,7 @@ export class MatchScene extends Phaser.Scene {
           : `POSITIONIERUNGSZUG\n\nPOSITION  ${movementLabel(this.movementPlan)}\n\nKein freier Schuss. Die Figur verbessert zuerst ihre Position und versucht es in ihrem nächsten Zug erneut.`,
       );
       this.interventionText.setText(
-        this.activeUnit().data.team === "rivals"
+        this.activeUnit().unit.team === "rivals"
           ? "GEGNERAKTION  ·  Positionierung läuft nach der Ankündigung automatisch"
           : this.managerStatusText(),
       );
@@ -1372,19 +1289,19 @@ export class MatchScene extends Phaser.Scene {
 
     const active = this.activeUnit();
     this.interventionText.setText(
-      active.data.team === "rivals"
+      active.unit.team === "rivals"
         ? "GEGNERAKTION  ·  wird nach der Ankündigung automatisch ausgeführt"
         : this.managerStatusText(),
     );
   }
 
   private managerStatusText(): string {
-    const rejectStatus = this.interventionUsed
+    const rejectStatus = this.simulation.interventionUsed
       ? "LASS DAS VERBRAUCHT"
       : "LASS DAS BEREIT";
-    const weaponStatus = this.forcedWeaponId
-      ? `WAFFENBEFEHL  ${WEAPON_PROFILES[this.forcedWeaponId].displayName}`
-      : this.weaponCommandUsed
+    const weaponStatus = this.simulation.forcedWeaponId
+      ? `WAFFENBEFEHL  ${WEAPON_PROFILES[this.simulation.forcedWeaponId].displayName}`
+      : this.simulation.weaponCommandUsed
         ? "WAFFENBEFEHL VERBRAUCHT"
         : "WAFFENBEFEHL BEREIT  ·  unten 1 / 2 / 3 wählen";
     return `${rejectStatus}\n${weaponStatus}`;
@@ -1432,7 +1349,7 @@ export class MatchScene extends Phaser.Scene {
 
     const active = this.activeUnit();
 
-    if (active.data.team === "rivals" && !this.opponentAutoReady) {
+    if (active.unit.team === "rivals" && !this.opponentAutoReady) {
       return;
     }
 
@@ -1457,7 +1374,7 @@ export class MatchScene extends Phaser.Scene {
     active.sprite.setFlipX(movement.destination.x < movement.start.x);
     this.frameMovementCamera(movement);
     this.updateStatus(
-      `${active.data.displayName} ${movement.reason}. Limit: ${Math.round(movement.distance)} von 190 Weltpunkten in diesem Zug.`,
+      `${active.unit.displayName} ${movement.reason}. Limit: ${Math.round(movement.distance)} von 190 Weltpunkten in diesem Zug.`,
     );
 
     this.tweens.addCounter({
@@ -1475,13 +1392,13 @@ export class MatchScene extends Phaser.Scene {
         if (!sample) {
           return;
         }
-        active.worldPosition.x = sample.x;
-        active.worldPosition.y = sample.y;
+        active.unit.position.x = sample.x;
+        active.unit.position.y = sample.y;
         active.container.setPosition(sample.x, sample.y);
       },
       onComplete: () => {
-        active.worldPosition.x = movement.destination.x;
-        active.worldPosition.y = movement.destination.y;
+        active.unit.position.x = movement.destination.x;
+        active.unit.position.y = movement.destination.y;
         active.container.setPosition(
           movement.destination.x,
           movement.destination.y,
@@ -1499,11 +1416,11 @@ export class MatchScene extends Phaser.Scene {
             this.startProjectileExecution(active);
           } else {
             this.actionState = "resolving";
-            this.setCreaturePose(active.data.id, "ready");
+            this.setCreaturePose(active.unit.id, "ready");
             this.updateButtons();
             this.scheduleTurnAdvance(
               500,
-              `${active.data.displayName} hat die Position verbessert und beendet den Zug ohne Schuss.`,
+              `${active.unit.displayName} hat die Position verbessert und beendet den Zug ohne Schuss.`,
             );
           }
         });
@@ -1540,12 +1457,12 @@ export class MatchScene extends Phaser.Scene {
     this.setProjectileAppearance(selected.weaponId);
     this.showLaunchExhaust(firstSample.position, firstSample.velocity);
     this.setCreaturePose(
-      active.data.id,
+      active.unit.id,
       selected.weaponId === "grenade" ? "grenade" : "action",
     );
     this.updateButtons();
     this.updateStatus(
-      `${active.data.displayName} setzt ${selected.weaponName} ein. Die Kamera folgt denselben ${selected.trajectory.samples.length} Ballistik-Samples wie die Vorschau.`,
+      `${active.unit.displayName} setzt ${selected.weaponName} ein. Die Kamera folgt denselben ${selected.trajectory.samples.length} Ballistik-Samples wie die Vorschau.`,
     );
   }
 
@@ -1629,14 +1546,14 @@ export class MatchScene extends Phaser.Scene {
     const affectedViews: UnitView[] = [];
 
     for (const view of this.units) {
-      if (view.hitPoints <= 0) {
+      if (view.unit.hitPoints <= 0) {
         continue;
       }
 
       const damage = Math.round(
         calculateBlastDamage(
           explosion.center,
-          view.worldPosition,
+          view.unit.position,
           explosion.radius,
           candidate.maximumDamage,
         ),
@@ -1647,14 +1564,14 @@ export class MatchScene extends Phaser.Scene {
       }
 
       affectedViews.push(view);
-      view.hitPoints = Math.max(0, view.hitPoints - damage);
+      view.unit.hitPoints = Math.max(0, view.unit.hitPoints - damage);
       this.updateUnitHealthBar(view);
-      this.setCreaturePose(view.data.id, "startled");
+      this.setCreaturePose(view.unit.id, "startled");
       const damageText = this.registerWorldObject(
         this.add
           .text(
-            view.worldPosition.x,
-            view.worldPosition.y - 125,
+            view.unit.position.x,
+            view.unit.position.y - 125,
             `−${damage}`,
             {
               fontFamily: "Segoe UI, Arial, sans-serif",
@@ -1695,7 +1612,7 @@ export class MatchScene extends Phaser.Scene {
         view,
         result: simulateExplosionKnockback({
           terrain: this.terrainMask,
-          startPosition: { ...view.worldPosition },
+          startPosition: { ...view.unit.position },
           explosionCenter: explosion.center,
           explosionRadius: explosion.radius,
           maximumSpeed: candidate.maximumKnockbackSpeed,
@@ -1746,20 +1663,20 @@ export class MatchScene extends Phaser.Scene {
           if (!sample) {
             return;
           }
-          view.worldPosition.x = sample.position.x;
-          view.worldPosition.y = sample.position.y;
+          view.unit.position.x = sample.position.x;
+          view.unit.position.y = sample.position.y;
           view.container
             .setPosition(sample.position.x, sample.position.y)
             .setAngle(Phaser.Math.Clamp(sample.velocity.x * 0.035, -18, 18));
         },
         onComplete: () => {
-          view.worldPosition.x = lastSample.position.x;
-          view.worldPosition.y = lastSample.position.y;
+          view.unit.position.x = lastSample.position.x;
+          view.unit.position.y = lastSample.position.y;
           view.container
             .setPosition(lastSample.position.x, lastSample.position.y)
             .setAngle(0);
           if (result.outcome === "out-of-world") {
-            view.hitPoints = 0;
+            view.unit.hitPoints = 0;
             this.updateUnitHealthBar(view);
             view.container.setVisible(false);
           } else {
@@ -1770,7 +1687,7 @@ export class MatchScene extends Phaser.Scene {
                 lastSample.position.y,
               );
             }
-            this.setCreaturePose(view.data.id, "startled");
+            this.setCreaturePose(view.unit.id, "startled");
           }
           finishOne();
         },
@@ -1784,27 +1701,27 @@ export class MatchScene extends Phaser.Scene {
     for (const view of this.units) {
       const resolution = resolveTerrainFall(
         this.terrainMask,
-        view.worldPosition.x,
-        view.worldPosition.y,
+        view.unit.position.x,
+        view.unit.position.y,
       );
 
       if (resolution.state === "supported") {
-        view.worldPosition.y = resolution.landingY;
+        view.unit.position.y = resolution.landingY;
         view.container.y = resolution.landingY;
         continue;
       }
 
-      this.setCreaturePose(view.data.id, "startled");
-      const startY = view.worldPosition.y;
+      this.setCreaturePose(view.unit.id, "startled");
+      const startY = view.unit.position.y;
       const destinationY =
         resolution.state === "fall"
           ? resolution.landingY
           : WORLD_HEIGHT + 150;
-      view.worldPosition.y = destinationY;
-      fallPoints.push({ x: view.worldPosition.x, y: destinationY });
+      view.unit.position.y = destinationY;
+      fallPoints.push({ x: view.unit.position.x, y: destinationY });
 
       if (resolution.state === "out-of-world") {
-        view.hitPoints = 0;
+        view.unit.hitPoints = 0;
         this.updateUnitHealthBar(view);
       }
 
@@ -1823,7 +1740,7 @@ export class MatchScene extends Phaser.Scene {
           if (resolution.state === "fall") {
             this.showSecondaryVfx(
               "landing",
-              view.worldPosition.x,
+              view.unit.position.x,
               destinationY,
             );
             this.tweens.add({
@@ -1844,7 +1761,7 @@ export class MatchScene extends Phaser.Scene {
 
   private activeUnit(): UnitView {
     const active = this.units.find(
-      (unit) => unit.data.id === this.matchState.activeCombatantId,
+      (unit) => unit.unit.id === this.matchState.activeCombatantId,
     );
 
     if (!active) {
@@ -1860,8 +1777,8 @@ export class MatchScene extends Phaser.Scene {
     const activeId = this.matchState.activeCombatantId;
 
     for (const view of this.units) {
-      const living = view.hitPoints > 0;
-      const active = living && view.data.id === activeId;
+      const living = view.unit.hitPoints > 0;
+      const active = living && view.unit.id === activeId;
       view.activeRing.setStrokeStyle(
         active ? 3 : 0,
         COLORS.yellow,
@@ -1872,7 +1789,7 @@ export class MatchScene extends Phaser.Scene {
         .setBackgroundColor(
           active
             ? "#ffcd5d"
-            : view.data.team === "crew"
+            : view.unit.team === "crew"
               ? "#176f6b"
               : "#b8463c",
         )
@@ -1882,7 +1799,7 @@ export class MatchScene extends Phaser.Scene {
       if (living) {
         view.container.setVisible(true);
         if (active) {
-          this.setCreaturePose(view.data.id, "planning");
+          this.setCreaturePose(view.unit.id, "planning");
         } else {
           this.playCreatureMotion(view, "idle");
         }
@@ -1890,17 +1807,17 @@ export class MatchScene extends Phaser.Scene {
     }
 
     const active = this.activeUnit();
-    this.intentHeaderText.setText(`PLAN VON ${active.data.displayName}`);
+    this.intentHeaderText.setText(`PLAN VON ${active.unit.displayName}`);
     this.updateTurnHud();
     this.updateTeamHud();
   }
 
   private synchronizeMatchHitPoints(): void {
     for (const view of this.units) {
-      this.matchState = updateCombatantHitPoints(
-        this.matchState,
-        view.data.id,
-        view.hitPoints,
+      this.simulation.matchState = updateCombatantHitPoints(
+        this.simulation.matchState,
+        view.unit.id,
+        view.unit.hitPoints,
       );
     }
   }
@@ -1911,7 +1828,7 @@ export class MatchScene extends Phaser.Scene {
     if (!this.plan.selected && this.movementPlan.kind === "hold") {
       this.scheduleTurnAdvance(
         1_000,
-        `${this.activeUnit().data.displayName} findet keinen gültigen Plan – Zug wird übersprungen.`,
+        `${this.activeUnit().unit.displayName} findet keinen gültigen Plan – Zug wird übersprungen.`,
       );
       return;
     }
@@ -1945,13 +1862,13 @@ export class MatchScene extends Phaser.Scene {
         return;
       }
 
-      this.matchState = advanceTurn(this.matchState);
-      this.rejectedCandidateIds = [];
-      this.forcedWeaponId = null;
+      this.simulation.matchState = advanceTurn(this.simulation.matchState);
+      this.simulation.rejectedCandidateIds = [];
+      this.simulation.forcedWeaponId = null;
       this.actionState = "planning";
       const next = this.activeUnit();
       this.replan(
-        `Zug ${this.matchState.turnNumber}: ${next.data.displayName} ist am Zug.`,
+        `Zug ${this.matchState.turnNumber}: ${next.unit.displayName} ist am Zug.`,
       );
     });
   }
@@ -1964,10 +1881,10 @@ export class MatchScene extends Phaser.Scene {
 
     for (const view of this.units) {
       view.activeRing.setStrokeStyle(0, COLORS.yellow, 0);
-      if (view.hitPoints > 0) {
+      if (view.unit.hitPoints > 0) {
         this.setCreaturePose(
-          view.data.id,
-          outcome !== "draw" && view.data.team === outcome
+          view.unit.id,
+          outcome !== "draw" && view.unit.team === outcome
             ? "victory"
             : "ready",
         );
@@ -2031,10 +1948,10 @@ export class MatchScene extends Phaser.Scene {
         mapId: this.launchConfig.mapId,
         turnNumber: this.matchState.turnNumber,
         survivingCrew: this.units.filter(
-          (view) => view.data.team === "crew" && view.hitPoints > 0,
+          (view) => view.unit.team === "crew" && view.unit.hitPoints > 0,
         ).length,
         survivingRivals: this.units.filter(
-          (view) => view.data.team === "rivals" && view.hitPoints > 0,
+          (view) => view.unit.team === "rivals" && view.unit.hitPoints > 0,
         ).length,
       };
       this.scene.start("DebriefScene", { report });
@@ -2046,18 +1963,18 @@ export class MatchScene extends Phaser.Scene {
 
     if (
       this.actionState !== "planning" ||
-      active.data.team !== "crew" ||
-      this.interventionUsed ||
+      active.unit.team !== "crew" ||
+      this.simulation.interventionUsed ||
       !this.plan.selected
     ) {
       return;
     }
 
     const rejected = this.plan.selected;
-    this.rejectedCandidateIds = [rejected.id];
-    this.interventionUsed = true;
+    this.simulation.rejectedCandidateIds = [rejected.id];
+    this.simulation.interventionUsed = true;
     this.replan(
-      `„Lass das!“: ${rejected.id} verworfen. ${active.data.displayName} erklärt jetzt den nächstbesten gültigen Plan.`,
+      `„Lass das!“: ${rejected.id} verworfen. ${active.unit.displayName} erklärt jetzt den nächstbesten gültigen Plan.`,
     );
   }
 
@@ -2078,31 +1995,31 @@ export class MatchScene extends Phaser.Scene {
 
     if (
       this.actionState !== "planning" ||
-      active.data.team !== "crew" ||
-      this.weaponCommandUsed
+      active.unit.team !== "crew" ||
+      this.simulation.weaponCommandUsed
     ) {
       return;
     }
 
-    this.weaponCommandUsed = true;
-    this.forcedWeaponId = weaponId;
-    this.rejectedCandidateIds = [];
+    this.simulation.weaponCommandUsed = true;
+    this.simulation.forcedWeaponId = weaponId;
+    this.simulation.rejectedCandidateIds = [];
     this.replan(
-      `Managerkommando: ${active.data.displayName} muss den nächsten Plan mit ${WEAPON_PROFILES[weaponId].displayName} aufstellen.`,
+      `Managerkommando: ${active.unit.displayName} muss den nächsten Plan mit ${WEAPON_PROFILES[weaponId].displayName} aufstellen.`,
     );
   }
 
   private cyclePersonality(): void {
     const active = this.activeUnit();
 
-    if (this.actionState !== "planning" || active.data.team !== "crew") {
+    if (this.actionState !== "planning" || active.unit.team !== "crew") {
       return;
     }
 
     const currentIndex = PERSONALITIES.indexOf(this.personality);
     this.personality =
       PERSONALITIES[(currentIndex + 1) % PERSONALITIES.length] ?? "cautious";
-    active.personality = this.personality;
+    active.unit.personality = this.personality;
     this.replan(
       `Persönlichkeit gewechselt: ${PERSONALITY_LABELS[this.personality]}. Alle Kandidaten wurden neu gewichtet.`,
     );
@@ -2133,9 +2050,9 @@ export class MatchScene extends Phaser.Scene {
 
   private updateButtons(): void {
     const planning = this.actionState === "planning";
-    const playerTurn = planning && this.activeUnit().data.team === "crew";
+    const playerTurn = planning && this.activeUnit().unit.team === "crew";
     const canReject =
-      playerTurn && !this.interventionUsed && Boolean(this.plan.selected);
+      playerTurn && !this.simulation.interventionUsed && Boolean(this.plan.selected);
     const canExecute =
       playerTurn &&
       (Boolean(this.plan.selected) || this.movementPlan.kind !== "hold");
@@ -2143,9 +2060,9 @@ export class MatchScene extends Phaser.Scene {
     this.executeButtonText.setAlpha(canExecute ? 1 : 0.55);
     this.rejectButton.setFillStyle(canReject ? COLORS.coral : 0x4d6465, 1);
     this.rejectButtonText.setAlpha(canReject ? 1 : 0.55);
-    const canChooseWeapon = playerTurn && !this.weaponCommandUsed;
+    const canChooseWeapon = playerTurn && !this.simulation.weaponCommandUsed;
     for (const [weaponId, button] of this.weaponCommandButtons) {
-      const selected = this.forcedWeaponId === weaponId;
+      const selected = this.simulation.forcedWeaponId === weaponId;
       button.background
         .setFillStyle(
           selected ? COLORS.yellow : canChooseWeapon ? 0x36565a : 0x4d6465,
@@ -2366,10 +2283,10 @@ export class MatchScene extends Phaser.Scene {
     }
 
     const actor = this.units.find(
-      (unit) => unit.data.id === this.matchState.activeCombatantId,
+      (unit) => unit.unit.id === this.matchState.activeCombatantId,
     );
     const target = this.units.find(
-      (unit) => unit.data.id === selected.targetId,
+      (unit) => unit.unit.id === selected.targetId,
     );
     const points: CameraPoint[] = selected.trajectory.samples.map(
       (sample) => sample.position,
@@ -2377,10 +2294,10 @@ export class MatchScene extends Phaser.Scene {
     points.push(...this.movementPlan.samples.map((sample) => ({ ...sample })));
 
     if (actor) {
-      points.push({ ...actor.worldPosition });
+      points.push({ ...actor.unit.position });
     }
     if (target) {
-      points.push({ ...target.worldPosition });
+      points.push({ ...target.unit.position });
     }
     if (selected.trajectory.explosion) {
       points.push(selected.trajectory.explosion.center);
@@ -2423,11 +2340,11 @@ export class MatchScene extends Phaser.Scene {
       .filter(
         (view) =>
           Math.hypot(
-            view.worldPosition.x - impact.x,
-            view.worldPosition.y - impact.y,
+            view.unit.position.x - impact.x,
+            view.unit.position.y - impact.y,
           ) < 260,
       )
-      .map((view) => ({ ...view.worldPosition }));
+      .map((view) => ({ ...view.unit.position }));
     const frame = frameCameraPoints(
       [impact, ...nearbyUnits, ...fallPoints],
       { width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT },
@@ -2789,18 +2706,18 @@ export class MatchScene extends Phaser.Scene {
 
   private updateUnitHealthBar(view: UnitView): void {
     const ratio = Phaser.Math.Clamp(
-      view.hitPoints / view.data.hitPoints,
+      view.unit.hitPoints / view.unit.maximumHitPoints,
       0,
       1,
     );
-    view.healthText.setText(String(view.hitPoints));
+    view.healthText.setText(String(view.unit.hitPoints));
     view.healthBarFill
       .setVisible(ratio > 0)
       .setDisplaySize(Math.max(1, 76 * ratio), 8)
       .setFillStyle(
         ratio <= 0.34
           ? COLORS.coral
-          : view.data.team === "crew"
+          : view.unit.team === "crew"
             ? COLORS.tealBright
             : COLORS.yellow,
         1,
@@ -2808,7 +2725,7 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private setCreaturePose(unitId: string, pose: CreaturePose): void {
-    const view = this.units.find((unit) => unit.data.id === unitId);
+    const view = this.units.find((unit) => unit.unit.id === unitId);
 
     if (!view) {
       return;
@@ -2832,7 +2749,7 @@ export class MatchScene extends Phaser.Scene {
 
     if (!frames || frames.length < 2) {
       this.setCreaturePose(
-        view.data.id,
+        view.unit.id,
         motion === "jump" ? "startled" : "planning",
       );
       return;

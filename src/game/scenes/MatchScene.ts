@@ -41,6 +41,11 @@ import {
   type MatchSimulationState,
   type SimulationUnit,
 } from "../../simulation/match/matchSimulationState";
+import {
+  commandWeapon,
+  cycleActivePersonality,
+  rejectActivePlan,
+} from "../../simulation/match/commands";
 import { planTurn, type TurnPlan } from "../../simulation/match/planTurn";
 import {
   concludeTurn,
@@ -100,12 +105,6 @@ const CAMERA_SAFE_INSETS = {
   top: 88,
   bottom: 54,
 } as const;
-const PERSONALITIES: readonly Personality[] = [
-  "cautious",
-  "explosive",
-  "showboat",
-];
-
 const PERSONALITY_LABELS: Record<Personality, string> = {
   cautious: "VORSICHTIG",
   explosive: "SPRENGFREUDIG",
@@ -1850,22 +1849,19 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private rejectCurrentPlan(): void {
-    const active = this.activeUnit();
-
-    if (
-      this.actionState !== "planning" ||
-      active.unit.team !== "crew" ||
-      this.simulation.interventionUsed ||
-      !this.plan.selected
-    ) {
+    if (this.actionState !== "planning") {
       return;
     }
 
-    const rejected = this.plan.selected;
-    this.simulation.rejectedCandidateIds = [rejected.id];
-    this.simulation.interventionUsed = true;
+    const active = this.activeUnit();
+    const result = rejectActivePlan(this.simulation, this.turnPlan);
+
+    if (!result.accepted) {
+      return;
+    }
+
     this.replan(
-      `„Lass das!“: ${rejected.id} verworfen. ${active.unit.displayName} erklärt jetzt den nächstbesten gültigen Plan.`,
+      `„Lass das!“: ${result.rejectedCandidateId} verworfen. ${active.unit.displayName} erklärt jetzt den nächstbesten gültigen Plan.`,
     );
   }
 
@@ -1882,35 +1878,34 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private chooseManagerWeapon(weaponId: WeaponId): void {
-    const active = this.activeUnit();
-
-    if (
-      this.actionState !== "planning" ||
-      active.unit.team !== "crew" ||
-      this.simulation.weaponCommandUsed
-    ) {
+    if (this.actionState !== "planning") {
       return;
     }
 
-    this.simulation.weaponCommandUsed = true;
-    this.simulation.forcedWeaponId = weaponId;
-    this.simulation.rejectedCandidateIds = [];
+    const active = this.activeUnit();
+    const result = commandWeapon(this.simulation, weaponId);
+
+    if (!result.accepted) {
+      return;
+    }
+
     this.replan(
       `Managerkommando: ${active.unit.displayName} muss den nächsten Plan mit ${WEAPON_PROFILES[weaponId].displayName} aufstellen.`,
     );
   }
 
   private cyclePersonality(): void {
-    const active = this.activeUnit();
-
-    if (this.actionState !== "planning" || active.unit.team !== "crew") {
+    if (this.actionState !== "planning") {
       return;
     }
 
-    const currentIndex = PERSONALITIES.indexOf(this.personality);
-    this.personality =
-      PERSONALITIES[(currentIndex + 1) % PERSONALITIES.length] ?? "cautious";
-    active.unit.personality = this.personality;
+    const result = cycleActivePersonality(this.simulation);
+
+    if (!result.accepted || !result.personality) {
+      return;
+    }
+
+    this.personality = result.personality;
     this.replan(
       `Persönlichkeit gewechselt: ${PERSONALITY_LABELS[this.personality]}. Alle Kandidaten wurden neu gewichtet.`,
     );

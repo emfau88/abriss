@@ -31,7 +31,7 @@ andere Priorität bestätigt. Es darf höchstens ein Task als `in Arbeit` gelten
 | `022_TURN_DIAGNOSTICS_AND_MASS_SIMULATOR.md` | umgesetzt (Claude Fable 5, 22.07.2026) | Zugdiagnose je Kandidat und deterministischer Massen-Simulator mit `reports/simulation-report.md` |
 | `023_WEAPON_BALANCE_AFTER_MEASUREMENT.md` | bereit | Geländebrecher-Dominanz und Granaten-Marginalität mit Vorher-/Nachher-Messung korrigieren |
 | `024_RISK_CONE_AND_PERSONALITY_FLAWS.md` | bereit | Streukegel, Blindflecken und eigene Optionsmengen gegen die „perfekten Bots“; danach Task 011 |
-| `025_IDLE_JITTER_FIX.md` | bereit | nicht zyklische Idle-Loops (22–28 px Drift) neu ausrichten und kosmetische Endlos-Tweens zähmen |
+| `025_IDLE_JITTER_FIX.md` | umgesetzt (Claude Fable 5, 22.07.2026) – Browserprüfung ausstehend | Idle-Loops rechnerisch ausgerichtet, Stabilität testpflichtig, Endlos-Scale-Tweens entfernt |
 
 Ein Status wird erst nach überprüfter Abnahme geändert. Scope-Erweiterungen
 gehören in einen neuen Task, nicht stillschweigend in einen bestehenden.

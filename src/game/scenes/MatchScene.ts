@@ -2659,14 +2659,15 @@ export class MatchScene extends Phaser.Scene {
       .setAngle(0)
       .setY(view.baseSpriteY);
 
+    const isLooping =
+      animation === "idle" ||
+      animation === "ready" ||
+      animation === "planning" ||
+      animation === "walk" ||
+      animation === "jump" ||
+      animation === "victory";
+
     if (view.visualId === "ghost") {
-      const isLooping =
-        animation === "idle" ||
-        animation === "ready" ||
-        animation === "planning" ||
-        animation === "walk" ||
-        animation === "jump" ||
-        animation === "victory";
       const lift =
         animation === "jump"
           ? 7
@@ -2684,11 +2685,17 @@ export class MatchScene extends Phaser.Scene {
               ? 240
               : 340;
 
+      // Task 025: Loop-Zustände schweben nur noch vertikal – dauerhafte
+      // Scale-Tweens auf dem verkleinerten Sheet erzeugten Kantenflimmern.
       this.tweens.add({
         targets: view.sprite,
         y: view.baseSpriteY - lift,
-        scaleX: view.baseSpriteScaleX * 1.018,
-        scaleY: view.baseSpriteScaleY * 0.988,
+        ...(isLooping
+          ? {}
+          : {
+              scaleX: view.baseSpriteScaleX * 1.018,
+              scaleY: view.baseSpriteScaleY * 0.988,
+            }),
         duration,
         ease: "Sine.easeInOut",
         yoyo: true,
@@ -2697,25 +2704,16 @@ export class MatchScene extends Phaser.Scene {
       return;
     }
 
-    const isLooping =
-      animation === "idle" ||
-      animation === "ready" ||
-      animation === "planning" ||
-      animation === "walk" ||
-      animation === "jump" ||
-      animation === "victory";
+    // Task 025: Das Slime-Sheet atmet selbst; Loop-Zustände erhalten keinen
+    // zusätzlichen Endlos-Scale-Tween mehr.
+    if (isLooping) {
+      return;
+    }
+
     const stretch =
-      animation === "jump"
-        ? { x: 0.9, y: 1.13, duration: 165 }
-        : animation === "walk"
-          ? { x: 1.055, y: 0.94, duration: 120 }
-          : animation === "startled"
-            ? { x: 1.16, y: 0.74, duration: 85 }
-            : animation === "action" || animation === "grenade"
-              ? { x: 1.09, y: 0.9, duration: 95 }
-              : animation === "victory"
-                ? { x: 1.07, y: 0.93, duration: 220 }
-                : { x: 1.025, y: 0.98, duration: 340 };
+      animation === "startled"
+        ? { x: 1.16, y: 0.74, duration: 85 }
+        : { x: 1.09, y: 0.9, duration: 95 };
 
     this.tweens.add({
       targets: view.sprite,
@@ -2724,7 +2722,7 @@ export class MatchScene extends Phaser.Scene {
       duration: stretch.duration,
       ease: "Sine.easeInOut",
       yoyo: true,
-      repeat: isLooping ? -1 : 0,
+      repeat: 0,
     });
   }
 }

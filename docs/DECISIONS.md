@@ -255,3 +255,13 @@ Hover-Bewegung besitzen keine Gameplay-Autorität.
 **Konsequenz:** Der erste Bericht bestätigt die Review-Vermutung messbar: Der Geländebrecher dominiert die Zugwahl (67 % der Angriffe auf den Sonneninseln, 51 % im Space-Resort) bei geringem Schadensbeitrag, die Wurfgranate ist mit 5–6 % marginal, und auf den Sonneninseln wählen alle drei Persönlichkeiten in allen vier Eröffnungssonden denselben Kandidaten (Divergenz nur in der Bewegung). Diese Befunde sind bewusst NICHT in Task 022 korrigiert worden; Waffen- und Persönlichkeitsbalance sind eigene Folgeaufgaben mit diesem Bericht als Vorher-Messung.
 
 **Umsetzung:** Task 022, ausgeführt von Claude Fable 5 (Anthropic) am 22. Juli 2026.
+
+## 2026-07-22 – D-031: Sheet-Stabilität ist testpflichtig
+
+**Entscheidung:** Loop-Animationen von Charakter-Sheets müssen zyklisch stabil sein und werden pixelbasiert automatisch geprüft (Basis-Schwerpunkt-Sprung inklusive Loop-Wrap ≤ 4 px, Fußlinien-Drift ≤ 3 px für Idle). Korrekturen erfolgen rechnerisch durch ganzzahlige Frame-Verschiebung (`ALIGN_SHEETS=1`-Werkzeug), nicht durch Neugenerierung.
+
+**Grund:** Die „jitterfreien“ Sheets aus Task 015/019 waren nur vertikal verankert; horizontal drifteten die Idle-Loops von GLIB um 22 px und GHOST um 28 px mit sichtbarem Rücksprung beim Loop-Neustart. Behauptete Qualität ohne Messung hat sich damit zum zweiten Mal als unzuverlässig erwiesen (vgl. D-030).
+
+**Konsequenz:** Neue oder überarbeitete Sheets müssen den Stabilitätstest bestehen, bevor sie eingebunden werden. Kosmetische Endlos-Scale-Tweens auf Loop-Zuständen sind unzulässig (Kantenflimmern durch Dauer-Resampling); erlaubt bleiben einmalige Übergangs-Squashes und reine Y-Bewegung. Walk/Jump-Drift ist dokumentiert, aber bewusst nicht automatisch korrigiert (posenbedingte Anker-Verschiebungen).
+
+**Umsetzung:** Task 025, ausgeführt von Claude Fable 5 (Anthropic) am 22. Juli 2026.

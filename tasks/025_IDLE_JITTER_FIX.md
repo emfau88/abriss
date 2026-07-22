@@ -2,7 +2,7 @@
 
 ## Status
 
-`bereit`
+`umgesetzt – Browserprüfung durch den Nutzer ausstehend` (zuvor: `bereit`)
 
 ## Ziel
 
@@ -88,3 +88,41 @@ Ruck, Übergänge weiterhin lebendig; Gegenprobe mit `R`-Neustart.
 
 *Befund, Messung und Lösungsweg am 22. Juli 2026 erstellt von Claude Fable 5
 (Anthropic).*
+
+## Abschlussbericht vom 22. Juli 2026
+
+Umgesetzt von **Claude Fable 5** (Anthropic, Claude Code).
+
+### Ergebnis je Schritt
+
+1. **Regressionstest** `src/content/characters/sheetStability.test.ts`:
+   Basis-Schwerpunkt-Sprung im Idle-Loop (inklusive Wrap) ≤ 4 px,
+   Fußlinien-Drift ≤ 3 px. Schlug vor der Korrektur erwartungsgemäß fehl
+   (GLIB 21,5 px, GHOST 28,3 px Wrap-Sprung).
+2. **Neuausrichtung**: Werkzeug `src/testing/alignFluidIdle.test.ts`
+   (nur mit `ALIGN_SHEETS=1` aktiv) verschiebt jeden Idle-Frame ganzzahlig
+   horizontal auf den Median des Basis-Schwerpunkts (unteres
+   Inhaltsdrittel); dazu `src/testing/pngWrite.ts` als minimaler
+   PNG-Encoder und `src/testing/sheetMetrics.ts` als geteilte Messbasis.
+   Beide PNGs wurden neu geschrieben und committet; Restabweichung ≤ 2 px,
+   Regressionstest grün.
+3. **Tween-Zähmung** in `MatchScene.animateCreatureTransition()`:
+   Loop-Zustände erhalten keine endlosen Scale-Tweens mehr – GLIB atmet
+   ausschließlich über die Frames, GHOST schwebt nur noch vertikal.
+   Einmalige Squash-Übergänge (startled, action, grenade) bleiben.
+4. **Browserprüfung**: steht aus (Sitzung ohne Browserzugriff) – bitte
+   GLIB und GHOST im Idle auf beiden Karten beobachten.
+
+### Zusatzbefund (nicht Teil dieses Tasks)
+
+Walk- und Jump-Frames wurden mitvermessen: Walk driftet horizontal
+17 px (beide Wesen, GHOST-Walk berührt zudem den Framerand), Slime-Jump
+hat einen posenbedingten 80-px-Ausreißer in Frame 4. Automatisches
+Ausrichten ist dort wegen Posenwechseln unzuverlässig und Bewegung
+maskiert den Effekt; falls Walk sichtbar ruckelt, braucht es einen
+eigenen Task mit manueller Sichtung.
+
+### Prüfungen
+
+`npm run typecheck`, `npm test` (74 Tests grün, 2 übersprungene
+Werkzeug-/SIM_FULL-Läufe), `npm run build` grün.

@@ -3,7 +3,7 @@
 exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn planning on good-mood 1`] = `
 {
   "ghost:21072026:forced-breaker": {
-    "candidateScore": "153.2324",
+    "candidateScore": "145.8066",
     "destination": {
       "x": 350,
       "y": 1260,
@@ -17,7 +17,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "breaker",
   },
   "ghost:21072026:preference": {
-    "candidateScore": "133.9370",
+    "candidateScore": "151.5108",
     "destination": {
       "x": 610,
       "y": 1314,
@@ -31,7 +31,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "grenade",
   },
   "ghost:21072026:rejected": {
-    "candidateScore": "177.7146",
+    "candidateScore": "170.3216",
     "destination": {
       "x": 350,
       "y": 1260,
@@ -45,7 +45,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "ghost:21072026:rival": {
-    "candidateScore": "99.8143",
+    "candidateScore": "95.4024",
     "destination": {
       "x": 1550,
       "y": 810,
@@ -59,7 +59,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "ghost:21072127:forced-breaker": {
-    "candidateScore": "152.2246",
+    "candidateScore": "144.7988",
     "destination": {
       "x": 350,
       "y": 1260,
@@ -73,21 +73,21 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "breaker",
   },
   "ghost:21072127:preference": {
-    "candidateScore": "133.7398",
+    "candidateScore": "151.5828",
     "destination": {
-      "x": 545,
-      "y": 1316,
+      "x": 610,
+      "y": 1314,
     },
-    "movementId": "jump:545:1316",
+    "movementId": "jump:610:1314",
     "movementKind": "jump",
-    "movementScore": "26.5608",
+    "movementScore": "24.4257",
     "preferenceFellBack": false,
     "selectedCandidateId": "grenade:rival-1:arc-1",
     "targetId": "rival-1",
     "weaponId": "grenade",
   },
   "ghost:21072127:rejected": {
-    "candidateScore": "177.7348",
+    "candidateScore": "170.3417",
     "destination": {
       "x": 350,
       "y": 1260,
@@ -101,7 +101,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "ghost:21072127:rival": {
-    "candidateScore": "99.2489",
+    "candidateScore": "94.8369",
     "destination": {
       "x": 1290,
       "y": 836,
@@ -115,7 +115,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "hornling:21072026:forced-breaker": {
-    "candidateScore": "64.7571",
+    "candidateScore": "59.8066",
     "destination": {
       "x": 350,
       "y": 1260,
@@ -129,7 +129,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "breaker",
   },
   "hornling:21072026:preference": {
-    "candidateScore": "95.2503",
+    "candidateScore": "90.3216",
     "destination": {
       "x": 350,
       "y": 1260,
@@ -143,7 +143,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "hornling:21072026:rejected": {
-    "candidateScore": "93.7982",
+    "candidateScore": "88.8695",
     "destination": {
       "x": 350,
       "y": 1260,
@@ -157,7 +157,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "hornling:21072026:rival": {
-    "candidateScore": "99.1856",
+    "candidateScore": "94.7737",
     "destination": {
       "x": 1550,
       "y": 810,
@@ -171,7 +171,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "hornling:21072127:forced-breaker": {
-    "candidateScore": "63.7493",
+    "candidateScore": "58.7988",
     "destination": {
       "x": 350,
       "y": 1260,
@@ -185,7 +185,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "breaker",
   },
   "hornling:21072127:preference": {
-    "candidateScore": "95.2704",
+    "candidateScore": "90.3417",
     "destination": {
       "x": 350,
       "y": 1260,
@@ -199,7 +199,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "hornling:21072127:rejected": {
-    "candidateScore": "94.5840",
+    "candidateScore": "89.6554",
     "destination": {
       "x": 350,
       "y": 1260,
@@ -213,7 +213,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "hornling:21072127:rival": {
-    "candidateScore": "99.8105",
+    "candidateScore": "95.3985",
     "destination": {
       "x": 1290,
       "y": 836,
@@ -227,7 +227,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "moki:21072026:forced-breaker": {
-    "candidateScore": "111.1734",
+    "candidateScore": "72.8066",
     "destination": {
       "x": 350,
       "y": 1260,
@@ -241,7 +241,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "breaker",
   },
   "moki:21072026:preference": {
-    "candidateScore": "94.0292",
+    "candidateScore": "79.7310",
     "destination": {
       "x": 610,
       "y": 1314,
@@ -255,7 +255,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "grenade",
   },
   "moki:21072026:rejected": {
-    "candidateScore": "138.5188",
+    "candidateScore": "100.3216",
     "destination": {
       "x": 350,
       "y": 1260,
@@ -269,7 +269,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "moki:21072026:rival": {
-    "candidateScore": "98.9740",
+    "candidateScore": "94.5621",
     "destination": {
       "x": 1550,
       "y": 810,
@@ -283,7 +283,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "moki:21072127:forced-breaker": {
-    "candidateScore": "110.1656",
+    "candidateScore": "71.7988",
     "destination": {
       "x": 350,
       "y": 1260,
@@ -297,7 +297,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "breaker",
   },
   "moki:21072127:preference": {
-    "candidateScore": "94.1011",
+    "candidateScore": "79.8029",
     "destination": {
       "x": 610,
       "y": 1314,
@@ -311,7 +311,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "grenade",
   },
   "moki:21072127:rejected": {
-    "candidateScore": "138.5389",
+    "candidateScore": "100.3417",
     "destination": {
       "x": 350,
       "y": 1260,
@@ -325,7 +325,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "moki:21072127:rival": {
-    "candidateScore": "99.7156",
+    "candidateScore": "95.3036",
     "destination": {
       "x": 1290,
       "y": 836,
@@ -339,7 +339,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "slime:21072026:forced-breaker": {
-    "candidateScore": "64.7571",
+    "candidateScore": "59.8066",
     "destination": {
       "x": 350,
       "y": 1260,
@@ -353,7 +353,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "breaker",
   },
   "slime:21072026:preference": {
-    "candidateScore": "95.2503",
+    "candidateScore": "90.3216",
     "destination": {
       "x": 350,
       "y": 1260,
@@ -367,7 +367,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "slime:21072026:rejected": {
-    "candidateScore": "93.7982",
+    "candidateScore": "88.8695",
     "destination": {
       "x": 350,
       "y": 1260,
@@ -381,7 +381,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "slime:21072026:rival": {
-    "candidateScore": "99.3779",
+    "candidateScore": "94.9660",
     "destination": {
       "x": 1550,
       "y": 810,
@@ -395,7 +395,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "slime:21072127:forced-breaker": {
-    "candidateScore": "63.7493",
+    "candidateScore": "58.7988",
     "destination": {
       "x": 350,
       "y": 1260,
@@ -409,7 +409,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "breaker",
   },
   "slime:21072127:preference": {
-    "candidateScore": "95.2704",
+    "candidateScore": "90.3417",
     "destination": {
       "x": 350,
       "y": 1260,
@@ -423,7 +423,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "slime:21072127:rejected": {
-    "candidateScore": "94.5840",
+    "candidateScore": "89.6554",
     "destination": {
       "x": 350,
       "y": 1260,
@@ -437,7 +437,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "slime:21072127:rival": {
-    "candidateScore": "99.2852",
+    "candidateScore": "94.8733",
     "destination": {
       "x": 1290,
       "y": 836,
@@ -456,7 +456,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
 exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn planning on space-resort 1`] = `
 {
   "ghost:21072026:forced-breaker": {
-    "candidateScore": "151.3300",
+    "candidateScore": "145.1516",
     "destination": {
       "x": 450,
       "y": 338,
@@ -470,21 +470,21 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "breaker",
   },
   "ghost:21072026:preference": {
-    "candidateScore": "166.1515",
+    "candidateScore": "78.7675",
     "destination": {
-      "x": 450,
-      "y": 338,
+      "x": 590,
+      "y": 374,
     },
-    "movementId": "jump:450:338",
+    "movementId": "jump:590:374",
     "movementKind": "jump",
-    "movementScore": "28.3023",
-    "preferenceFellBack": true,
-    "selectedCandidateId": "rocket:rival-3:arc-3",
-    "targetId": "rival-3",
-    "weaponId": "rocket",
+    "movementScore": "22.5713",
+    "preferenceFellBack": false,
+    "selectedCandidateId": "grenade:rival-1:arc-1:kurz",
+    "targetId": "rival-1",
+    "weaponId": "grenade",
   },
   "ghost:21072026:rejected": {
-    "candidateScore": "154.6770",
+    "candidateScore": "170.6109",
     "destination": {
       "x": 450,
       "y": 338,
@@ -493,12 +493,12 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "movementKind": "jump",
     "movementScore": "28.3023",
     "preferenceFellBack": false,
-    "selectedCandidateId": "rocket:rival-3:arc-2",
+    "selectedCandidateId": "rocket:rival-3:arc-4",
     "targetId": "rival-3",
     "weaponId": "rocket",
   },
   "ghost:21072026:rival": {
-    "candidateScore": "89.1874",
+    "candidateScore": "86.7580",
     "destination": {
       "x": 320,
       "y": 888,
@@ -507,12 +507,12 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "movementKind": "walk",
     "movementScore": "15.3217",
     "preferenceFellBack": false,
-    "selectedCandidateId": "rocket:crew-ghost:arc-3",
+    "selectedCandidateId": "rocket:crew-ghost:arc-4",
     "targetId": "crew-ghost",
     "weaponId": "rocket",
   },
   "ghost:21072127:forced-breaker": {
-    "candidateScore": "152.5062",
+    "candidateScore": "146.3279",
     "destination": {
       "x": 450,
       "y": 338,
@@ -526,21 +526,21 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "breaker",
   },
   "ghost:21072127:preference": {
-    "candidateScore": "166.6071",
+    "candidateScore": "78.3822",
     "destination": {
-      "x": 450,
-      "y": 338,
+      "x": 590,
+      "y": 374,
     },
-    "movementId": "jump:450:338",
+    "movementId": "jump:590:374",
     "movementKind": "jump",
-    "movementScore": "28.7261",
-    "preferenceFellBack": true,
-    "selectedCandidateId": "rocket:rival-3:arc-3",
-    "targetId": "rival-3",
-    "weaponId": "rocket",
+    "movementScore": "23.5773",
+    "preferenceFellBack": false,
+    "selectedCandidateId": "grenade:rival-1:arc-1:kurz",
+    "targetId": "rival-1",
+    "weaponId": "grenade",
   },
   "ghost:21072127:rejected": {
-    "candidateScore": "154.9322",
+    "candidateScore": "169.7631",
     "destination": {
       "x": 450,
       "y": 338,
@@ -549,12 +549,12 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "movementKind": "jump",
     "movementScore": "28.7261",
     "preferenceFellBack": false,
-    "selectedCandidateId": "rocket:rival-3:arc-2",
-    "targetId": "rival-3",
+    "selectedCandidateId": "rocket:rival-2:arc-4",
+    "targetId": "rival-2",
     "weaponId": "rocket",
   },
   "ghost:21072127:rival": {
-    "candidateScore": "89.6330",
+    "candidateScore": "86.8878",
     "destination": {
       "x": 320,
       "y": 888,
@@ -568,7 +568,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "hornling:21072026:forced-breaker": {
-    "candidateScore": "67.3872",
+    "candidateScore": "64.5271",
     "destination": {
       "x": 450,
       "y": 338,
@@ -582,7 +582,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "breaker",
   },
   "hornling:21072026:preference": {
-    "candidateScore": "99.0948",
+    "candidateScore": "95.3983",
     "destination": {
       "x": 450,
       "y": 338,
@@ -596,7 +596,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "hornling:21072026:rejected": {
-    "candidateScore": "98.2750",
+    "candidateScore": "94.2578",
     "destination": {
       "x": 450,
       "y": 338,
@@ -610,7 +610,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "hornling:21072026:rival": {
-    "candidateScore": "89.1334",
+    "candidateScore": "86.3882",
     "destination": {
       "x": 320,
       "y": 888,
@@ -624,7 +624,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "hornling:21072127:forced-breaker": {
-    "candidateScore": "68.1510",
+    "candidateScore": "64.0321",
     "destination": {
       "x": 450,
       "y": 338,
@@ -638,7 +638,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "breaker",
   },
   "hornling:21072127:preference": {
-    "candidateScore": "99.1149",
+    "candidateScore": "95.4184",
     "destination": {
       "x": 450,
       "y": 338,
@@ -652,7 +652,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "hornling:21072127:rejected": {
-    "candidateScore": "97.6566",
+    "candidateScore": "93.9601",
     "destination": {
       "x": 450,
       "y": 338,
@@ -666,7 +666,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "hornling:21072127:rival": {
-    "candidateScore": "89.5043",
+    "candidateScore": "86.7591",
     "destination": {
       "x": 320,
       "y": 888,
@@ -680,7 +680,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "moki:21072026:forced-breaker": {
-    "candidateScore": "104.5540",
+    "candidateScore": "72.6325",
     "destination": {
       "x": 450,
       "y": 338,
@@ -694,21 +694,21 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "breaker",
   },
   "moki:21072026:preference": {
-    "candidateScore": "129.6980",
+    "candidateScore": "7.7397",
     "destination": {
-      "x": 450,
-      "y": 338,
+      "x": 590,
+      "y": 374,
     },
-    "movementId": "jump:450:338",
+    "movementId": "jump:590:374",
     "movementKind": "jump",
-    "movementScore": "16.3520",
-    "preferenceFellBack": true,
-    "selectedCandidateId": "rocket:rival-3:arc-3",
-    "targetId": "rival-3",
-    "weaponId": "rocket",
+    "movementScore": "7.0872",
+    "preferenceFellBack": false,
+    "selectedCandidateId": "grenade:rival-1:arc-1:kurz",
+    "targetId": "rival-1",
+    "weaponId": "grenade",
   },
   "moki:21072026:rejected": {
-    "candidateScore": "128.4321",
+    "candidateScore": "100.6109",
     "destination": {
       "x": 450,
       "y": 338,
@@ -717,12 +717,12 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "movementKind": "jump",
     "movementScore": "16.3520",
     "preferenceFellBack": false,
-    "selectedCandidateId": "rocket:rival-3:arc-2",
+    "selectedCandidateId": "rocket:rival-3:arc-4",
     "targetId": "rival-3",
     "weaponId": "rocket",
   },
   "moki:21072026:rival": {
-    "candidateScore": "90.0497",
+    "candidateScore": "87.6150",
     "destination": {
       "x": 320,
       "y": 888,
@@ -731,12 +731,12 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "movementKind": "walk",
     "movementScore": "15.3217",
     "preferenceFellBack": false,
-    "selectedCandidateId": "rocket:crew-moki:arc-3",
+    "selectedCandidateId": "rocket:crew-moki:arc-4",
     "targetId": "crew-moki",
     "weaponId": "rocket",
   },
   "moki:21072127:forced-breaker": {
-    "candidateScore": "105.2494",
+    "candidateScore": "73.3279",
     "destination": {
       "x": 450,
       "y": 338,
@@ -750,21 +750,21 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "breaker",
   },
   "moki:21072127:preference": {
-    "candidateScore": "130.1536",
+    "candidateScore": "7.3544",
     "destination": {
-      "x": 450,
-      "y": 338,
+      "x": 590,
+      "y": 374,
     },
-    "movementId": "jump:450:338",
+    "movementId": "jump:590:374",
     "movementKind": "jump",
-    "movementScore": "15.2030",
-    "preferenceFellBack": true,
-    "selectedCandidateId": "rocket:rival-3:arc-3",
-    "targetId": "rival-3",
-    "weaponId": "rocket",
+    "movementScore": "7.6932",
+    "preferenceFellBack": false,
+    "selectedCandidateId": "grenade:rival-1:arc-1:kurz",
+    "targetId": "rival-1",
+    "weaponId": "grenade",
   },
   "moki:21072127:rejected": {
-    "candidateScore": "128.6873",
+    "candidateScore": "99.7631",
     "destination": {
       "x": 450,
       "y": 338,
@@ -773,12 +773,12 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "movementKind": "jump",
     "movementScore": "15.2030",
     "preferenceFellBack": false,
-    "selectedCandidateId": "rocket:rival-3:arc-2",
-    "targetId": "rival-3",
+    "selectedCandidateId": "rocket:rival-2:arc-4",
+    "targetId": "rival-2",
     "weaponId": "rocket",
   },
   "moki:21072127:rival": {
-    "candidateScore": "89.1625",
+    "candidateScore": "86.4173",
     "destination": {
       "x": 320,
       "y": 888,
@@ -792,7 +792,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "slime:21072026:forced-breaker": {
-    "candidateScore": "67.3872",
+    "candidateScore": "64.5271",
     "destination": {
       "x": 450,
       "y": 338,
@@ -806,7 +806,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "breaker",
   },
   "slime:21072026:preference": {
-    "candidateScore": "99.0948",
+    "candidateScore": "95.3983",
     "destination": {
       "x": 450,
       "y": 338,
@@ -820,7 +820,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "slime:21072026:rejected": {
-    "candidateScore": "98.2750",
+    "candidateScore": "94.2578",
     "destination": {
       "x": 450,
       "y": 338,
@@ -834,7 +834,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "slime:21072026:rival": {
-    "candidateScore": "89.3872",
+    "candidateScore": "86.6420",
     "destination": {
       "x": 320,
       "y": 888,
@@ -848,7 +848,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "slime:21072127:forced-breaker": {
-    "candidateScore": "68.1510",
+    "candidateScore": "64.0321",
     "destination": {
       "x": 450,
       "y": 338,
@@ -862,7 +862,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "breaker",
   },
   "slime:21072127:preference": {
-    "candidateScore": "99.1149",
+    "candidateScore": "95.4184",
     "destination": {
       "x": 450,
       "y": 338,
@@ -876,7 +876,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "slime:21072127:rejected": {
-    "candidateScore": "97.6566",
+    "candidateScore": "93.9601",
     "destination": {
       "x": 450,
       "y": 338,
@@ -890,7 +890,7 @@ exports[`planning golden master (Task 021, Schritt 0) > freezes first-turn plann
     "weaponId": "rocket",
   },
   "slime:21072127:rival": {
-    "candidateScore": "90.5183",
+    "candidateScore": "87.7730",
     "destination": {
       "x": 320,
       "y": 888,

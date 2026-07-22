@@ -20,8 +20,8 @@ exports[`mass simulator (Task 022, Teil B) > aggregates a deterministic report o
         "rivals": 1,
       },
       "planKinds": {
-        "attack": 69,
-        "reposition": 0,
+        "attack": 70,
+        "reposition": 1,
         "skip": 0,
       },
       "seeds": [
@@ -31,49 +31,76 @@ exports[`mass simulator (Task 022, Teil B) > aggregates a deterministic report o
       ],
       "selfHits": 1,
       "turnStats": {
-        "maximum": 29,
-        "median": 22,
-        "minimum": 18,
+        "maximum": 26,
+        "median": 23,
+        "minimum": 22,
       },
-      "weaponUsage": [
+      "weaponDiagnosis": [
         {
-          "attacks": 19,
-          "share": 0.2754,
-          "totalDamage": 1900,
+          "consideredTurns": 66,
+          "invalidReasons": {
+            "Ziel liegt außerhalb wirksamer Reichweite": 368,
+          },
+          "validTurns": 28,
           "weaponId": "rocket",
         },
         {
-          "attacks": 4,
-          "share": 0.058,
-          "totalDamage": 313,
+          "consideredTurns": 68,
+          "invalidReasons": {
+            "Flugbahn endet ohne Einschlag": 2,
+            "Ziel liegt außerhalb wirksamer Reichweite": 863,
+          },
+          "validTurns": 20,
           "weaponId": "grenade",
         },
         {
-          "attacks": 46,
-          "share": 0.6667,
-          "totalDamage": 550,
+          "consideredTurns": 63,
+          "invalidReasons": {
+            "Ziel liegt außerhalb wirksamer Reichweite": 118,
+          },
+          "validTurns": 61,
+          "weaponId": "breaker",
+        },
+      ],
+      "weaponUsage": [
+        {
+          "attacks": 28,
+          "share": 0.4,
+          "totalDamage": 2768,
+          "weaponId": "rocket",
+        },
+        {
+          "attacks": 6,
+          "share": 0.0857,
+          "totalDamage": 371,
+          "weaponId": "grenade",
+        },
+        {
+          "attacks": 36,
+          "share": 0.5143,
+          "totalDamage": 6,
           "weaponId": "breaker",
         },
       ],
     },
     {
       "firstTurnDivergence": {
-        "divergentMovements": 4,
-        "divergentSelections": 4,
+        "divergentMovements": 2,
+        "divergentSelections": 2,
         "divergentWeapons": 0,
         "probes": 4,
       },
       "friendlyHits": 0,
       "mapId": "space-resort",
       "matches": 3,
-      "outOfWorldKnockouts": 2,
+      "outOfWorldKnockouts": 1,
       "outcomes": {
-        "crew": 3,
+        "crew": 2,
         "draw": 0,
-        "rivals": 0,
+        "rivals": 1,
       },
       "planKinds": {
-        "attack": 57,
+        "attack": 55,
         "reposition": 0,
         "skip": 0,
       },
@@ -84,27 +111,54 @@ exports[`mass simulator (Task 022, Teil B) > aggregates a deterministic report o
       ],
       "selfHits": 0,
       "turnStats": {
-        "maximum": 23,
-        "median": 17,
-        "minimum": 17,
+        "maximum": 21,
+        "median": 21,
+        "minimum": 13,
       },
-      "weaponUsage": [
+      "weaponDiagnosis": [
         {
-          "attacks": 25,
-          "share": 0.4386,
-          "totalDamage": 2500,
+          "consideredTurns": 52,
+          "invalidReasons": {
+            "Ziel liegt außerhalb wirksamer Reichweite": 254,
+          },
+          "validTurns": 27,
           "weaponId": "rocket",
         },
         {
-          "attacks": 3,
-          "share": 0.0526,
-          "totalDamage": 134,
+          "consideredTurns": 52,
+          "invalidReasons": {
+            "Flugbahn verlässt das Einsatzgebiet": 42,
+            "Ziel liegt außerhalb wirksamer Reichweite": 758,
+          },
+          "validTurns": 31,
           "weaponId": "grenade",
         },
         {
-          "attacks": 29,
-          "share": 0.5088,
-          "totalDamage": 117,
+          "consideredTurns": 49,
+          "invalidReasons": {
+            "Ziel liegt außerhalb wirksamer Reichweite": 83,
+          },
+          "validTurns": 47,
+          "weaponId": "breaker",
+        },
+      ],
+      "weaponUsage": [
+        {
+          "attacks": 27,
+          "share": 0.4909,
+          "totalDamage": 2700,
+          "weaponId": "rocket",
+        },
+        {
+          "attacks": 12,
+          "share": 0.2182,
+          "totalDamage": 418,
+          "weaponId": "grenade",
+        },
+        {
+          "attacks": 16,
+          "share": 0.2909,
+          "totalDamage": 0,
           "weaponId": "breaker",
         },
       ],

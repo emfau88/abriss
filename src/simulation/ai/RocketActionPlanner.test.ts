@@ -59,7 +59,8 @@ describe("rocket action planner", () => {
     const second = planRocketAction(input);
 
     expect(second).toEqual(first);
-    expect(first.candidates).toHaveLength(6);
+    // Zwei lebende Ziele × vier Raketenbögen (Task 023: vierter steiler Bogen).
+    expect(first.candidates).toHaveLength(8);
     expect(first.rankedCandidates.length).toBeGreaterThan(1);
     expect(first.selected?.trajectory.outcome).toBe("terrain-impact");
   });
@@ -100,7 +101,9 @@ describe("rocket action planner", () => {
       weaponIds: ["rocket", "grenade", "breaker"],
     });
 
-    expect(plan.candidates).toHaveLength(18);
+    // Zwei Ziele × (4 Raketenbögen + 4 Granatenbögen × 2 Zielpunkte +
+    // 3 Brecherbögen) – Task 023.
+    expect(plan.candidates).toHaveLength(30);
     expect(new Set(plan.candidates.map((candidate) => candidate.weaponId))).toEqual(
       new Set(["rocket", "grenade", "breaker"]),
     );
@@ -117,7 +120,8 @@ describe("rocket action planner", () => {
       weaponIds: ["grenade"],
     });
 
-    expect(plan.candidates).toHaveLength(6);
+    // Zwei Ziele × vier Granatenbögen × zwei Zielpunkte (direkt und kurz).
+    expect(plan.candidates).toHaveLength(16);
     expect(
       plan.candidates.some(
         (candidate) => candidate.trajectory.outcome === "fuse-expired",

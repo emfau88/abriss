@@ -23,7 +23,9 @@ export const WEAPON_PROFILES: Readonly<Record<WeaponId, WeaponProfile>> = {
   rocket: {
     id: "rocket",
     displayName: "PANZERFAUST",
-    flightTimesSeconds: [1.6, 1.8, 2.0],
+    // Task 023: steile Zusatzbögen überwinden Terrain-Deckung, an der
+    // die flachen Bögen zuvor in ~70 % der Züge scheiterten.
+    flightTimesSeconds: [1.6, 1.8, 2.0, 2.5],
     explosionRadius: 62,
     maximumDamage: 100,
     maximumKnockbackSpeed: 430,
@@ -31,10 +33,13 @@ export const WEAPON_PROFILES: Readonly<Record<WeaponId, WeaponProfile>> = {
   grenade: {
     id: "grenade",
     displayName: "WURFGRANATE",
-    flightTimesSeconds: [2.25, 2.55, 2.85],
-    explosionRadius: 54,
-    maximumDamage: 86,
-    maximumKnockbackSpeed: 370,
+    flightTimesSeconds: [2.25, 2.55, 2.85, 3.4],
+    // Task 023: Radius auf Raketen-Niveau und höherer Maximalschaden als
+    // Ausgleich für die schwerer kontrollierbare Abpraller-Flugbahn – die
+    // Granaten-Identität sind Abpraller und Zeitzünder.
+    explosionRadius: 62,
+    maximumDamage: 96,
+    maximumKnockbackSpeed: 390,
   },
   breaker: {
     id: "breaker",
@@ -206,6 +211,13 @@ export function planRocketAction(input: RocketPlannerInput): RocketActionPlan {
           ? input.explosionRadius
           : weapon.explosionRadius;
 
+      // Task 023: Granaten zielen zusätzlich bewusst kurz, damit die
+      // Abpraller zum Ziel rollen statt darüber hinaus.
+      const aimSign =
+        Math.sign(target.position.x - activeUnit.position.x) || 1;
+      const aimOffsets: readonly number[] =
+        weaponId === "grenade" ? [0, -110 * aimSign] : [0];
+
       for (let index = 0; index < flightTimes.length; index += 1) {
         const flightTime = flightTimes[index];
 
@@ -213,7 +225,14 @@ export function planRocketAction(input: RocketPlannerInput): RocketActionPlan {
           throw new Error("Candidate flight times must be positive.");
         }
 
-        const id = `${weapon.id}:${target.id}:arc-${index + 1}`;
+        for (const aimOffset of aimOffsets) {
+        const id =
+          `${weapon.id}:${target.id}:arc-${index + 1}` +
+          (aimOffset !== 0 ? ":kurz" : "");
+        const aimPoint = {
+          x: target.position.x + aimOffset,
+          y: target.position.y,
+        };
         const launchPosition = {
           x:
             activeUnit.position.x +
@@ -224,7 +243,7 @@ export function planRocketAction(input: RocketPlannerInput): RocketActionPlan {
           startPosition: launchPosition,
           startVelocity: velocityForArrival(
             launchPosition,
-            target.position,
+            aimPoint,
             gravity,
             flightTime,
           ),
@@ -236,10 +255,13 @@ export function planRocketAction(input: RocketPlannerInput): RocketActionPlan {
           ...(weaponId === "grenade"
             ? {
                 collisionBehavior: "bounce" as const,
-                fuseSeconds: flightTime + 0.65,
+                // Task 023: kürzerer Zünder und stumpferer Abpraller halten
+                // die Explosion näher am Zielpunkt; zuvor war die Granate
+                // nur in ~15 % der Züge überhaupt gültig.
+                fuseSeconds: flightTime + 0.35,
                 maximumBounces: 2,
-                bounceRestitution: 0.44,
-                surfaceFriction: 0.68,
+                bounceRestitution: 0.34,
+                surfaceFriction: 0.58,
               }
             : {}),
         };
@@ -261,8 +283,14 @@ export function planRocketAction(input: RocketPlannerInput): RocketActionPlan {
           metrics,
           weapon.id,
         );
+        // Task 023: Geländewirkung zählt nur als Fallback-Nutzen, wenn der
+        // Kandidat selbst keinen wirksamen Schadensschuss darstellt (D-020).
+        const scoringMetrics =
+          metrics.targetDamage >= MINIMUM_TARGET_DAMAGE
+            ? { ...metrics, terrainEffect: 0 }
+            : metrics;
         const components = scoreRocketMetrics(
-          metrics,
+          scoringMetrics,
           input.personality,
           keyedSignedVariation(input.seed, id) * VARIATION_MAGNITUDE,
         );
@@ -284,6 +312,7 @@ export function planRocketAction(input: RocketPlannerInput): RocketActionPlan {
           components,
           score: sumContributions(components),
         });
+        }
       }
     }
   }
@@ -501,7 +530,10 @@ function candidateInvalidReason(
   }
 
   if (metrics.targetDamage < MINIMUM_TARGET_DAMAGE) {
-    if (weaponId === "breaker" && metrics.terrainEffect >= 8) {
+    // Task 023: Die Fallback-Ausnahme des Geländebrechers verlangt jetzt
+    // nennenswerte Terrainwirkung statt beliebiger Kratzer – zuvor war er
+    // dadurch in praktisch jedem Zug die gültige Standardwahl.
+    if (weaponId === "breaker" && metrics.terrainEffect >= 45) {
       return null;
     }
     return "Ziel liegt außerhalb wirksamer Reichweite";

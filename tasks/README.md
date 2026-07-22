@@ -29,7 +29,7 @@ andere Priorität bestätigt. Es darf höchstens ein Task als `in Arbeit` gelten
 | `020_CHICKEN_AND_FEEDBACK_ASSET_PACK.md` | bereit | Chicken, Projektil-/Sekundär-VFX und kleine Zusatzassets |
 | `021_HEADLESS_MATCH_ENGINE.md` | umgesetzt (Claude Fable 5, 22.07.2026) – Browserprüfung ausstehend | rendererunabhängige Zug-Orchestrierung unter `src/simulation/match/`; headless Matches deterministisch in Vitest |
 | `022_TURN_DIAGNOSTICS_AND_MASS_SIMULATOR.md` | umgesetzt (Claude Fable 5, 22.07.2026) | Zugdiagnose je Kandidat und deterministischer Massen-Simulator mit `reports/simulation-report.md` |
-| `023_WEAPON_BALANCE_AFTER_MEASUREMENT.md` | bereit | Geländebrecher-Dominanz und Granaten-Marginalität mit Vorher-/Nachher-Messung korrigieren |
+| `023_WEAPON_BALANCE_AFTER_MEASUREMENT.md` | teilweise abgeschlossen (Claude Fable 5, 22.07.2026) | Space-Resort im Zielkorridor (48/21/31), Sonneninseln verbessert (Brecher 67→54 %); Resthebel dokumentiert |
 | `024_RISK_CONE_AND_PERSONALITY_FLAWS.md` | bereit | Streukegel, Blindflecken und eigene Optionsmengen gegen die „perfekten Bots“; danach Task 011 |
 | `025_IDLE_JITTER_FIX.md` | umgesetzt (Claude Fable 5, 22.07.2026) – Browserprüfung ausstehend | Idle-Loops rechnerisch ausgerichtet, Stabilität testpflichtig, Endlos-Scale-Tweens entfernt |
 

@@ -41,6 +41,15 @@ export interface WeaponUsageSummary {
   readonly totalDamage: number;
 }
 
+export interface WeaponDiagnosisSummary {
+  readonly weaponId: WeaponId;
+  /** Züge, in denen die Waffe im Arsenal der Planung war. */
+  readonly consideredTurns: number;
+  /** Züge mit mindestens einem gültigen Kandidaten dieser Waffe. */
+  readonly validTurns: number;
+  readonly invalidReasons: Readonly<Record<string, number>>;
+}
+
 export interface FirstTurnDivergenceSummary {
   readonly probes: number;
   /** Sonden, bei denen Persönlichkeiten unterschiedliche Kandidaten wählen. */
@@ -65,6 +74,7 @@ export interface MapSimulationSummary {
   };
   readonly planKinds: Record<TurnPlanKind, number>;
   readonly weaponUsage: readonly WeaponUsageSummary[];
+  readonly weaponDiagnosis: readonly WeaponDiagnosisSummary[];
   readonly selfHits: number;
   readonly friendlyHits: number;
   readonly outOfWorldKnockouts: number;
@@ -110,6 +120,19 @@ export function simulateMatches(
     const weaponAttacks = new Map<WeaponId, { attacks: number; damage: number }>(
       WEAPON_IDS.map((weaponId) => [weaponId, { attacks: 0, damage: 0 }]),
     );
+    const weaponDiagnosis = new Map<
+      WeaponId,
+      {
+        consideredTurns: number;
+        validTurns: number;
+        invalidReasons: Record<string, number>;
+      }
+    >(
+      WEAPON_IDS.map((weaponId) => [
+        weaponId,
+        { consideredTurns: 0, validTurns: 0, invalidReasons: {} },
+      ]),
+    );
     let selfHits = 0;
     let friendlyHits = 0;
     let outOfWorldKnockouts = 0;
@@ -120,10 +143,34 @@ export function simulateMatches(
         state.units.map((unit) => [unit.id, unit.team] as const),
       );
       const result = runMatch(state, {
+        collectDiagnostics: true,
         ...(options.maximumTurns ? { maximumTurns: options.maximumTurns } : {}),
       });
       outcomes[result.outcome] += 1;
       turnCounts.push(result.turnCount);
+
+      for (const diagnostic of result.diagnostics ?? []) {
+        for (const availability of diagnostic.weaponAvailability) {
+          const entry = weaponDiagnosis.get(availability.weaponId);
+
+          if (!entry) {
+            continue;
+          }
+
+          entry.consideredTurns += 1;
+
+          if (availability.valid > 0) {
+            entry.validTurns += 1;
+          }
+
+          for (const [reason, count] of Object.entries(
+            availability.invalidReasons,
+          )) {
+            entry.invalidReasons[reason] =
+              (entry.invalidReasons[reason] ?? 0) + count;
+          }
+        }
+      }
 
       for (const turn of result.turns) {
         planKinds[turn.planKind] += 1;
@@ -190,6 +237,16 @@ export function simulateMatches(
           attacks: usage.attacks,
           share: totalAttacks > 0 ? roundShare(usage.attacks / totalAttacks) : 0,
           totalDamage: usage.damage,
+        };
+      }),
+      weaponDiagnosis: WEAPON_IDS.map((weaponId) => {
+        const entry = weaponDiagnosis.get(weaponId)!;
+
+        return {
+          weaponId,
+          consideredTurns: entry.consideredTurns,
+          validTurns: entry.validTurns,
+          invalidReasons: entry.invalidReasons,
         };
       }),
       selfHits,
@@ -280,6 +337,23 @@ export function renderSimulationReport(report: SimulationReport): string {
     for (const usage of map.weaponUsage) {
       lines.push(
         `| ${WEAPON_LABELS[usage.weaponId]} | ${usage.attacks} von ${attackTotal} | ${(usage.share * 100).toFixed(1)} % | ${usage.totalDamage} |`,
+      );
+    }
+
+    lines.push(
+      "",
+      "| Waffe | in Planung betrachtet | Züge mit gültigem Kandidat | häufigste Scheiterngründe |",
+      "| --- | ---: | ---: | --- |",
+    );
+
+    for (const diagnosis of map.weaponDiagnosis) {
+      const reasons = Object.entries(diagnosis.invalidReasons)
+        .sort((left, right) => right[1] - left[1])
+        .slice(0, 2)
+        .map(([reason, count]) => `${reason} (${count})`)
+        .join(" · ");
+      lines.push(
+        `| ${WEAPON_LABELS[diagnosis.weaponId]} | ${diagnosis.consideredTurns} | ${diagnosis.validTurns} | ${reasons.length > 0 ? reasons : "–"} |`,
       );
     }
 

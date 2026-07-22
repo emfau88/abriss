@@ -35,6 +35,14 @@ export interface CandidateDiagnostic {
   readonly topNegative: UtilityFactorDiagnostic | null;
 }
 
+export interface WeaponAvailabilityDiagnostic {
+  readonly weaponId: WeaponId;
+  readonly candidates: number;
+  readonly valid: number;
+  readonly bestScore: number | null;
+  readonly invalidReasons: Readonly<Record<string, number>>;
+}
+
 export interface TurnDiagnostic {
   readonly turnNumber: number;
   readonly activeUnitId: string;
@@ -57,6 +65,8 @@ export interface TurnDiagnostic {
   readonly invalidCandidateCount: number;
   /** Bestplatzierte Kandidaten, absteigend nach Rang. */
   readonly rankedCandidates: readonly CandidateDiagnostic[];
+  /** Verfügbarkeit und Scheiterngründe pro erwogener Waffe (Task 023). */
+  readonly weaponAvailability: readonly WeaponAvailabilityDiagnostic[];
 }
 
 const RANKED_CANDIDATE_LIMIT = 5;
@@ -129,5 +139,46 @@ export function diagnoseTurn(
       (candidate) => !candidate.valid,
     ).length,
     rankedCandidates,
+    weaponAvailability: summarizeWeaponAvailability(turnPlan),
   };
+}
+
+function summarizeWeaponAvailability(
+  turnPlan: TurnPlan,
+): WeaponAvailabilityDiagnostic[] {
+  const byWeapon = new Map<
+    WeaponId,
+    {
+      candidates: number;
+      valid: number;
+      bestScore: number | null;
+      invalidReasons: Record<string, number>;
+    }
+  >();
+
+  for (const candidate of turnPlan.action.candidates) {
+    let entry = byWeapon.get(candidate.weaponId);
+
+    if (!entry) {
+      entry = { candidates: 0, valid: 0, bestScore: null, invalidReasons: {} };
+      byWeapon.set(candidate.weaponId, entry);
+    }
+
+    entry.candidates += 1;
+
+    if (candidate.valid) {
+      entry.valid += 1;
+      const score = roundScore(candidate.score);
+      entry.bestScore =
+        entry.bestScore === null ? score : Math.max(entry.bestScore, score);
+    } else if (candidate.invalidReason) {
+      entry.invalidReasons[candidate.invalidReason] =
+        (entry.invalidReasons[candidate.invalidReason] ?? 0) + 1;
+    }
+  }
+
+  return [...byWeapon.entries()].map(([weaponId, entry]) => ({
+    weaponId,
+    ...entry,
+  }));
 }

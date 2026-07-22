@@ -137,6 +137,7 @@ describe("mass simulator (Task 022, Teil B)", () => {
 
   it.skipIf(!process.env["SIM_FULL"])(
     "aggregates the extended matrix (SIM_FULL=1)",
+    { timeout: 300_000 },
     () => {
       const report = simulateMatches(buildScenarios(FULL_SEED_COUNT), {
         divergenceProbes: buildDivergenceProbes(),

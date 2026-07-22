@@ -265,3 +265,13 @@ Hover-Bewegung besitzen keine Gameplay-Autorität.
 **Konsequenz:** Neue oder überarbeitete Sheets müssen den Stabilitätstest bestehen, bevor sie eingebunden werden. Kosmetische Endlos-Scale-Tweens auf Loop-Zuständen sind unzulässig (Kantenflimmern durch Dauer-Resampling); erlaubt bleiben einmalige Übergangs-Squashes und reine Y-Bewegung. Walk/Jump-Drift ist dokumentiert, aber bewusst nicht automatisch korrigiert (posenbedingte Anker-Verschiebungen).
 
 **Umsetzung:** Task 025, ausgeführt von Claude Fable 5 (Anthropic) am 22. Juli 2026.
+
+## 2026-07-22 – D-032: Verfügbarkeit schlägt Score – Waffenbalance über Gültigkeitsregeln
+
+**Entscheidung:** Waffenbalance wird primär über Kandidaten-Gültigkeit gesteuert, nicht über Schadenszahlen: Die Geländebrecher-Fallback-Ausnahme verlangt ≥ 45 % Terrainwirkung, Geländewirkung zählt im Score nur noch für Kandidaten ohne wirksamen Schadensschuss (D-020-Intention), die Panzerfaust erhält einen vierten steilen Bogen (2,5 s) gegen Terrain-Deckung, und die Wurfgranate bekommt Raketen-Radius (62), 96 Maximalschaden, kürzeren Zünder, stumpfere Abpraller und zusätzliche kurz gezielte Kandidaten. Der lineare Schadensabfall bleibt: Die quadratische Variante wurde implementiert, gemessen und belegt verworfen; ebenso ein 3,0-s-Raketenbogen (80,6 % Raketendominanz im Space-Resort).
+
+**Grund:** Die Verfügbarkeits-Diagnose aus Task 022/023 zeigte, dass der Brecher in 100 % der Züge gültig war und in der Mehrheit der Züge die einzige Option – ein Gültigkeits-, kein Score-Problem. Messwerte statt Vermutungen haben zwei intuitive Hebel (quadratischer Abfall, extremer Steilbogen) als kontraproduktiv entlarvt.
+
+**Konsequenz:** Space-Resort liegt im Zielkorridor (47,8/20,8/31,4, Ausgänge 5:5), die Sonneninseln sind deutlich verbessert (54,3 % Brecher statt 66,7 %, Ausgänge 6:4), verfehlen den Korridor aber noch; der dokumentierte Resthebel ist sichtlinien-bewusste Zielpunktwahl oder Kartentuning. Golden-Master- und Metrik-Snapshots wurden als bewusste Balance-Entscheidung erneuert.
+
+**Umsetzung:** Task 023, ausgeführt von Claude Fable 5 (Anthropic) am 22. Juli 2026.

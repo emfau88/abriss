@@ -27,6 +27,7 @@ andere Priorität bestätigt. Es darf höchstens ein Task als `in Arbeit` gelten
 | `018_TOUCH_CAMERA_GESTURES.md` | abgeschlossen | Ein-Finger-Pan und Zwei-Finger-Zoom |
 | `019_FLUID_GHOST_CHARACTER.md` | abgeschlossen | referenznaher Ghost als jitterfreies 32-Frame-Sheet |
 | `020_CHICKEN_AND_FEEDBACK_ASSET_PACK.md` | bereit | Chicken, Projektil-/Sekundär-VFX und kleine Zusatzassets |
+| `021_HEADLESS_MATCH_ENGINE.md` | bereit | rendererunabhängige Zug-Orchestrierung unter `src/simulation/match/` |
 
 Ein Status wird erst nach überprüfter Abnahme geändert. Scope-Erweiterungen
 gehören in einen neuen Task, nicht stillschweigend in einen bestehenden.

@@ -1,6 +1,6 @@
 import { BinaryTerrainMask } from "../../simulation/terrain/TerrainMask";
 
-const SOLID_ALPHA_THRESHOLD = 72;
+export const SOLID_ALPHA_THRESHOLD = 72;
 
 export function createTerrainMaskFromImage(
   sourceImage: CanvasImageSource,

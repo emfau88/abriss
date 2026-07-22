@@ -2,7 +2,7 @@
 
 ## Status
 
-`bereit`
+`umgesetzt – Browserprüfung durch den Nutzer ausstehend` (zuvor: `bereit`)
 
 ## Ziel
 
@@ -152,3 +152,72 @@ Der Bearbeiter berichtet:
    Darstellungslogik),
 5. neuer Eintrag in `docs/DECISIONS.md` zur Engine-Grenze
    (`simulation/match` als einzige Autorität für Zugverlauf).
+
+## Abschlussbericht vom 22. Juli 2026
+
+Bearbeitet und verfasst von **Claude Fable 5** (Anthropic, Claude Code).
+Alle fünf Schritte wurden in dieser Sitzung umgesetzt, je Schritt ein Commit
+mit grünem `typecheck`, `test` und `build`.
+
+### 1. Umgesetztes Ergebnis je Schritt
+
+- **Schritt 0** (`c2ca53f`): Golden-Master-Test friert das Planungsverhalten
+  von `MatchScene.replan()` ein – beide Karten × vier Eröffnungsfiguren ×
+  zwei Seeds × vier Managerfälle = 64 Snapshot-Fälle, alle mit echten Plänen.
+  Dazu `src/testing/pngTerrain.ts`: PNG-Decoder auf Node-Bordmitteln, der die
+  echten Terrainkarten headless in `BinaryTerrainMask` übersetzt.
+- **Schritt 1** (`0f9c316`): `matchSimulationState.ts` bündelt Figuren,
+  MatchState, Terrain, Seed und Manager-Flags; `game/session/matchSetup.ts`
+  baut die Figurendefinitionen aus der `MatchLaunchConfig`. `UnitView`
+  referenziert die Simulationseinheit statt eigener HP/Positionen.
+- **Schritt 2** (`2614a86`): `planTurn()` ersetzt die Planungslogik der Szene;
+  der Golden-Master bestätigt alle 64 Fälle als identisch.
+- **Schritt 3** (`2fedd68`): `resolveTurn()` liefert das Ereignisprotokoll
+  (Bewegung, Projektil, Terrainmutation, Schaden, Rückstoß, Fälle),
+  `concludeTurn()` den Zugwechsel. Die Szene spielt nur noch Ereignisse ab;
+  Tweens schreiben ausschließlich Container.
+- **Schritt 4** (`b862a1a`): Managerkommandos als Engine-Funktionen mit vier
+  neuen Tests (Einmaligkeit, Kandidaten-Reset, Persönlichkeitszyklus,
+  Ablehnung im Rivalenzug).
+- **Schritt 5** (`07f3be3`): `runMatch()` läuft headless bis zum Ausgang.
+  Szenariotests: Determinismus (identisches Protokoll bei gleichem Seed) und
+  spielbare Eröffnung für jede Figur auf jeder Karte.
+
+### 2. Geänderte Dateien (Kern)
+
+Neu: `src/simulation/match/{matchSimulationState,planTurn,resolveTurn,commands,runMatch}.ts`,
+`src/simulation/match/{planningGoldenMaster,commands,runMatch}.test.ts`,
+`src/game/session/matchSetup.ts`, `src/testing/pngTerrain.ts`.
+Geändert: `src/game/scenes/MatchScene.ts` (konsumiert Zustand/Ereignisse),
+`src/content/maps/terrainMaskFromImage.ts` (Schwellwert exportiert),
+`tsconfig.json` (+`node`-Types), `package.json` (+`@types/node`, dev).
+
+### 3. Ausgeführte Prüfungen und Resultate
+
+- `npm run typecheck`, `npm test`, `npm run build` nach jedem Schritt grün;
+  Endstand 69 Tests in 19 Dateien.
+- Golden-Master: `planTurn()` reproduziert alle 64 eingefrorenen Fälle exakt.
+- Headless-Referenzlauf Seed 21072026: Sonneninseln → Sieg der Rivalen nach
+  29 Zügen (Überlebender `rival-3`), Space-Resort → Sieg der Crew nach
+  17 Zügen (`crew-slime`, `crew-ghost`); alle Züge Angriffe, kein Aussetzer.
+- Determinismus: zwei Läufe je Karte liefern byte-identische
+  Ereignisprotokolle und Endzustände.
+
+### 4. Bekannte Einschränkungen
+
+- Die im Task geforderte **Browserprüfung (Kriterium 6) steht noch aus** –
+  diese Sitzung lief ohne Browserzugriff. Bitte je ein Match auf beiden
+  Karten mit `R`-Neustart, „Lass das!“, Waffenbefehl, `P` und Matchende
+  prüfen; danach kann der Status auf `abgeschlossen` wechseln.
+- Headless-Terrainmasken mitteln den Alpha-Wert je Zellblock statt des
+  Canvas-Downscalings des Browsers; einzelne Randzellen können abweichen
+  (fachlich dokumentiert in D-029).
+- Bewusste Abweichung: Figuren außerhalb der Welt werden bei der
+  Fallauflösung übersprungen statt eine Exception auszulösen (latenter
+  Absturz der alten Szene nach Out-of-world-Ereignissen).
+- Kamera, HUD, VFX und Touch blieben unverändert (Nichtziele).
+
+### 5. Neue Einträge in `docs/DECISIONS.md`
+
+- **D-029**: `simulation/match` als einzige Autorität über den Zugverlauf,
+  inklusive Headless-Terrain-Verfahren und dokumentierter Abweichungen.

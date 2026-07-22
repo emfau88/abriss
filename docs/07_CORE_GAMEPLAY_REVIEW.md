@@ -226,3 +226,25 @@ Das Grafikpaket aus Task 020 ist vollständig eingebunden:
 
 Diese Assets verbessern Lesbarkeit und Feedback, ändern aber bewusst keine der
 oben beschriebenen Entscheidungs-, Architektur- oder Balancefragen.
+
+## Fortschritt vom 22. Juli 2026: Phase B umgesetzt (Task 021)
+
+Ergänzt von Claude Fable 5 (Anthropic). Die in diesem Review geforderte
+headless Match-Orchestrierung existiert seit Task 021 als Modul
+`src/simulation/match/` (Zustand, `planTurn`, `resolveTurn`, `concludeTurn`,
+Managerkommandos, `runMatch`). Damit sind folgende Abnahmekriterien dieses
+Dokuments automatisch geprüft:
+
+- Determinismus: identischer Seed erzeugt in zwei headless Läufen ein
+  identisches Ereignisprotokoll samt Endzustand (beide Karten).
+- Eröffnungen: jede der vier möglichen Eröffnungsfiguren erhält auf beiden
+  Karten einen Angriff oder eine begründete Positionierung – der
+  Moki-Regressionsfall ist als dauerhafter Test verankert.
+- Vollständige Matches laufen ohne Browser: Referenzlauf Seed 21072026 endet
+  auf den Sonneninseln nach 29 Zügen (Sieg der Rivalen) und im Space-Resort
+  nach 17 Zügen (Sieg der Crew), ausnahmslos mit Angriffszügen.
+
+Noch offen aus diesem Review: Zugdiagnose-Berichte (Phase A im Sinne
+auswertbarer Kandidatenprotokolle pro Zug), Massen-Simulator mit
+Diversitätsmetriken (Phase C) sowie die inhaltlichen Balancefragen
+(Waffendominanz, spürbare Persönlichkeitsunterschiede).

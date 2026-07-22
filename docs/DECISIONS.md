@@ -235,3 +235,13 @@ flüssige, jitterfreie Bewegung gemeinsam belegen.
 **Konsequenz:** Das historische Vela-Asset bleibt dokumentiert, wird aber nicht
 mehr geladen. Die rechnerische Frame-Stabilisierung und kosmetische
 Hover-Bewegung besitzen keine Gameplay-Autorität.
+
+## 2026-07-22 – D-029: simulation/match ist die einzige Autorität über den Zugverlauf
+
+**Entscheidung:** Die gesamte fachliche Zug-Orchestrierung liegt im neuen Modul `src/simulation/match/`: serialisierbarer `MatchSimulationState` (Figuren, Terrainreferenz, Seed, Manager-Flags), `planTurn()` mit der eingefrorenen Zugseed-Formel `seed + turnNumber * 9973`, `resolveTurn()` mit deterministischem Ereignisprotokoll, `concludeTurn()` für Zugwechsel und Matchausgang, typisierte Managerkommandos sowie `runMatch()` als headless Matchschleife. Die `MatchScene` besitzt keine eigene Schadens-, Terrainmutations-, Fall- oder Zugwechsel-Logik mehr; Tweens schreiben ausschließlich Container, nie Simulationszustand. Ein Golden-Master-Test fror das Planungsverhalten vor der Extraktion ein (beide Karten × vier Eröffnungsfiguren × zwei Seeds × vier Managerfälle) und belegt, dass `planTurn()` alle 64 Fälle identisch reproduziert.
+
+**Grund:** `docs/07_CORE_GAMEPLAY_REVIEW.md` benannte als größtes Produktrisiko, dass vollständige Matches nur im Browser beobachtbar waren. Zugdiagnose, Diversitätsmessung und Balancing brauchen Matches als reine Funktion über Seed und Konfiguration.
+
+**Konsequenz:** Neue fachliche Regeln entstehen zuerst in `simulation/match` samt Test und erst danach in der Darstellung. Für headless Tests dekodiert `src/testing/pngTerrain.ts` die echten Terrain-PNGs über Node-Bordmittel (`node:zlib`, devDependency `@types/node`); der Alpha-Mittelwert je Zellblock ersetzt das Canvas-Downscaling des Browsers, minimale Randzellenabweichungen sind akzeptiert. Bewusste fachliche Abweichung: Figuren außerhalb der Welt werden bei der Fallauflösung übersprungen, statt wie zuvor eine Exception in `findGroundY` auszulösen (latenter Absturz nach Out-of-world-Ereignissen). Referenzlauf Seed 21072026: Sonneninseln → Sieg der Rivalen nach 29 Zügen, Space-Resort → Sieg der Crew nach 17 Zügen.
+
+**Umsetzung:** Task 021, ausgeführt von Claude Fable 5 (Anthropic) am 22. Juli 2026; Golden Master, Engine-Module, Szenen-Umbau und Szenariotests stammen aus dieser Sitzung.

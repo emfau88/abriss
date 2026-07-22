@@ -220,3 +220,45 @@ Mindestens Start, Matchbeginn, eine ausgeführte Aktion, Terrainänderung und Ne
 - reproduzierbare Testfälle mit ausgegebenem Seed,
 - verständliche Fehlermeldung statt stiller Zustandskorruption,
 - Produktionsbuild ohne Typfehler und bekannte Konsolenfehler.
+
+## Nachtrag vom 22. Juli 2026: Headless Match-Engine (Task 021)
+
+Dieser Abschnitt wurde von Claude Fable 5 (Anthropic) ergänzt, nachdem die
+Zug-Orchestrierung aus der `MatchScene` extrahiert wurde. Er beschreibt den
+seitdem verbindlichen Ist-Zustand; die älteren Abschnitte bleiben unverändert
+als Entstehungsgeschichte stehen.
+
+### Modul `src/simulation/match/`
+
+- `matchSimulationState.ts` – serialisierbarer fachlicher Matchzustand:
+  Figuren (Position, Trefferpunkte, Persönlichkeit), `MatchState`,
+  Terrainreferenz, Seed, Loadout-Präferenzen und Manager-Flags. Erzeugung aus
+  Figurendefinitionen inklusive Spawn-Bodensuche.
+- `planTurn.ts` – Zugplanung mit Bewegungskandidaten, kombinierter
+  Bewegungs-/Waffenbewertung, Loadout-Präferenz samt Arsenal-Fallback,
+  Waffenbefehl und „Lass das!“. Enthält die verbindliche Zugseed-Formel
+  `seed + turnNumber * 9973`.
+- `resolveTurn.ts` – deterministische Zugauflösung als Ereignisprotokoll:
+  Bewegung, Projektil, Terrainmutation, gerundeter Explosionsschaden,
+  Rückstoß mit Endpositionen, Fallauflösung und HP-Synchronisation.
+  `concludeTurn()` liefert Zugwechsel oder Matchausgang.
+- `commands.ts` – typisierte Managerkommandos (`rejectActivePlan`,
+  `commandWeapon`, `cycleActivePersonality`) mit allen fachlichen Guards.
+- `runMatch.ts` – headless Matchschleife bis zum Ausgang; Grundlage für
+  Determinismus-, Eröffnungs- und spätere Balancetests.
+
+### Rollenverteilung seit der Extraktion
+
+Die `MatchScene` konsumiert `TurnPlan` und Ereignisprotokoll und spielt sie
+als Animationen ab. Tweens schreiben ausschließlich Phaser-Container; die
+Simulationseinheiten gehören der Engine. `game/session/matchSetup.ts`
+übersetzt eine `MatchLaunchConfig` in Figurendefinitionen plus
+Darstellungszuordnung (`visualId`).
+
+### Headless-Terrain für Tests
+
+`src/testing/pngTerrain.ts` dekodiert die echten Terrain-PNGs ohne Browser
+(Node `zlib`, PNG-Filterrekonstruktion) und bildet Zellen über den
+Alpha-Mittelwert des Pixelblocks. Das entspricht dem Canvas-Downscaling des
+Browsers bis auf mögliche einzelne Randzellen und ist die verbindliche
+Testgrundlage für Karten-Szenariotests.

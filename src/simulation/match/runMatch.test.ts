@@ -40,6 +40,7 @@ function configWithOpeningFighter(
     mode: "quick",
     seed: createQuickMatchConfig(mapId).seed,
     mapId,
+    controlMode: "auto",
     crew: [slot0, ...others].map((fighterId) => ({
       fighterId,
       preferredWeaponId: FIGHTER_ROSTER[fighterId].preferredWeaponId,

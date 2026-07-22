@@ -295,3 +295,13 @@ Hover-Bewegung besitzen keine Gameplay-Autorität.
 **Konsequenz und Befund:** Die Messung zeigt, dass die Bewertungsdämpfung die Waffenwahl kaum verändert, weil Rakete und Granate denselben Explosionsradius (62) haben und daher gleich gedämpft werden – die Panzerfaust-Dominanz ist ein **Verfügbarkeits-**, kein Score-Problem (ihre flachere Bahn scheitert seltener an Terrain-Deckung). Wirksam war der kleinere Streukegel: Sonneninseln zurück auf 51,6 % (Referenz ohne Kegel: 48,2 %), Space-Resort seedabhängig 51–68 %. Die streuungsbewusste Bewertung bleibt trotzdem als korrekte Grundlage erhalten (KI plant ehrlich, Erstzug-Divergenz im Space-Resort auf 4/4 gestiegen). Der verbleibende Hebel gegen die Panzerfaust-Verfügbarkeit ist sichtlinien-bewusste Zielpunktwahl oder Kartentuning – ein Kartenthema, kein KI-Bewertungsthema.
 
 **Umsetzung:** Task 026, ausgeführt von Claude Fable 5 (Anthropic) am 22. Juli 2026.
+
+## 2026-07-22 – D-035: Steuerungsmodus als reversibler Testschalter (Autobattle vs. Selbststeuern)
+
+**Entscheidung:** `MatchLaunchConfig` erhält ein Feld `controlMode` (`auto` | `manual`, Default `auto`). Das Hauptmenü bietet einen Umschalter, der das Testmatch wahlweise als Autobattler oder mit manuellem Zielen des Spielerteams startet. Der manuelle Schuss (Maus ziehen → Winkel/Kraft, Waffe 1/2/3) erzeugt über `planManualShot` einen regulären TurnPlan und läuft durch dieselbe deterministische `resolveTurn`-Maschinerie wie ein KI-Zug; beim manuellen Zielen wirkt kein Streukegel. Rivalenzüge bleiben in beiden Modi autonom.
+
+**Grund:** Die offene Produktfrage „Autobattler oder Selbststeuern?“ (Task 011, D-006-Umfeld) soll direkt vergleichbar getestet werden, statt sie theoretisch zu entscheiden. Ein Schalter im Menü macht beide Varianten in derselben Build ohne Codewechsel erlebbar.
+
+**Konsequenz:** Erster Wurf bewusst schlank – kein manuelles Laufen/Springen (Schuss vom Stand), kein optionaler KI-Vorschlag, Manager-Einsatz bleibt Autobattle. Die architektonische Grenze aus D-029 (`simulation/match` als einzige Autorität) bleibt gewahrt: Der manuelle Modus fügt nur eine weitere Plan-Quelle hinzu, keine parallele Ausführungslogik. Nach der Nutzerbewertung wird über Ausbau (Bewegung, Vorschlag) oder Rücknahme entschieden.
+
+**Umsetzung:** Task 011 (erster Wurf), ausgeführt von Claude Fable 5 (Anthropic) am 22. Juli 2026.

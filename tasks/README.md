@@ -17,7 +17,7 @@ andere Priorität bestätigt. Es darf höchstens ein Task als `in Arbeit` gelten
 | `008_ALTERNATING_ACTION_LOOP.md` | abgeschlossen | fortlaufender Teamwechsel und Matchausgang |
 | `009_TEAM_STATUS_HUD.md` | abgeschlossen | kompakte Teamzuordnung und HP |
 | `010_HUD_DECLUTTER_AND_TURN_ORDER.md` | abgeschlossen | schmale HUD-Leiste und Zugvorschau |
-| `011_PLAYER_CONTROL_EXPERIMENT.md` | bereit | direkter Steuerungsvergleich |
+| `011_PLAYER_CONTROL_EXPERIMENT.md` | erster Wurf umgesetzt (Claude Fable 5, 22.07.2026) – Bewertung ausstehend | Menü-Schalter Autobattle vs. Selbststeuern; manuelles Zielen per Maus (Schuss vom Stand) |
 | `012_AUTONOMY_MOVEMENT_AND_CREATURES.md` | abgeschlossen | 3-gegen-3-Autonomietest mit Bewegung |
 | `013_KNOCKBACK_GRENADES_AND_WEAPON_COMMAND.md` | abgeschlossen | Rückstoß, Zeitzünder und Waffenwahl |
 | `014_GITHUB_PAGES_AND_MOBILE_SHELL.md` | abgeschlossen | Pages-Veröffentlichung und mobile Hülle |

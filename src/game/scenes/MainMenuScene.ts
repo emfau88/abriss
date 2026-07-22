@@ -13,13 +13,17 @@ import {
   type ManagerState,
 } from "../../manager/managerState";
 import { RENDER_HEIGHT, RENDER_WIDTH } from "../config";
-import { createQuickMatchConfig } from "../session/matchSession";
+import {
+  createQuickMatchConfig,
+  type ControlMode,
+} from "../session/matchSession";
 import { createMenuButton, drawMenuBackdrop } from "../ui/menuUi";
 
 const MAP_CARD_CENTERS = [465, 1135] as const;
 
 export class MainMenuScene extends Phaser.Scene {
   private managerState!: ManagerState;
+  private controlMode: ControlMode = "auto";
 
   public constructor() {
     super("MainMenuScene");
@@ -27,6 +31,9 @@ export class MainMenuScene extends Phaser.Scene {
 
   public create(): void {
     this.managerState = loadManagerState();
+    // Über die Registry, damit die Wahl scene.restart() (Kartenwechsel) übersteht.
+    this.controlMode =
+      (this.registry.get("controlMode") as ControlMode | undefined) ?? "auto";
     const selectedMap = MAP_DEFINITIONS[this.managerState.selectedMapId];
     drawMenuBackdrop(
       this,
@@ -79,14 +86,19 @@ export class MainMenuScene extends Phaser.Scene {
       accent: 0x55d7c2,
       onClick: () =>
         this.scene.start("MatchScene", {
-          launchConfig: createQuickMatchConfig(this.managerState.selectedMapId),
+          launchConfig: createQuickMatchConfig(
+            this.managerState.selectedMapId,
+            this.controlMode,
+          ),
         }),
     });
+
+    this.createControlModeToggle();
 
     this.add
       .text(
         RENDER_WIDTH / 2,
-        833,
+        868,
         `EINSÄTZE ${this.managerState.completedMissions}   ·   ARSENAL ${this.managerState.unlockedWeaponIds.length}/3   ·   KARTE ${selectedMap.settingLabel}`,
         {
           fontFamily: "Consolas, ui-monospace, monospace",
@@ -96,6 +108,52 @@ export class MainMenuScene extends Phaser.Scene {
         },
       )
       .setOrigin(0.5);
+  }
+
+  private createControlModeToggle(): void {
+    const y = 820;
+    const auto = this.controlMode === "auto";
+    const label = this.add
+      .text(RENDER_WIDTH / 2 - 168, y, "CREW-STEUERUNG:", {
+        fontFamily: "Consolas, ui-monospace, monospace",
+        fontSize: "15px",
+        fontStyle: "bold",
+        color: "#d9eee9",
+      })
+      .setOrigin(0, 0.5);
+
+    const button = this.add
+      .rectangle(
+        RENDER_WIDTH / 2 + 120,
+        y,
+        280,
+        40,
+        auto ? 0x176f6b : 0xd9843a,
+        1,
+      )
+      .setStrokeStyle(2, 0xfff5d6, 0.5)
+      .setInteractive({ useHandCursor: true });
+    const buttonText = this.add
+      .text(
+        button.x,
+        y,
+        auto ? "⚙ AUTOBATTLE  (klicken)" : "🎯 SELBST ZIELEN  (klicken)",
+        {
+          fontFamily: "Consolas, ui-monospace, monospace",
+          fontSize: "14px",
+          fontStyle: "bold",
+          color: "#fff5d6",
+        },
+      )
+      .setOrigin(0.5);
+
+    void label;
+    void buttonText;
+    button.on("pointerdown", () => {
+      const next: ControlMode = this.controlMode === "auto" ? "manual" : "auto";
+      this.registry.set("controlMode", next);
+      this.scene.restart();
+    });
   }
 
   private createMapCard(map: MapDefinition, x: number): void {

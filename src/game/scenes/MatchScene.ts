@@ -48,6 +48,7 @@ import {
   rejectActivePlan,
 } from "../../simulation/match/commands";
 import { planTurn, type TurnPlan } from "../../simulation/match/planTurn";
+import { planManualShot } from "../../simulation/match/planManualShot";
 import {
   concludeTurn,
   resolveTurn,
@@ -224,6 +225,11 @@ export class MatchScene extends Phaser.Scene {
   private touchGestureMidpoint: TouchPoint | null = null;
   private touchGestureDistance = 0;
   private touchGesturePointerCount = 0;
+  private manualAiming = false;
+  private manualWeaponId: WeaponId = "rocket";
+  private manualAimGraphics: Phaser.GameObjects.Graphics | null = null;
+  private manualDragging = false;
+  private manualDragCurrent: Vector2 | null = null;
 
   public constructor() {
     super("MatchScene");
@@ -273,6 +279,11 @@ export class MatchScene extends Phaser.Scene {
     this.weaponCommandButtons = new Map();
     this.helpVisible = false;
     this.nextGrenadeBounceIndex = 0;
+    this.manualAiming = false;
+    this.manualDragging = false;
+    this.manualDragCurrent = null;
+    this.manualWeaponId = "rocket";
+    this.manualAimGraphics = null;
     this.touchPointers = new Map();
     this.touchGestureMidpoint = null;
     this.touchGestureDistance = 0;
@@ -1007,6 +1018,10 @@ export class MatchScene extends Phaser.Scene {
     this.input.on("pointermove", this.handleTouchPointerMove, this);
     this.input.on("pointerup", this.handleTouchPointerUp, this);
     this.input.on("pointerupoutside", this.handleTouchPointerUp, this);
+    this.input.on("pointerdown", this.handleManualPointerDown, this);
+    this.input.on("pointermove", this.handleManualPointerMove, this);
+    this.input.on("pointerup", this.handleManualPointerUp, this);
+    this.input.on("pointerupoutside", this.handleManualPointerUp, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       keyboard?.off("keydown-SPACE", this.executeSelected, this);
       keyboard?.off("keydown-X", this.rejectCurrentPlan, this);
@@ -1026,6 +1041,10 @@ export class MatchScene extends Phaser.Scene {
       this.input.off("pointermove", this.handleTouchPointerMove, this);
       this.input.off("pointerup", this.handleTouchPointerUp, this);
       this.input.off("pointerupoutside", this.handleTouchPointerUp, this);
+      this.input.off("pointerdown", this.handleManualPointerDown, this);
+      this.input.off("pointermove", this.handleManualPointerMove, this);
+      this.input.off("pointerup", this.handleManualPointerUp, this);
+      this.input.off("pointerupoutside", this.handleManualPointerUp, this);
       this.clearTouchGesture();
       this.autoActionTimer?.remove(false);
       this.autoActionTimer = undefined;
@@ -1054,11 +1073,191 @@ export class MatchScene extends Phaser.Scene {
     this.framePlanningCamera();
     this.updateStatus(status);
 
+    // Task 011: Im manuellen Modus zielt der Spieler die Crew-Züge selbst.
+    if (this.isManualCrewTurn()) {
+      this.beginManualAiming();
+      return;
+    }
+
     if (active.unit.team === "rivals") {
       this.scheduleOpponentAction();
     } else if (!this.plan.selected && this.movementPlan.kind === "hold") {
       this.scheduleTurnAdvance(1_000, "Kein gültiger Plan – Zug wird übersprungen.");
     }
+  }
+
+  private isManualCrewTurn(): boolean {
+    return (
+      this.launchConfig.controlMode === "manual" &&
+      this.activeUnit().unit.team === "crew"
+    );
+  }
+
+  private beginManualAiming(): void {
+    this.manualAiming = true;
+    this.manualDragging = false;
+    this.manualDragCurrent = null;
+    this.manualWeaponId = "rocket";
+    if (!this.manualAimGraphics) {
+      this.manualAimGraphics = this.add.graphics().setDepth(28);
+    }
+    this.manualAimGraphics.clear();
+    this.pathGraphics.clear();
+    this.effectGraphics.clear();
+    this.updateButtons();
+    this.updateManualAimStatus();
+  }
+
+  private endManualAiming(): void {
+    this.manualAiming = false;
+    this.manualDragging = false;
+    this.manualDragCurrent = null;
+    this.manualAimGraphics?.clear();
+  }
+
+  private updateManualAimStatus(): void {
+    const active = this.activeUnit();
+    this.intentHeaderText.setText(`ZIELEN: ${active.unit.displayName}`);
+    this.intentText.setText(
+      `DU STEUERST SELBST\n\n` +
+        `WAFFE  ${WEAPON_PROFILES[this.manualWeaponId].displayName}\n` +
+        `Taste 1/2/3 wechselt die Waffe.\n\n` +
+        `Ziehe von der Figur weg, um Winkel und\n` +
+        `Kraft zu setzen. Loslassen schießt.`,
+    );
+    this.updateStatus(
+      `${active.unit.displayName}: Von der Figur wegziehen und loslassen zum Schuss. Waffe ${WEAPON_PROFILES[this.manualWeaponId].displayName} (1/2/3).`,
+    );
+  }
+
+  /** Startgeschwindigkeit aus dem Ziehvektor (invers: weg = Gegenrichtung). */
+  private manualLaunchVelocity(dragTo: Vector2): Vector2 {
+    const active = this.activeUnit();
+    const anchor = { x: active.unit.position.x, y: active.unit.position.y - 46 };
+    const dragX = anchor.x - dragTo.x;
+    const dragY = anchor.y - dragTo.y;
+    // Ziehweite (max ~260 Weltpunkte) skaliert auf Startgeschwindigkeit.
+    const power = Math.min(1, Math.hypot(dragX, dragY) / 260);
+    const length = Math.hypot(dragX, dragY) || 1;
+    const speed = 240 + power * 620;
+    return { x: (dragX / length) * speed, y: (dragY / length) * speed };
+  }
+
+  private updateManualAimPreview(): void {
+    if (!this.manualAiming || !this.manualDragging || !this.manualDragCurrent) {
+      return;
+    }
+
+    const velocity = this.manualLaunchVelocity(this.manualDragCurrent);
+    const preview = planManualShot(this.simulation, {
+      weaponId: this.manualWeaponId,
+      launchVelocity: velocity,
+    });
+    const graphics = this.manualAimGraphics;
+    if (!graphics) {
+      return;
+    }
+
+    graphics.clear();
+    const selected = preview.action.selected;
+    const samples = selected?.trajectory.samples ?? [];
+
+    if (samples.length >= 2) {
+      graphics.lineStyle(3, COLORS.yellow, 0.9);
+      graphics.beginPath();
+      graphics.moveTo(samples[0]!.position.x, samples[0]!.position.y);
+      for (const sample of samples.slice(1)) {
+        graphics.lineTo(sample.position.x, sample.position.y);
+      }
+      graphics.strokePath();
+
+      const explosion = selected?.trajectory.explosion;
+      if (explosion) {
+        graphics.lineStyle(3, COLORS.coral, 0.9);
+        graphics.strokeCircle(
+          explosion.center.x,
+          explosion.center.y,
+          explosion.radius,
+        );
+      }
+    } else {
+      graphics.lineStyle(3, COLORS.coral, 0.6);
+      const active = this.activeUnit();
+      graphics.lineBetween(
+        active.unit.position.x,
+        active.unit.position.y - 46,
+        this.manualDragCurrent.x,
+        this.manualDragCurrent.y,
+      );
+    }
+  }
+
+  private fireManualShot(): void {
+    if (!this.manualAiming || !this.manualDragCurrent) {
+      return;
+    }
+
+    const velocity = this.manualLaunchVelocity(this.manualDragCurrent);
+    const turnPlan = planManualShot(this.simulation, {
+      weaponId: this.manualWeaponId,
+      launchVelocity: velocity,
+    });
+
+    if (!turnPlan.action.selected) {
+      this.updateStatus("Dieser Schuss trifft kein Terrain – Winkel oder Kraft anpassen.");
+      return;
+    }
+
+    this.endManualAiming();
+    this.turnPlan = turnPlan;
+    this.movementPlan = turnPlan.movement;
+    this.plan = turnPlan.action;
+    this.pendingEvents = resolveTurn(this.simulation, turnPlan);
+    this.startProjectileExecution(this.activeUnit());
+  }
+
+  private selectManualWeapon(weaponId: WeaponId): void {
+    if (!this.manualAiming) {
+      return;
+    }
+
+    this.manualWeaponId = weaponId;
+    this.updateManualAimStatus();
+    this.updateManualAimPreview();
+  }
+
+  private manualPointerWorld(pointer: Phaser.Input.Pointer): Vector2 {
+    const point = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+    return { x: point.x, y: point.y };
+  }
+
+  private handleManualPointerDown(pointer: Phaser.Input.Pointer): void {
+    if (!this.manualAiming || this.helpVisible || this.isTouchHudRegion(pointer)) {
+      return;
+    }
+
+    this.manualDragging = true;
+    this.manualDragCurrent = this.manualPointerWorld(pointer);
+    this.updateManualAimPreview();
+  }
+
+  private handleManualPointerMove(pointer: Phaser.Input.Pointer): void {
+    if (!this.manualAiming || !this.manualDragging) {
+      return;
+    }
+
+    this.manualDragCurrent = this.manualPointerWorld(pointer);
+    this.updateManualAimPreview();
+  }
+
+  private handleManualPointerUp(pointer: Phaser.Input.Pointer): void {
+    if (!this.manualAiming || !this.manualDragging) {
+      return;
+    }
+
+    this.manualDragCurrent = this.manualPointerWorld(pointer);
+    this.manualDragging = false;
+    this.fireManualShot();
   }
 
   private renderPlan(): void {
@@ -1893,14 +2092,26 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private chooseRocketWeapon(): void {
+    if (this.manualAiming) {
+      this.selectManualWeapon("rocket");
+      return;
+    }
     this.chooseManagerWeapon("rocket");
   }
 
   private chooseGrenadeWeapon(): void {
+    if (this.manualAiming) {
+      this.selectManualWeapon("grenade");
+      return;
+    }
     this.chooseManagerWeapon("grenade");
   }
 
   private chooseBreakerWeapon(): void {
+    if (this.manualAiming) {
+      this.selectManualWeapon("breaker");
+      return;
+    }
     this.chooseManagerWeapon("breaker");
   }
 
@@ -1964,6 +2175,25 @@ export class MatchScene extends Phaser.Scene {
   private updateButtons(): void {
     const planning = this.actionState === "planning";
     const playerTurn = planning && this.activeUnit().unit.team === "crew";
+    // Task 011: Im manuellen Zielmodus steuert der Spieler per Maus; die
+    // KI-Kommandobuttons entfallen.
+    const manual = this.manualAiming;
+    this.executeButton.setVisible(!manual);
+    this.executeButtonText.setVisible(!manual);
+    this.rejectButton.setVisible(!manual);
+    this.rejectButtonText.setVisible(!manual);
+    for (const button of this.weaponCommandButtons.values()) {
+      const showWeapon = !manual;
+      button.background.setVisible(true);
+      button.text.setVisible(true);
+      button.icon.setVisible(true);
+      void showWeapon;
+    }
+
+    if (manual) {
+      return;
+    }
+
     const canReject =
       playerTurn && !this.simulation.interventionUsed && Boolean(this.plan.selected);
     const canExecute =

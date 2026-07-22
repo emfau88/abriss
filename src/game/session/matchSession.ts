@@ -6,6 +6,14 @@ import type { MapId } from "../../content/maps/mapCatalog";
 
 export type MatchMode = "manager" | "quick";
 
+/**
+ * Steuerungsmodus des Spielerteams (Task 011): `auto` = Autobattler wie
+ * bisher (KI plant, Manager greift nur ein); `manual` = der Spieler zielt
+ * die Crew-Züge selbst per Maus. Der Rivalen-Zug bleibt in beiden Modi
+ * autonom.
+ */
+export type ControlMode = "auto" | "manual";
+
 export interface FighterLoadout {
   readonly fighterId: FighterId;
   readonly preferredWeaponId: WeaponId;
@@ -15,6 +23,7 @@ export interface MatchLaunchConfig {
   readonly seed: number;
   readonly mapId: MapId;
   readonly crew: readonly FighterLoadout[];
+  readonly controlMode: ControlMode;
 }
 
 export interface MatchReport {
@@ -29,7 +38,10 @@ export interface MatchReport {
 
 const DEFAULT_SEED = 21_072_026;
 
-export function createManagerMatchConfig(state: ManagerState): MatchLaunchConfig {
+export function createManagerMatchConfig(
+  state: ManagerState,
+  controlMode: ControlMode = "auto",
+): MatchLaunchConfig {
   if (state.selectedFighterIds.length !== 3) {
     throw new Error("Vor dem Einsatz müssen genau drei Crewmitglieder gewählt sein.");
   }
@@ -38,6 +50,7 @@ export function createManagerMatchConfig(state: ManagerState): MatchLaunchConfig
     mode: "manager",
     seed: DEFAULT_SEED + state.completedMissions * 101,
     mapId: state.selectedMapId,
+    controlMode,
     crew: state.selectedFighterIds.map((fighterId) => ({
       fighterId,
       preferredWeaponId:
@@ -49,11 +62,13 @@ export function createManagerMatchConfig(state: ManagerState): MatchLaunchConfig
 
 export function createQuickMatchConfig(
   mapId: MapId = "good-mood",
+  controlMode: ControlMode = "auto",
 ): MatchLaunchConfig {
   return {
     mode: "quick",
     seed: DEFAULT_SEED,
     mapId,
+    controlMode,
     crew: [
       { fighterId: "slime", preferredWeaponId: "rocket" },
       { fighterId: "moki", preferredWeaponId: "grenade" },

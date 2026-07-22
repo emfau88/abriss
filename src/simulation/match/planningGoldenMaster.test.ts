@@ -20,6 +20,12 @@ import {
 import type { TeamId } from "../state/matchState";
 import type { BinaryTerrainMask } from "../../simulation/terrain/TerrainMask";
 import { loadTerrainMaskForMap } from "../../testing/pngTerrain";
+import {
+  createMatchSimulation,
+  type MatchSimulationState,
+  type MatchUnitDefinition,
+} from "./matchSimulationState";
+import { planTurn, type TurnPlan } from "./planTurn";
 
 /**
  * Golden Master für Task 021, Schritt 0.
@@ -50,6 +56,8 @@ interface ScenarioUnit {
 interface Scenario {
   readonly terrain: BinaryTerrainMask;
   readonly units: readonly ScenarioUnit[];
+  /** Für den Vergleich mit der Engine ab Schritt 2. */
+  readonly definitions: readonly MatchUnitDefinition[];
 }
 
 interface FrozenPlanningOptions {
@@ -78,6 +86,7 @@ function buildScenario(mapId: (typeof MAP_IDS)[number], slot0: FighterId): Scena
     ...FIGHTER_IDS.filter((fighterId) => fighterId !== slot0).slice(0, 2),
   ];
   const units: ScenarioUnit[] = [];
+  const definitions: MatchUnitDefinition[] = [];
 
   crewFighters.forEach((fighterId, index) => {
     const fighter = FIGHTER_ROSTER[fighterId];
@@ -108,9 +117,24 @@ function buildScenario(mapId: (typeof MAP_IDS)[number], slot0: FighterId): Scena
       hitPoints: 140,
       personality: rival.personality,
     });
+    definitions.push({
+      id: `crew-${fighter.id}`,
+      displayName: fighter.displayName,
+      team: "crew",
+      spawnX: crewX,
+      personality: fighter.personality,
+      preferredWeaponId: fighter.preferredWeaponId,
+    });
+    definitions.push({
+      id: `rival-${index + 1}`,
+      displayName: `RIVALE ${String.fromCharCode(65 + index)}`,
+      team: "rivals",
+      spawnX: rivalX,
+      personality: rival.personality,
+    });
   });
 
-  return { terrain, units };
+  return { terrain, units, definitions };
 }
 
 /** Eingefrorene Kopie von MatchScene.replan() – nicht verändern. */
@@ -266,6 +290,82 @@ describe("planning golden master (Task 021, Schritt 0)", () => {
       }
 
       expect(snapshot).toMatchSnapshot();
+    });
+  }
+});
+
+function freshSimulation(scenario: Scenario, seed: number): MatchSimulationState {
+  return createMatchSimulation({
+    seed,
+    terrain: scenario.terrain,
+    unitDefinitions: scenario.definitions,
+  });
+}
+
+function summarizeTurnPlan(plan: TurnPlan): FrozenPlanningResult {
+  return {
+    movementId: plan.movement.id,
+    movementKind: plan.movement.kind,
+    destination: {
+      x: Math.round(plan.movement.destination.x),
+      y: Math.round(plan.movement.destination.y),
+    },
+    movementScore: plan.movement.score.toFixed(4),
+    selectedCandidateId: plan.action.selected?.id ?? null,
+    weaponId: plan.action.selected?.weaponId ?? null,
+    targetId: plan.action.selected?.targetId ?? null,
+    candidateScore: plan.action.selected
+      ? plan.action.selected.score.toFixed(4)
+      : null,
+    preferenceFellBack: plan.preferenceFellBack,
+  };
+}
+
+describe("planTurn matches the frozen golden master (Task 021, Schritt 2)", () => {
+  for (const mapId of MAP_IDS) {
+    it(`reproduces every frozen case on ${mapId}`, () => {
+      for (const slot0 of FIGHTER_IDS) {
+        const scenario = buildScenario(mapId, slot0);
+        const crewId = `crew-${slot0}`;
+
+        for (const seed of SEEDS) {
+          const preferenceState = freshSimulation(scenario, seed);
+          const preferencePlan = planTurn(preferenceState);
+          const frozenPreference = frozenScenePlanning(scenario, crewId, seed, 1);
+          expect(summarizeTurnPlan(preferencePlan)).toEqual(frozenPreference);
+
+          const forcedState = freshSimulation(scenario, seed);
+          forcedState.forcedWeaponId = "breaker";
+          expect(summarizeTurnPlan(planTurn(forcedState))).toEqual(
+            frozenScenePlanning(scenario, crewId, seed, 1, {
+              forcedWeaponId: "breaker",
+            }),
+          );
+
+          if (frozenPreference.selectedCandidateId) {
+            const rejectedState = freshSimulation(scenario, seed);
+            rejectedState.rejectedCandidateIds = [
+              frozenPreference.selectedCandidateId,
+            ];
+            rejectedState.preferenceConsumedByUnitId.add(crewId);
+            expect(summarizeTurnPlan(planTurn(rejectedState))).toEqual(
+              frozenScenePlanning(scenario, crewId, seed, 1, {
+                rejectedCandidateIds: [frozenPreference.selectedCandidateId],
+                preferenceConsumed: true,
+              }),
+            );
+          }
+
+          const rivalState = freshSimulation(scenario, seed);
+          rivalState.matchState = {
+            ...rivalState.matchState,
+            activeCombatantId: "rival-1",
+          };
+          expect(summarizeTurnPlan(planTurn(rivalState))).toEqual(
+            frozenScenePlanning(scenario, "rival-1", seed, 1),
+          );
+        }
+      }
     });
   }
 });

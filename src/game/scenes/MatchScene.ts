@@ -30,7 +30,6 @@ import {
 } from "../../content/vfx/secondaryVfxKit";
 import {
   calculateBlastDamage,
-  planRocketAction,
   topUtilityReasons,
   WEAPON_PROFILES,
   type Personality,
@@ -40,18 +39,15 @@ import {
 } from "../../simulation/ai/RocketActionPlanner";
 import {
   createMatchSimulation,
-  plannerUnitsFromSimulation,
   type MatchSimulationState,
   type SimulationUnit,
 } from "../../simulation/match/matchSimulationState";
+import { planTurn } from "../../simulation/match/planTurn";
 import {
   sampleTrajectoryAtElapsed,
   type Vector2,
 } from "../../simulation/ballistics/Ballistics";
-import {
-  planLocalMovement,
-  type LocalMovementPlan,
-} from "../../simulation/movement/LocalMovementPlanner";
+import type { LocalMovementPlan } from "../../simulation/movement/LocalMovementPlanner";
 import {
   simulateExplosionKnockback,
   type ExplosionKnockbackResult,
@@ -1035,84 +1031,18 @@ export class MatchScene extends Phaser.Scene {
 
   private replan(status: string): void {
     const active = this.activeUnit();
-    this.personality = active.unit.personality;
     this.opponentAutoReady = false;
-    const plannerUnits = plannerUnitsFromSimulation(this.simulation);
-    const turnSeed = this.launchConfig.seed + this.matchState.turnNumber * 9_973;
-    const preferredWeaponId =
-      active.unit.team === "crew" &&
-      !this.simulation.preferenceConsumedByUnitId.has(active.unit.id) &&
-      !this.simulation.forcedWeaponId
-        ? this.simulation.preferredWeaponByUnitId.get(active.unit.id)
-        : undefined;
-    const planningWeaponIds: readonly WeaponId[] = this.simulation.forcedWeaponId
-      ? [this.simulation.forcedWeaponId]
-      : preferredWeaponId
-        ? [preferredWeaponId]
-        : ["rocket", "grenade", "breaker"];
-    const movementCandidates = planLocalMovement({
-      terrain: this.terrainMask,
-      units: plannerUnits,
-      activeUnitId: active.unit.id,
-      personality: this.personality,
-      seed: turnSeed,
-    });
-    let best:
-      | {
-          movement: LocalMovementPlan;
-          plan: RocketActionPlan;
-          combinedScore: number;
-        }
-      | undefined;
-    let fallbackPlan: RocketActionPlan | undefined;
+    const turnPlan = planTurn(this.simulation);
+    this.personality = turnPlan.personality;
 
-    for (const movement of movementCandidates) {
-      const movedUnits = plannerUnits.map((unit) =>
-        unit.id === active.unit.id
-          ? { ...unit, position: { ...movement.destination } }
-          : unit,
-      );
-      const weaponPlan = planRocketAction({
-        terrain: this.terrainMask,
-        units: movedUnits,
-        activeUnitId: active.unit.id,
-        personality: this.personality,
-        seed: turnSeed,
-        rejectedCandidateIds: this.simulation.rejectedCandidateIds,
-        weaponIds: planningWeaponIds,
-      });
-      fallbackPlan ??= weaponPlan;
-
-      if (!weaponPlan.selected) {
-        continue;
-      }
-
-      const combinedScore = weaponPlan.selected.score + movement.score;
-      if (
-        !best ||
-        combinedScore > best.combinedScore ||
-        (combinedScore === best.combinedScore &&
-          movement.id.localeCompare(best.movement.id) < 0)
-      ) {
-        best = { movement, plan: weaponPlan, combinedScore };
-      }
+    if (turnPlan.preferenceFellBack && turnPlan.usedPreferredWeaponId) {
+      status = `${active.unit.displayName} findet mit ${WEAPON_PROFILES[turnPlan.usedPreferredWeaponId].displayName} keinen sicheren Plan und weicht auf das freie Arsenal aus.`;
+    } else if (turnPlan.usedPreferredWeaponId) {
+      status = `${status} Loadout-Präferenz: ${WEAPON_PROFILES[turnPlan.usedPreferredWeaponId].displayName}.`;
     }
 
-    if (preferredWeaponId && !best) {
-      this.simulation.preferenceConsumedByUnitId.add(active.unit.id);
-      this.replan(
-        `${active.unit.displayName} findet mit ${WEAPON_PROFILES[preferredWeaponId].displayName} keinen sicheren Plan und weicht auf das freie Arsenal aus.`,
-      );
-      return;
-    }
-
-    if (preferredWeaponId) {
-      this.simulation.preferenceConsumedByUnitId.add(active.unit.id);
-      status = `${status} Loadout-Präferenz: ${WEAPON_PROFILES[preferredWeaponId].displayName}.`;
-    }
-
-    this.movementPlan = best?.movement ?? movementCandidates[0]!;
-    this.plan = best?.plan ?? fallbackPlan!;
+    this.movementPlan = turnPlan.movement;
+    this.plan = turnPlan.action;
 
     this.updateActiveUnitPresentation();
     this.renderPlan();

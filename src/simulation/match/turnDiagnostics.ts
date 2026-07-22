@@ -67,6 +67,12 @@ export interface TurnDiagnostic {
   readonly rankedCandidates: readonly CandidateDiagnostic[];
   /** Verfügbarkeit und Scheiterngründe pro erwogener Waffe (Task 023). */
   readonly weaponAvailability: readonly WeaponAvailabilityDiagnostic[];
+  /** Streukegel der Ausführung (Task 024); null ohne Waffenplan. */
+  readonly execution: {
+    readonly spreadRadius: number;
+    readonly aimOffsetX: number;
+    readonly aimOffsetY: number;
+  } | null;
 }
 
 const RANKED_CANDIDATE_LIMIT = 5;
@@ -140,6 +146,13 @@ export function diagnoseTurn(
     ).length,
     rankedCandidates,
     weaponAvailability: summarizeWeaponAvailability(turnPlan),
+    execution: turnPlan.execution
+      ? {
+          spreadRadius: turnPlan.execution.spreadRadius,
+          aimOffsetX: roundScore(turnPlan.execution.aimOffset.x),
+          aimOffsetY: roundScore(turnPlan.execution.aimOffset.y),
+        }
+      : null,
   };
 }
 

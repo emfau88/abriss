@@ -275,3 +275,13 @@ Hover-Bewegung besitzen keine Gameplay-Autorität.
 **Konsequenz:** Space-Resort liegt im Zielkorridor (47,8/20,8/31,4, Ausgänge 5:5), die Sonneninseln sind deutlich verbessert (54,3 % Brecher statt 66,7 %, Ausgänge 6:4), verfehlen den Korridor aber noch; der dokumentierte Resthebel ist sichtlinien-bewusste Zielpunktwahl oder Kartentuning. Golden-Master- und Metrik-Snapshots wurden als bewusste Balance-Entscheidung erneuert.
 
 **Umsetzung:** Task 023, ausgeführt von Claude Fable 5 (Anthropic) am 22. Juli 2026.
+
+## 2026-07-22 – D-033: Designte Unvollkommenheit – Streukegel und Persönlichkeits-Blindflecken
+
+**Entscheidung:** Das Spiel bleibt ein Autobattler, aber die Figuren handeln bewusst nicht mehr perfekt. Zwei Mechanismen: (1) **Persönlichkeits-Blindflecken** (`PERSONALITY_PERCEPTION`) verzerren die *Wahrnehmung* einzelner Metriken – Vorsichtig übertreibt Risiken, Explosiv redet sie klein, Showboat überschätzt den Showfaktor; die Verzerrung ist in Diagnose und Intent-Panel sichtbar begründet (D-006 gewahrt: kein verborgener Zufallswurf). (2) Ein **Streukegel** (`executionSpread.ts`) trennt angekündigte Absicht von ausgeführtem Ergebnis: Jeder Schuss kündigt einen persönlichkeitsabhängigen Streuradius an, die Ausführung ist ein deterministisch geseedetes, zur Planungszeit feststehendes Sample daraus. D-011 bleibt gewahrt – Vorschau zeigt Absicht plus ehrliche Unsicherheit, wiedergegeben wird exakt das eine vorab feststehende Sample.
+
+**Grund:** Auf die Nutzerfrage „selbst steuern oder Autobattler?“ lautet die Antwort: Autobattler ist tragfähig, aber nur mit Drama zwischen Ankündigung und Ausführung. Die Simulator-Messung belegte zuvor, dass alle Persönlichkeiten identische Kandidaten wählten. Nach dieser Änderung verändern die sechs Persönlichkeits-Matchups die Matchausgänge messbar (gemischte Sieger, Zuglängen 10–23) – Persönlichkeit ist erstmals ausgangswirksam.
+
+**Konsequenz:** Der Streukegel benachteiligt real kurzreichweitige Waffen, weil die Kandidatenbewertung weiter auf die perfekte Vorschau plant; der Panzerfaust-Anteil stieg dadurch von 37,5 %/47,8 % (D-032) auf 62 %/57 %. Diese Balance-Wechselwirkung ist dokumentiert und bewusst nicht durch stille Balance-Verschlechterung oder Entfernen des Streukegels kaschiert, sondern als **Task 026** (streuungsbewusste Bewertung) ausgelagert. Damit ist Task 011 (direktes Steuerungsexperiment) jetzt fair vergleichbar, sollte aber erst nach Task 026 durchgeführt werden.
+
+**Umsetzung:** Task 024, ausgeführt von Claude Fable 5 (Anthropic) am 22. Juli 2026.

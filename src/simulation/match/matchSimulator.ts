@@ -1,4 +1,5 @@
 import type { WeaponId } from "../ai/RocketActionPlanner";
+import type { TeamId } from "../state/matchState";
 import { PERSONALITY_CYCLE } from "./commands";
 import {
   activeSimulationUnit,
@@ -305,6 +306,63 @@ const WEAPON_LABELS: Record<WeaponId, string> = {
   grenade: "Wurfgranate",
   breaker: "Geländebrecher",
 };
+
+/** Persönlichkeits-Matchup (Task 024): ein deterministisches Match je Paarung. */
+export interface MatchupScenario {
+  readonly label: string;
+  createState(): MatchSimulationState;
+}
+
+export interface MatchupResult {
+  readonly label: string;
+  readonly outcome: TeamId | "draw";
+  readonly turnCount: number;
+}
+
+export function simulateMatchups(
+  scenarios: readonly MatchupScenario[],
+  options: SimulateOptions = {},
+): readonly MatchupResult[] {
+  return scenarios.map((scenario) => {
+    const result = runMatch(scenario.createState(), {
+      ...(options.maximumTurns ? { maximumTurns: options.maximumTurns } : {}),
+    });
+
+    return {
+      label: scenario.label,
+      outcome: result.outcome,
+      turnCount: result.turnCount,
+    };
+  });
+}
+
+export function renderMatchupResults(
+  results: readonly MatchupResult[],
+): string {
+  const lines = [
+    "",
+    "## Persönlichkeits-Matchups",
+    "",
+    "Je Paarung ein deterministisches Match (Crew-Team gegen Rivalen-Team,",
+    "alle Figuren der Seite mit derselben Persönlichkeit).",
+    "",
+    "| Paarung | Ausgang | Züge |",
+    "| --- | --- | ---: |",
+  ];
+
+  for (const result of results) {
+    const outcome =
+      result.outcome === "crew"
+        ? "Crew gewinnt"
+        : result.outcome === "rivals"
+          ? "Rivalen gewinnen"
+          : "Unentschieden";
+    lines.push(`| ${result.label} | ${outcome} | ${result.turnCount} |`);
+  }
+
+  lines.push("");
+  return lines.join("\n");
+}
 
 /** Deterministischer Markdown-Bericht ohne Zeitstempel. */
 export function renderSimulationReport(report: SimulationReport): string {

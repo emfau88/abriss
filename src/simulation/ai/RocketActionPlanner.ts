@@ -168,6 +168,32 @@ const PERSONALITY_WEIGHTS: Record<Personality, PersonalityWeights> = {
   },
 };
 
+/**
+ * Task 024: Persönlichkeits-Blindflecken. Persönlichkeiten nehmen einzelne
+ * Metriken systematisch verzerrt wahr – Explosiv redet Risiken klein,
+ * Vorsichtig übertreibt sie, Showboat überschätzt den Showfaktor. Die
+ * Verzerrung fließt in die Bewertung ein und ist in den Komponenten (und
+ * damit in Diagnose und Intent-Panel) sichtbar.
+ */
+export interface PersonalityPerception {
+  readonly selfRisk: number;
+  readonly friendlyRisk: number;
+  readonly showmanship: number;
+  readonly aimError: number;
+}
+
+export const PERSONALITY_PERCEPTION: Record<Personality, PersonalityPerception> = {
+  cautious: { selfRisk: 1.45, friendlyRisk: 1.3, showmanship: 1, aimError: 1.15 },
+  explosive: { selfRisk: 0.4, friendlyRisk: 0.55, showmanship: 1, aimError: 0.9 },
+  showboat: { selfRisk: 0.8, friendlyRisk: 0.85, showmanship: 1.75, aimError: 1 },
+};
+
+export const PERSONALITY_PERCEPTION_NOTES: Record<Personality, string> = {
+  cautious: "übertreibt Eigen- und Teamrisiko",
+  explosive: "unterschätzt Eigen- und Teamrisiko deutlich",
+  showboat: "überschätzt den Showfaktor",
+};
+
 const REASON_LABELS: Record<UtilityReasonCode, string> = {
   "enemy-effect": "Trefferwirkung",
   "friendly-risk": "Kameradenrisiko",
@@ -202,10 +228,16 @@ export function planRocketAction(input: RocketPlannerInput): RocketActionPlan {
   for (const target of targets) {
     for (const weaponId of weaponIds) {
       const weapon = WEAPON_PROFILES[weaponId];
-      const flightTimes =
+      const baseFlightTimes =
         weaponId === "rocket" && input.candidateFlightTimesSeconds
           ? input.candidateFlightTimesSeconds
           : weapon.flightTimesSeconds;
+      // Task 024: Showboat erwägt pro Waffe zusätzlich einen besonders
+      // hohen Showbogen – eigene Optionsmenge statt nur anderer Gewichte.
+      const flightTimes =
+        input.personality === "showboat"
+          ? [...baseFlightTimes, Math.max(...baseFlightTimes) + 0.6]
+          : baseFlightTimes;
       const explosionRadius =
         weaponId === "rocket" && input.explosionRadius
           ? input.explosionRadius
@@ -337,13 +369,22 @@ export function scoreRocketMetrics(
   seedVariation = 0,
 ): readonly UtilityComponent[] {
   const weights = PERSONALITY_WEIGHTS[personality];
+  const perception = PERSONALITY_PERCEPTION[personality];
   const values: readonly [UtilityReasonCode, number, number][] = [
     ["enemy-effect", metrics.enemyDamage, weights.enemyEffect],
-    ["friendly-risk", metrics.friendlyDamage, weights.friendlyRisk],
-    ["self-risk", metrics.selfDamage, weights.selfRisk],
+    [
+      "friendly-risk",
+      metrics.friendlyDamage * perception.friendlyRisk,
+      weights.friendlyRisk,
+    ],
+    ["self-risk", metrics.selfDamage * perception.selfRisk, weights.selfRisk],
     ["demolition", metrics.terrainEffect, weights.demolition],
-    ["showmanship", metrics.showmanship, weights.showmanship],
-    ["aim-error", metrics.aimError, weights.aimError],
+    [
+      "showmanship",
+      metrics.showmanship * perception.showmanship,
+      weights.showmanship,
+    ],
+    ["aim-error", metrics.aimError * perception.aimError, weights.aimError],
     ["seed-variation", 1, seedVariation],
   ];
 

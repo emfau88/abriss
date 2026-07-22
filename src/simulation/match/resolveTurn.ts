@@ -2,7 +2,10 @@ import {
   calculateBlastDamage,
   type RocketCandidate,
 } from "../ai/RocketActionPlanner";
-import type { Vector2 } from "../ballistics/Ballistics";
+import type {
+  RocketTrajectoryResult,
+  Vector2,
+} from "../ballistics/Ballistics";
 import {
   simulateExplosionKnockback,
   type ExplosionKnockbackResult,
@@ -51,6 +54,8 @@ export type MatchTurnEvent =
       readonly type: "projectile-resolved";
       readonly unitId: string;
       readonly candidate: RocketCandidate;
+      /** Ausgeführte Flugbahn aus dem Streukegel (Task 024). */
+      readonly executedTrajectory: RocketTrajectoryResult;
     }
   | {
       readonly type: "terrain-mutated";
@@ -122,13 +127,19 @@ export function resolveTurn(
     return events;
   }
 
+  // Task 024: Fachlich zählt die ausgeführte Flugbahn aus dem Streukegel,
+  // nicht die angekündigte Absicht.
+  const executedTrajectory =
+    turnPlan.execution?.trajectory ?? candidate.trajectory;
+
   events.push({
     type: "projectile-resolved",
     unitId: active.id,
     candidate,
+    executedTrajectory,
   });
 
-  const explosion = candidate.trajectory.explosion;
+  const explosion = executedTrajectory.explosion;
 
   if (!explosion) {
     return events;

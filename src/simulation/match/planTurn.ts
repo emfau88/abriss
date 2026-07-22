@@ -8,6 +8,7 @@ import {
   planLocalMovement,
   type LocalMovementPlan,
 } from "../movement/LocalMovementPlanner";
+import { planExecution, type PlannedExecution } from "./executionSpread";
 import {
   activeSimulationUnit,
   plannerUnitsFromSimulation,
@@ -41,6 +42,11 @@ export interface TurnPlan {
   readonly usedPreferredWeaponId: WeaponId | null;
   /** Die Präferenz fand keinen Plan; es gilt das freie Arsenal. */
   readonly preferenceFellBack: boolean;
+  /**
+   * Streukegel-Ausführung des gewählten Kandidaten (Task 024): steht bereits
+   * zur Planungszeit deterministisch fest; null bei reinen Positionszügen.
+   */
+  readonly execution: PlannedExecution | null;
 }
 
 export function turnSeedFor(state: MatchSimulationState): number {
@@ -145,5 +151,8 @@ export function planTurn(state: MatchSimulationState): TurnPlan {
         : "skip",
     usedPreferredWeaponId: preferredWeaponId ?? null,
     preferenceFellBack: false,
+    execution: action.selected
+      ? planExecution(state.terrain, action.selected, personality, turnSeed)
+      : null,
   };
 }

@@ -29,6 +29,7 @@ import {
   type SecondaryVfx,
 } from "../../content/vfx/secondaryVfxKit";
 import {
+  PERSONALITY_PERCEPTION_NOTES,
   topUtilityReasons,
   WEAPON_PROFILES,
   type Personality,
@@ -325,8 +326,12 @@ export class MatchScene extends Phaser.Scene {
 
     this.executionElapsedSeconds += deltaMilliseconds / 1000;
     const selected = this.plan.selected;
+    // Task 024: Wiedergegeben wird die ausgeführte Flugbahn aus dem
+    // Streukegel, nicht die angekündigte Absicht.
+    const executedTrajectory =
+      this.turnPlan.execution?.trajectory ?? selected.trajectory;
     const playback = sampleTrajectoryAtElapsed(
-      selected.trajectory,
+      executedTrajectory,
       this.executionElapsedSeconds,
     );
 
@@ -338,11 +343,11 @@ export class MatchScene extends Phaser.Scene {
         ),
       );
       while (
-        this.nextGrenadeBounceIndex < selected.trajectory.bounces.length &&
-        (selected.trajectory.bounces[this.nextGrenadeBounceIndex]?.timeSeconds ??
+        this.nextGrenadeBounceIndex < executedTrajectory.bounces.length &&
+        (executedTrajectory.bounces[this.nextGrenadeBounceIndex]?.timeSeconds ??
           Number.POSITIVE_INFINITY) <= this.executionElapsedSeconds
       ) {
-        const bounce = selected.trajectory.bounces[this.nextGrenadeBounceIndex];
+        const bounce = executedTrajectory.bounces[this.nextGrenadeBounceIndex];
         if (bounce) {
           this.showSecondaryVfx(
             "bounce",
@@ -369,7 +374,7 @@ export class MatchScene extends Phaser.Scene {
     this.updateCameraDebug();
 
     if (playback.complete) {
-      this.completeAction(selected);
+      this.completeAction();
     }
   }
 
@@ -1078,6 +1083,24 @@ export class MatchScene extends Phaser.Scene {
       this.drawTrajectory(selected, COLORS.yellow, 0.96, 3);
       const explosion = selected.trajectory.explosion;
 
+      // Task 024: ehrlicher Streukegel – der tatsächliche Einschlag weicht
+      // deterministisch bis zu diesem Radius vom angekündigten Punkt ab.
+      if (explosion && this.turnPlan.execution) {
+        const spread = this.turnPlan.execution.spreadRadius;
+        this.effectGraphics.lineStyle(2, COLORS.yellow, 0.5);
+        this.effectGraphics.strokeCircle(
+          explosion.center.x,
+          explosion.center.y,
+          spread,
+        );
+        this.effectGraphics.lineStyle(1, COLORS.coral, 0.3);
+        this.effectGraphics.strokeCircle(
+          explosion.center.x,
+          explosion.center.y,
+          explosion.radius + spread,
+        );
+      }
+
       if (explosion) {
         this.effectGraphics.lineStyle(3, COLORS.coral, 0.92);
         this.effectGraphics.strokeCircle(
@@ -1202,6 +1225,9 @@ export class MatchScene extends Phaser.Scene {
       selected.weaponId === "grenade"
         ? `ZÜNDER  ${lastTrajectorySample?.timeSeconds.toFixed(2) ?? "–"} s · ${selected.trajectory.bounces.length} PRALLER`
         : `BOGEN  ${arcLabel(selected.flightTimeSeconds)} · ${selected.flightTimeSeconds.toFixed(2)} s`;
+    const spreadDetail = this.turnPlan.execution
+      ? `\nSTREUUNG  ±${this.turnPlan.execution.spreadRadius} Punkte (${PERSONALITY_PERCEPTION_NOTES[this.personality]})`
+      : "";
 
     this.intentText.setText(
       `${PERSONALITY_LABELS[this.personality]}\n` +
@@ -1209,7 +1235,7 @@ export class MatchScene extends Phaser.Scene {
         `POSITION  ${movementLabel(this.movementPlan)}\n` +
         `WAFFE  ${selected.weaponName}\n` +
         `ZIEL  ${selected.targetName}\n` +
-        `${trajectoryDetail}\n` +
+        `${trajectoryDetail}${spreadDetail}\n` +
         `${Math.round(selected.metrics.enemyDamage)} SCHADEN  ·  ${Math.round(selected.metrics.terrainEffect)}% TERRAIN\n` +
         `RISIKO  ${Math.round(selected.metrics.friendlyDamage)} TEAM  ·  ${Math.round(selected.metrics.selfDamage)} SELBST\n\n` +
         `WARUM?  ${positive}\n` +
@@ -1368,7 +1394,8 @@ export class MatchScene extends Phaser.Scene {
       return;
     }
 
-    const firstSample = selected.trajectory.samples[0];
+    const firstSample = (this.turnPlan.execution?.trajectory ??
+      selected.trajectory).samples[0];
 
     if (!firstSample) {
       return;
@@ -1396,7 +1423,7 @@ export class MatchScene extends Phaser.Scene {
     );
   }
 
-  private completeAction(candidate: RocketCandidate): void {
+  private completeAction(): void {
     if (this.actionState !== "executing") {
       return;
     }
@@ -1410,7 +1437,7 @@ export class MatchScene extends Phaser.Scene {
         event.type === "terrain-mutated",
     );
 
-    if (!candidate.trajectory.explosion || !explosionEvent) {
+    if (!explosionEvent) {
       this.scheduleTurnAdvance(700, "Aktion beendet, aber ohne Explosion.");
       this.updateButtons();
       return;

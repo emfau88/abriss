@@ -15,10 +15,14 @@ import {
   type FighterId,
 } from "../../manager/fighterRoster";
 import { loadTerrainMaskForMap } from "../../testing/pngTerrain";
+import type { Personality } from "../ai/RocketActionPlanner";
 import {
+  renderMatchupResults,
   renderSimulationReport,
   simulateMatches,
+  simulateMatchups,
   type DivergenceProbe,
+  type MatchupScenario,
   type SimulationScenario,
 } from "./matchSimulator";
 import {
@@ -95,8 +99,38 @@ function buildDivergenceProbes(): DivergenceProbe[] {
   return probes;
 }
 
+const MATCHUP_PAIRINGS: readonly [Personality, Personality][] = [
+  ["cautious", "explosive"],
+  ["explosive", "showboat"],
+  ["showboat", "cautious"],
+];
+
+function buildMatchupScenarios(): MatchupScenario[] {
+  const scenarios: MatchupScenario[] = [];
+
+  for (const mapId of MAP_IDS) {
+    for (const [crewPersonality, rivalPersonality] of MATCHUP_PAIRINGS) {
+      scenarios.push({
+        label: `${mapId}: Crew ${crewPersonality} vs. Rivalen ${rivalPersonality}`,
+        createState: () => {
+          const state = stateForConfig(createQuickMatchConfig(mapId));
+
+          for (const unit of state.units) {
+            unit.personality =
+              unit.team === "crew" ? crewPersonality : rivalPersonality;
+          }
+
+          return state;
+        },
+      });
+    }
+  }
+
+  return scenarios;
+}
+
 describe("mass simulator (Task 022, Teil B)", () => {
-  it("aggregates a deterministic report over the default matrix", () => {
+  it("aggregates a deterministic report over the default matrix", { timeout: 120_000 }, () => {
     const report = simulateMatches(buildScenarios(DEFAULT_SEED_COUNT), {
       divergenceProbes: buildDivergenceProbes(),
     });
@@ -125,7 +159,14 @@ describe("mass simulator (Task 022, Teil B)", () => {
     // erfordern ein ausdrückliches Snapshot-Update.
     expect(report).toMatchSnapshot();
 
-    const rendered = renderSimulationReport(report);
+    // Persönlichkeits-Matchups (Task 024): misst, ob Persönlichkeit auch
+    // Matchausgänge verändert, nicht nur die Zugwahl.
+    const matchups = simulateMatchups(buildMatchupScenarios());
+    expect(matchups).toHaveLength(MAP_IDS.length * MATCHUP_PAIRINGS.length);
+    expect(matchups).toMatchSnapshot();
+
+    const rendered =
+      renderSimulationReport(report) + renderMatchupResults(matchups);
     mkdirSync(join(process.cwd(), "reports"), { recursive: true });
     writeFileSync(
       join(process.cwd(), "reports", "simulation-report.md"),
@@ -133,6 +174,7 @@ describe("mass simulator (Task 022, Teil B)", () => {
     );
     expect(rendered).toContain("## Karte `good-mood`");
     expect(rendered).toContain("## Karte `space-resort`");
+    expect(rendered).toContain("## Persönlichkeits-Matchups");
   });
 
   it.skipIf(!process.env["SIM_FULL"])(

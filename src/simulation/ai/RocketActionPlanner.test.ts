@@ -120,8 +120,9 @@ describe("rocket action planner", () => {
       weaponIds: ["grenade"],
     });
 
-    // Zwei Ziele × vier Granatenbögen × zwei Zielpunkte (direkt und kurz).
-    expect(plan.candidates).toHaveLength(16);
+    // Zwei Ziele × (vier Granatenbögen + Showboat-Extrabogen, Task 024) ×
+    // zwei Zielpunkte (direkt und kurz).
+    expect(plan.candidates).toHaveLength(20);
     expect(
       plan.candidates.some(
         (candidate) => candidate.trajectory.outcome === "fuse-expired",

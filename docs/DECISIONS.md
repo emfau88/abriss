@@ -305,3 +305,7 @@ Hover-Bewegung besitzen keine Gameplay-Autorität.
 **Konsequenz:** Erster Wurf bewusst schlank – kein manuelles Laufen/Springen (Schuss vom Stand), kein optionaler KI-Vorschlag, Manager-Einsatz bleibt Autobattle. Die architektonische Grenze aus D-029 (`simulation/match` als einzige Autorität) bleibt gewahrt: Der manuelle Modus fügt nur eine weitere Plan-Quelle hinzu, keine parallele Ausführungslogik. Nach der Nutzerbewertung wird über Ausbau (Bewegung, Vorschlag) oder Rücknahme entschieden.
 
 **Umsetzung:** Task 011 (erster Wurf), ausgeführt von Claude Fable 5 (Anthropic) am 22. Juli 2026.
+
+## 2026-07-22 – D-035 Ergänzung: Manuelle Bewegung und Touch
+
+Der Testschalter aus D-035 wurde auf Nutzerwunsch vervollständigt. Der manuelle Crew-Zug läuft jetzt zweiphasig (erst bewegen, dann zielen): Bewegungsziele stammen aus demselben deterministischen `planLocalMovement` wie bei der KI (Laufen/Springen im 190-Weltpunkte-Limit) und werden als antippbare Weltmarker angeboten; `applyManualMovement` schreibt die gewählte Position in den Simulationszustand. Steuerung funktioniert per Maus und Touch: Ein-Finger-Zielen (Kamerapan in der Zielphase deaktiviert, Zwei-Finger-Zoom bleibt), antippbare Bewegungsmarker und HUD-Waffenbuttons als tastaturfreie Waffenwahl. Kein manueller Feinlauf jenseits der vorbereiteten Ziele – Bewegung bleibt terrain-sicher und begrenzt. Die Grenze aus D-029 bleibt gewahrt: `manualMovement` und `planManualShot` sind zusätzliche Plan-Quellen, keine parallele Ausführungslogik.

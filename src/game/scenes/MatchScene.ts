@@ -50,6 +50,10 @@ import {
 import { planTurn, type TurnPlan } from "../../simulation/match/planTurn";
 import { planManualShot } from "../../simulation/match/planManualShot";
 import {
+  applyManualMovement,
+  manualMovementOptions,
+} from "../../simulation/match/manualMovement";
+import {
   concludeTurn,
   resolveTurn,
   type MatchTurnEvent,
@@ -225,11 +229,13 @@ export class MatchScene extends Phaser.Scene {
   private touchGestureMidpoint: TouchPoint | null = null;
   private touchGestureDistance = 0;
   private touchGesturePointerCount = 0;
-  private manualAiming = false;
+  private manualPhase: "off" | "movement" | "aiming" = "off";
   private manualWeaponId: WeaponId = "rocket";
   private manualAimGraphics: Phaser.GameObjects.Graphics | null = null;
   private manualDragging = false;
   private manualDragCurrent: Vector2 | null = null;
+  private manualMoveMarkers: Phaser.GameObjects.Container[] = [];
+  private manualMoveOptions: LocalMovementPlan[] = [];
 
   public constructor() {
     super("MatchScene");
@@ -279,11 +285,13 @@ export class MatchScene extends Phaser.Scene {
     this.weaponCommandButtons = new Map();
     this.helpVisible = false;
     this.nextGrenadeBounceIndex = 0;
-    this.manualAiming = false;
+    this.manualPhase = "off";
     this.manualDragging = false;
     this.manualDragCurrent = null;
     this.manualWeaponId = "rocket";
     this.manualAimGraphics = null;
+    this.manualMoveMarkers = [];
+    this.manualMoveOptions = [];
     this.touchPointers = new Map();
     this.touchGestureMidpoint = null;
     this.touchGestureDistance = 0;
@@ -869,9 +877,15 @@ export class MatchScene extends Phaser.Scene {
         )
         .setDisplaySize(18, 18)
         .setDepth(83);
-      background.on("pointerdown", () =>
-        this.chooseManagerWeapon(definition.id),
-      );
+      background.on("pointerdown", () => {
+        // Task 011: Im manuellen Zielmodus wählen die Buttons die Zielwaffe
+        // (Touch-Ersatz für 1/2/3), sonst den Managerbefehl.
+        if (this.manualAiming) {
+          this.selectManualWeapon(definition.id);
+        } else {
+          this.chooseManagerWeapon(definition.id);
+        }
+      });
       this.weaponCommandButtons.set(definition.id, {
         background,
         text,
@@ -944,11 +958,16 @@ export class MatchScene extends Phaser.Scene {
         384,
         231,
         [
-          "AKTION",
+          "AKTION (AUTOBATTLE)",
           "Leertaste   angekündigten Plan ausführen",
           "X            einmalig: ‚Lass das!‘",
           "1 / 2 / 3    einmalig Waffe vorgeben",
           "P            Persönlichkeit im Prototyp wechseln",
+          "",
+          "SELBST STEUERN (im Hauptmenü wählbar)",
+          "Marker antippen  laufen (→) oder springen (⤴)",
+          "von Figur wegziehen  Winkel + Kraft, loslassen schießt",
+          "1 / 2 / 3 oder HUD-Waffe  Waffe im Zielmodus",
           "",
           "KAMERA",
           "Pfeile / 1 Finger   Ausschnitt verschieben",
@@ -1073,9 +1092,10 @@ export class MatchScene extends Phaser.Scene {
     this.framePlanningCamera();
     this.updateStatus(status);
 
-    // Task 011: Im manuellen Modus zielt der Spieler die Crew-Züge selbst.
+    // Task 011: Im manuellen Modus steuert der Spieler die Crew-Züge selbst –
+    // erst Bewegung wählen, dann zielen.
     if (this.isManualCrewTurn()) {
-      this.beginManualAiming();
+      this.beginManualTurn();
       return;
     }
 
@@ -1093,8 +1113,11 @@ export class MatchScene extends Phaser.Scene {
     );
   }
 
-  private beginManualAiming(): void {
-    this.manualAiming = true;
+  private get manualAiming(): boolean {
+    return this.manualPhase === "aiming";
+  }
+
+  private beginManualTurn(): void {
     this.manualDragging = false;
     this.manualDragCurrent = null;
     this.manualWeaponId = "rocket";
@@ -1104,15 +1127,161 @@ export class MatchScene extends Phaser.Scene {
     this.manualAimGraphics.clear();
     this.pathGraphics.clear();
     this.effectGraphics.clear();
+    this.beginManualMovement();
+  }
+
+  private beginManualMovement(): void {
+    this.manualPhase = "movement";
+    this.manualMoveOptions = [...manualMovementOptions(this.simulation)];
+    this.drawManualMoveMarkers();
+    this.updateButtons();
+    this.updateManualMovementStatus();
+  }
+
+  private clearManualMoveMarkers(): void {
+    for (const marker of this.manualMoveMarkers) {
+      marker.destroy();
+    }
+    this.manualMoveMarkers = [];
+  }
+
+  private drawManualMoveMarkers(): void {
+    this.clearManualMoveMarkers();
+
+    for (const option of this.manualMoveOptions) {
+      if (option.kind === "hold") {
+        continue;
+      }
+
+      const isJump = option.kind === "jump";
+      const dot = this.add
+        .circle(0, 0, 15, isJump ? COLORS.yellow : COLORS.tealBright, 0.85)
+        .setStrokeStyle(3, 0x0c2429, 0.9);
+      const glyph = this.add
+        .text(0, 0, isJump ? "⤴" : "→", {
+          fontFamily: "Segoe UI, Arial, sans-serif",
+          fontSize: "18px",
+          fontStyle: "bold",
+          color: "#0c2429",
+        })
+        .setOrigin(0.5);
+      const container = this.registerWorldObject(
+        this.add
+          .container(option.destination.x, option.destination.y - 24, [dot, glyph])
+          .setDepth(29)
+          .setSize(46, 46)
+          .setInteractive({ useHandCursor: true }),
+      );
+      container.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+        pointer.event?.stopPropagation?.();
+        this.chooseManualMovement(option);
+      });
+      this.tweens.add({
+        targets: container,
+        y: container.y - 6,
+        duration: 620,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut",
+      });
+      this.manualMoveMarkers.push(container);
+    }
+  }
+
+  private chooseManualMovement(movement: LocalMovementPlan): void {
+    if (this.manualPhase !== "movement") {
+      return;
+    }
+
+    this.clearManualMoveMarkers();
+    this.manualMoveOptions = [];
+
+    if (movement.kind === "hold") {
+      this.beginManualAiming();
+      return;
+    }
+
+    // Bewegung fachlich anwenden, dann als Animation abspielen, danach zielen.
+    this.manualPhase = "off";
+    this.actionState = "moving";
+    const active = this.activeUnit();
+    applyManualMovement(this.simulation, movement);
+    this.updateButtons();
+    this.playCreatureMotion(active, movement.kind === "jump" ? "jump" : "walk");
+    active.sprite.setFlipX(movement.destination.x < movement.start.x);
+    this.frameMovementCamera(movement);
+    this.updateStatus(
+      `${active.unit.displayName} ${movement.reason}. Danach zielst du selbst.`,
+    );
+
+    this.tweens.addCounter({
+      from: 0,
+      to: movement.samples.length - 1,
+      duration: movement.durationSeconds * 1_000,
+      ease: movement.kind === "jump" ? "Sine.easeInOut" : "Linear",
+      onUpdate: (tween) => {
+        const index = Phaser.Math.Clamp(
+          Math.round(tween.getValue() ?? 0),
+          0,
+          movement.samples.length - 1,
+        );
+        const sample = movement.samples[index];
+        if (sample) {
+          active.container.setPosition(sample.x, sample.y);
+        }
+      },
+      onComplete: () => {
+        active.container.setPosition(
+          movement.destination.x,
+          movement.destination.y,
+        );
+        if (movement.kind === "jump") {
+          this.showSecondaryVfx(
+            "landing",
+            movement.destination.x,
+            movement.destination.y,
+          );
+        }
+        active.sprite.setFlipX(false);
+        this.actionState = "planning";
+        this.beginManualAiming();
+      },
+    });
+  }
+
+  private beginManualAiming(): void {
+    this.manualPhase = "aiming";
+    this.manualDragging = false;
+    this.manualDragCurrent = null;
+    this.manualAimGraphics?.clear();
     this.updateButtons();
     this.updateManualAimStatus();
   }
 
+  private updateManualMovementStatus(): void {
+    const active = this.activeUnit();
+    const moves = this.manualMoveOptions.filter(
+      (option) => option.kind !== "hold",
+    ).length;
+    this.intentHeaderText.setText(`BEWEGEN: ${active.unit.displayName}`);
+    this.intentText.setText(
+      `DU STEUERST SELBST\n\n` +
+        `Tippe einen Marker an, um zu laufen (→)\n` +
+        `oder zu springen (⤴). ${moves} Optionen.\n\n` +
+        `Oder unten „HIER BLEIBEN“ zum direkten\n` +
+        `Zielen ohne Bewegung.`,
+    );
+    this.updateStatus(
+      `${active.unit.displayName}: Bewegungsziel wählen (Marker antippen) oder „HIER BLEIBEN“.`,
+    );
+  }
+
   private endManualAiming(): void {
-    this.manualAiming = false;
+    this.manualPhase = "off";
     this.manualDragging = false;
     this.manualDragCurrent = null;
     this.manualAimGraphics?.clear();
+    this.clearManualMoveMarkers();
   }
 
   private updateManualAimStatus(): void {
@@ -1197,6 +1366,19 @@ export class MatchScene extends Phaser.Scene {
       return;
     }
 
+    // Mindest-Ziehweg, damit ein versehentlicher Tap nicht sofort schießt.
+    const active = this.activeUnit();
+    const anchor = { x: active.unit.position.x, y: active.unit.position.y - 46 };
+    if (
+      Math.hypot(
+        anchor.x - this.manualDragCurrent.x,
+        anchor.y - this.manualDragCurrent.y,
+      ) < 30
+    ) {
+      this.updateStatus("Weiter von der Figur wegziehen, um zu schießen.");
+      return;
+    }
+
     const velocity = this.manualLaunchVelocity(this.manualDragCurrent);
     const turnPlan = planManualShot(this.simulation, {
       weaponId: this.manualWeaponId,
@@ -1224,6 +1406,7 @@ export class MatchScene extends Phaser.Scene {
     this.manualWeaponId = weaponId;
     this.updateManualAimStatus();
     this.updateManualAimPreview();
+    this.updateButtons();
   }
 
   private manualPointerWorld(pointer: Phaser.Input.Pointer): Vector2 {
@@ -1493,6 +1676,27 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private executeSelected(): void {
+    // Task 011: „HIER BLEIBEN“ in der manuellen Bewegungsphase → direkt zielen.
+    if (this.manualPhase === "movement") {
+      const holdOption = this.manualMoveOptions.find(
+        (option) => option.kind === "hold",
+      );
+      this.chooseManualMovement(
+        holdOption ?? {
+          id: "manual-hold",
+          kind: "hold",
+          start: { ...this.activeUnit().unit.position },
+          destination: { ...this.activeUnit().unit.position },
+          samples: [{ ...this.activeUnit().unit.position }],
+          distance: 0,
+          durationSeconds: 0,
+          score: 0,
+          reason: "bleibt stehen",
+        },
+      );
+      return;
+    }
+
     if (
       this.actionState !== "planning" ||
       (!this.plan.selected && this.movementPlan.kind === "hold")
@@ -2175,22 +2379,34 @@ export class MatchScene extends Phaser.Scene {
   private updateButtons(): void {
     const planning = this.actionState === "planning";
     const playerTurn = planning && this.activeUnit().unit.team === "crew";
-    // Task 011: Im manuellen Zielmodus steuert der Spieler per Maus; die
-    // KI-Kommandobuttons entfallen.
-    const manual = this.manualAiming;
-    this.executeButton.setVisible(!manual);
-    this.executeButtonText.setVisible(!manual);
-    this.rejectButton.setVisible(!manual);
-    this.rejectButtonText.setVisible(!manual);
-    for (const button of this.weaponCommandButtons.values()) {
-      const showWeapon = !manual;
-      button.background.setVisible(true);
-      button.text.setVisible(true);
-      button.icon.setVisible(true);
-      void showWeapon;
+    // Task 011: Im manuellen Modus steuert der Spieler selbst. In der
+    // Bewegungsphase wird der Ausführen-Button zum „HIER BLEIBEN“, in der
+    // Zielphase entfallen die KI-Kommandobuttons ganz.
+    const manualMovement = this.manualPhase === "movement";
+    const manualAiming = this.manualPhase === "aiming";
+    const manualActive = manualMovement || manualAiming;
+
+    this.rejectButton.setVisible(!manualActive);
+    this.rejectButtonText.setVisible(!manualActive);
+
+    if (manualMovement) {
+      this.executeButton.setVisible(true).setFillStyle(COLORS.teal, 1);
+      this.executeButtonText.setVisible(true).setText("HIER BLEIBEN").setAlpha(1);
+      return;
     }
 
-    if (manual) {
+    if (manualAiming) {
+      this.executeButton.setVisible(false);
+      this.executeButtonText.setVisible(false);
+      // Waffen-Buttons dienen im Zielmodus als Touch-Waffenwahl.
+      for (const [weaponId, button] of this.weaponCommandButtons) {
+        const selected = this.manualWeaponId === weaponId;
+        button.background
+          .setFillStyle(selected ? COLORS.yellow : 0x36565a, 1)
+          .setStrokeStyle(selected ? 2 : 1, selected ? COLORS.yellow : COLORS.paper, selected ? 1 : 0.35);
+        button.text.setColor(selected ? COLORS.ink : COLORS.cream).setAlpha(1);
+        button.icon.setAlpha(1);
+      }
       return;
     }
 
@@ -2666,12 +2882,17 @@ export class MatchScene extends Phaser.Scene {
     pointer: Phaser.Input.Pointer,
     currentlyOver: Phaser.GameObjects.GameObject[],
   ): void {
+    // Task 011: In der manuellen Zielphase steuert Ein-Finger-Touch das
+    // Zielen, nicht die Kamera. Zwei Finger (Zoom) bleiben erlaubt.
+    const manualAimingSingleFinger =
+      this.manualPhase === "aiming" && this.input.pointer2?.isDown !== true;
     if (
       !pointer.wasTouch ||
       this.actionState !== "planning" ||
       this.helpVisible ||
       currentlyOver.length > 0 ||
-      this.isTouchHudRegion(pointer)
+      this.isTouchHudRegion(pointer) ||
+      manualAimingSingleFinger
     ) {
       return;
     }

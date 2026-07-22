@@ -2,7 +2,7 @@
 
 ## Status
 
-`erster Wurf umgesetzt (Testschalter + manuelles Zielen) – Browserprüfung und Bewertung durch den Nutzer ausstehend` (zuvor: `bereit`)
+`umgesetzt (Testschalter + manuelle Bewegung + manuelles Zielen, Maus und Touch) – Browserprüfung und Bewertung durch den Nutzer ausstehend` (zuvor: `bereit`)
 
 ## Ziel
 
@@ -102,3 +102,44 @@ grün. Browserprüfung steht aus.
 ### Neue Einträge in `docs/DECISIONS.md`
 
 - **D-035**: Steuerungsmodus als reversibler Testschalter.
+
+## Ergänzung vom 22. Juli 2026: Bewegung von Hand und Touch
+
+Auf Nutzerwunsch nachgezogen (der erste Wurf ließ nur Zielen vom Stand zu).
+Umgesetzt von **Claude Fable 5** (Anthropic, Claude Code).
+
+### Manuelle Bewegung
+
+- Der manuelle Crew-Zug hat jetzt zwei Phasen: **erst bewegen, dann zielen.**
+- `manualMovement.ts` liefert die gültigen Bewegungsoptionen aus demselben
+  deterministischen, terrain-sicheren `planLocalMovement`, das die KI nutzt
+  (Laufen/Springen im 190-Weltpunkte-Limit) plus „hier bleiben“.
+- Die Szene zeigt jedes Laufziel (→) und jeden Sprung (⤴) als antippbaren
+  Marker; Auswahl bewegt die Figur animiert dorthin und wechselt danach
+  automatisch in die Zielphase. Der „HIER BLEIBEN“-Button überspringt die
+  Bewegung.
+- `applyManualMovement` schreibt die Zielposition in den Simulationszustand,
+  bevor gezielt wird – der Schuss startet also von der neuen Position.
+
+### Touch
+
+- **Zielen** funktioniert per Ein-Finger-Touch (ziehen = Winkel/Kraft,
+  loslassen schießt); in der Zielphase ist Ein-Finger-Kamerapan deaktiviert,
+  Zwei-Finger-Zoom bleibt erlaubt.
+- **Bewegung** über antippbare Marker (Touch wie Maus).
+- **Waffenwahl** ohne Tastatur: Die HUD-Waffenbuttons wählen im Zielmodus die
+  Zielwaffe (Touch-Ersatz für 1/2/3) und heben die aktive Waffe hervor.
+- Ein Mindest-Ziehweg verhindert, dass ein versehentlicher Tap sofort feuert.
+
+### Tests
+
+`manualMovement.test.ts` (Optionen inkl. hold-first, 190-Limit, Anwendung)
+plus die bestehenden `planManualShot`-Tests. Gesamt 80 grün, 2 übersprungen;
+`npm run typecheck` und `npm run build` grün.
+
+### Weiterhin offen / zu bewerten
+
+Browserprüfung auf Desktop und Touch durch den Nutzer; danach die
+Kern-Bewertung Autobattle vs. Selbststeuern. Bewusst noch nicht dabei:
+optionaler KI-Vorschlag im manuellen Modus, freies Feinlaufen jenseits der
+vorbereiteten Bewegungsziele.

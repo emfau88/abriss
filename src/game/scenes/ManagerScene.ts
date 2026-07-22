@@ -29,6 +29,7 @@ import {
 } from "../../simulation/ai/RocketActionPlanner";
 import { RENDER_HEIGHT, RENDER_WIDTH } from "../config";
 import { createManagerMatchConfig } from "../session/matchSession";
+import { WEAPON_FLAVOR } from "../ui/menuFlavor";
 import { createMenuButton, drawMenuBackdrop, type MenuButton } from "../ui/menuUi";
 
 interface FighterCard {
@@ -41,6 +42,7 @@ interface FighterCard {
       readonly background: Phaser.GameObjects.Rectangle;
       readonly label: Phaser.GameObjects.Text;
       readonly icon: Phaser.GameObjects.Sprite;
+      readonly tag: Phaser.GameObjects.Text;
     }
   >;
 }
@@ -142,8 +144,8 @@ export class ManagerScene extends Phaser.Scene {
     background.on("pointerdown", () => this.toggleFighter(fighterId));
 
     const sprite = this.add
-      .sprite(x, 285, visual.textureKey, visual.poseFrames.ready)
-      .setDisplaySize(192, 192);
+      .sprite(x, 262, visual.textureKey, visual.poseFrames.ready)
+      .setDisplaySize(150, 150);
     if ((visual.motionFrames.idle?.length ?? 0) > 1) {
       sprite.play(creatureAnimationKey(fighter.visualId, "idle"), true);
     }
@@ -164,17 +166,13 @@ export class ManagerScene extends Phaser.Scene {
         color: "#55d7c2",
       })
       .setOrigin(0.5);
+
+    this.createTraitRow(x, 356, "#8fe6c8", "KANN GUT", fighter.strength);
+    this.createTraitRow(x, 400, "#ffb199", "KANN NICHT", fighter.weakness);
+    this.createTraitRow(x, 444, "#ffcd5d", "BERÜCHTIGT FÜR", fighter.knownFor);
+
     this.add
-      .text(x, 397, fighter.description, {
-        fontFamily: "Segoe UI, Arial, sans-serif",
-        fontSize: "15px",
-        color: "#fff5d6",
-        align: "center",
-        wordWrap: { width: 278 },
-      })
-      .setOrigin(0.5);
-    this.add
-      .text(x, 448, "WAFFENPRÄFERENZ", {
+      .text(x, 486, "WAFFENPRÄFERENZ", {
         fontFamily: "Consolas, ui-monospace, monospace",
         fontSize: "12px",
         fontStyle: "bold",
@@ -188,10 +186,11 @@ export class ManagerScene extends Phaser.Scene {
         background: Phaser.GameObjects.Rectangle;
         label: Phaser.GameObjects.Text;
         icon: Phaser.GameObjects.Sprite;
+        tag: Phaser.GameObjects.Text;
       }
     >();
     WEAPON_IDS.forEach((weaponId, index) => {
-      const y = 492 + index * 54;
+      const y = 512 + index * 52;
       const weaponBackground = this.add
         .rectangle(x, y, 282, 42, 0x23454d, 1)
         .setStrokeStyle(2, 0xfff5d6, 0.35)
@@ -212,13 +211,33 @@ export class ManagerScene extends Phaser.Scene {
           feedbackIconFrame(weaponId),
         )
         .setDisplaySize(30, 30);
+      // Tag als kleiner Chip an der oberen rechten Ecke des Buttons – aus der
+      // horizontalen Beschriftungsspur heraus, damit nichts kollidiert.
+      const weaponTag = this.add
+        .text(x + 137, y - 21, WEAPON_FLAVOR[weaponId].tag, {
+          fontFamily: "Consolas, ui-monospace, monospace",
+          fontSize: "9px",
+          fontStyle: "bold",
+          color: "#0d2027",
+          backgroundColor: "#8fe6c8",
+          padding: { x: 5, y: 2 },
+        })
+        .setOrigin(1, 0.5)
+        .setDepth(2);
       weaponBackground.on("pointerdown", () =>
         this.chooseWeapon(fighterId, weaponId),
+      );
+      // Beim Überfahren erklärt die Waffe sich selbst in der Statuszeile.
+      weaponBackground.on("pointerover", () =>
+        this.statusText.setText(
+          `${WEAPON_PROFILES[weaponId].displayName}: ${WEAPON_FLAVOR[weaponId].quip}`,
+        ),
       );
       weaponButtons.set(weaponId, {
         background: weaponBackground,
         label: weaponLabel,
         icon: weaponIcon,
+        tag: weaponTag,
       });
     });
 
@@ -234,6 +253,37 @@ export class ManagerScene extends Phaser.Scene {
       .setOrigin(1, 0.5);
 
     return { fighterId, background, selectionText, weaponButtons };
+  }
+
+  /**
+   * Eine Merkmalszeile auf der Figurenkarte: kleines farbiges Label plus
+   * kurzer Charaktertext darunter. Rein kosmetisch, verändert kein Verhalten.
+   */
+  private createTraitRow(
+    x: number,
+    y: number,
+    accentHex: string,
+    label: string,
+    text: string,
+  ): void {
+    this.add
+      .text(x, y, label, {
+        fontFamily: "Consolas, ui-monospace, monospace",
+        fontSize: "11px",
+        fontStyle: "bold",
+        color: accentHex,
+        letterSpacing: 1,
+      })
+      .setOrigin(0.5);
+    this.add
+      .text(x, y + 17, text, {
+        fontFamily: "Segoe UI, Arial, sans-serif",
+        fontSize: "13px",
+        color: "#fff5d6",
+        align: "center",
+        wordWrap: { width: 300 },
+      })
+      .setOrigin(0.5);
   }
 
   private toggleFighter(fighterId: FighterId): void {
@@ -311,6 +361,10 @@ export class ManagerScene extends Phaser.Scene {
           );
         button.icon.setAlpha(
           selected ? (unlocked ? 1 : 0.4) : 0.25,
+        );
+        // Der Tag tritt zurück, wenn die Waffe gewählt ist (der Goldton reicht).
+        button.tag.setAlpha(
+          preferred ? 0 : selected ? (unlocked ? 0.9 : 0.4) : 0.22,
         );
       }
     }

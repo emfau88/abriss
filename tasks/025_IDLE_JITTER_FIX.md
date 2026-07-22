@@ -126,3 +126,18 @@ eigenen Task mit manueller Sichtung.
 
 `npm run typecheck`, `npm test` (74 Tests grün, 2 übersprungene
 Werkzeug-/SIM_FULL-Läufe), `npm run build` grün.
+
+## Nutzer-Rückmeldung vom 22. Juli 2026 (nach Browserprüfung)
+
+Der Nutzer hat ein Match gespielt: Läuft grundsätzlich, aber GLIB und GHOST
+**jittern weiterhin sichtbar**. Die rechnerische Idle-Ausrichtung (Basis-
+Schwerpunkt-Wrap ≤ 4 px) und die Tween-Entfernung haben den Loop-Ruck
+messbar reduziert, das verbleibende Flimmern kommt aber offenbar aus den
+Frames selbst (Kontur- und Volumenänderungen zwischen den Einzelbildern der
+komplexen 32-Frame-Sheets), nicht aus Ausrichtung oder Tweens.
+
+**Nutzer-Einschätzung:** Die Charaktere sind evtl. zu komplex; er will die
+Sheets in Zukunft neu erstellen. Weitere Feinjustierung an den bestehenden
+Sheets lohnt sich daher nicht – ein eigener Neuerstellungs-Task ist der
+richtige Ort, nicht dieser Fix. Der Regressionstest (Loop-Stabilität) bleibt
+als Qualitätsschranke für die neuen Sheets bestehen.

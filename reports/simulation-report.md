@@ -6,22 +6,22 @@ Gleiche Szenarien ergeben byte-identische Berichte.
 ## Karte `good-mood`
 
 - Matches: 3 (Seeds: 21072026, 21072127, 21072228)
-- Ausgänge: Crew 1 · Rivalen 2 · Unentschieden 0
-- Zuglängen: Minimum 15 · Median 15 · Maximum 24
-- Plan-Arten: 54 Angriffe · 0 Positionszüge · 0 Aussetzer
-- Trefferbild: 1 Eigentreffer · 0 Kameradentreffer · 0 Out-of-world-Ausschaltungen
+- Ausgänge: Crew 2 · Rivalen 1 · Unentschieden 0
+- Zuglängen: Minimum 18 · Median 20 · Maximum 21
+- Plan-Arten: 59 Angriffe · 0 Positionszüge · 0 Aussetzer
+- Trefferbild: 0 Eigentreffer · 0 Kameradentreffer · 0 Out-of-world-Ausschaltungen
 
 | Waffe | Angriffe | Anteil | Gesamtschaden |
 | --- | ---: | ---: | ---: |
-| Panzerfaust | 29 von 54 | 53.7 % | 2467 |
-| Wurfgranate | 12 von 54 | 22.2 % | 380 |
-| Geländebrecher | 13 von 54 | 24.1 % | 0 |
+| Panzerfaust | 27 von 59 | 45.8 % | 2497 |
+| Wurfgranate | 14 von 59 | 23.7 % | 418 |
+| Geländebrecher | 18 von 59 | 30.5 % | 66 |
 
 | Waffe | in Planung betrachtet | Züge mit gültigem Kandidat | häufigste Scheiterngründe |
 | --- | ---: | ---: | --- |
-| Panzerfaust | 48 | 29 | Ziel liegt außerhalb wirksamer Reichweite (326) |
-| Wurfgranate | 51 | 28 | Ziel liegt außerhalb wirksamer Reichweite (825) · Flugbahn verlässt das Einsatzgebiet (4) |
-| Geländebrecher | 45 | 44 | Ziel liegt außerhalb wirksamer Reichweite (104) |
+| Panzerfaust | 53 | 27 | Ziel liegt außerhalb wirksamer Reichweite (355) |
+| Wurfgranate | 56 | 27 | Ziel liegt außerhalb wirksamer Reichweite (883) · Flugbahn verlässt das Einsatzgebiet (5) |
+| Geländebrecher | 50 | 50 | Ziel liegt außerhalb wirksamer Reichweite (103) |
 
 Erstzug-Divergenz über 4 Eröffnungssonden × 3 Persönlichkeiten:
 2 Sonden wählen unterschiedliche Kandidaten, 0 unterschiedliche Waffen, 4 unterschiedliche Bewegungen.
@@ -29,25 +29,25 @@ Erstzug-Divergenz über 4 Eröffnungssonden × 3 Persönlichkeiten:
 ## Karte `space-resort`
 
 - Matches: 3 (Seeds: 21072026, 21072127, 21072228)
-- Ausgänge: Crew 2 · Rivalen 1 · Unentschieden 0
-- Zuglängen: Minimum 14 · Median 16 · Maximum 21
-- Plan-Arten: 51 Angriffe · 0 Positionszüge · 0 Aussetzer
-- Trefferbild: 0 Eigentreffer · 1 Kameradentreffer · 1 Out-of-world-Ausschaltungen
+- Ausgänge: Crew 3 · Rivalen 0 · Unentschieden 0
+- Zuglängen: Minimum 12 · Median 12 · Maximum 15
+- Plan-Arten: 39 Angriffe · 0 Positionszüge · 0 Aussetzer
+- Trefferbild: 0 Eigentreffer · 0 Kameradentreffer · 1 Out-of-world-Ausschaltungen
 
 | Waffe | Angriffe | Anteil | Gesamtschaden |
 | --- | ---: | ---: | ---: |
-| Panzerfaust | 30 von 51 | 58.8 % | 2503 |
-| Wurfgranate | 5 von 51 | 9.8 % | 169 |
-| Geländebrecher | 16 von 51 | 31.4 % | 67 |
+| Panzerfaust | 25 von 39 | 64.1 % | 2030 |
+| Wurfgranate | 6 von 39 | 15.4 % | 252 |
+| Geländebrecher | 8 von 39 | 20.5 % | 0 |
 
 | Waffe | in Planung betrachtet | Züge mit gültigem Kandidat | häufigste Scheiterngründe |
 | --- | ---: | ---: | --- |
-| Panzerfaust | 48 | 30 | Ziel liegt außerhalb wirksamer Reichweite (292) |
-| Wurfgranate | 48 | 21 | Ziel liegt außerhalb wirksamer Reichweite (797) · Flugbahn verlässt das Einsatzgebiet (46) |
-| Geländebrecher | 45 | 44 | Ziel liegt außerhalb wirksamer Reichweite (103) |
+| Panzerfaust | 36 | 25 | Ziel liegt außerhalb wirksamer Reichweite (224) |
+| Wurfgranate | 36 | 18 | Ziel liegt außerhalb wirksamer Reichweite (599) · Flugbahn verlässt das Einsatzgebiet (24) |
+| Geländebrecher | 33 | 33 | Ziel liegt außerhalb wirksamer Reichweite (84) |
 
 Erstzug-Divergenz über 4 Eröffnungssonden × 3 Persönlichkeiten:
-2 Sonden wählen unterschiedliche Kandidaten, 0 unterschiedliche Waffen, 2 unterschiedliche Bewegungen.
+4 Sonden wählen unterschiedliche Kandidaten, 0 unterschiedliche Waffen, 4 unterschiedliche Bewegungen.
 
 ## Persönlichkeits-Matchups
 
@@ -56,9 +56,9 @@ alle Figuren der Seite mit derselben Persönlichkeit).
 
 | Paarung | Ausgang | Züge |
 | --- | --- | ---: |
-| good-mood: Crew cautious vs. Rivalen explosive | Rivalen gewinnen | 19 |
-| good-mood: Crew explosive vs. Rivalen showboat | Rivalen gewinnen | 14 |
-| good-mood: Crew showboat vs. Rivalen cautious | Rivalen gewinnen | 24 |
+| good-mood: Crew cautious vs. Rivalen explosive | Crew gewinnt | 18 |
+| good-mood: Crew explosive vs. Rivalen showboat | Rivalen gewinnen | 12 |
+| good-mood: Crew showboat vs. Rivalen cautious | Rivalen gewinnen | 10 |
 | space-resort: Crew cautious vs. Rivalen explosive | Crew gewinnt | 9 |
-| space-resort: Crew explosive vs. Rivalen showboat | Rivalen gewinnen | 12 |
-| space-resort: Crew showboat vs. Rivalen cautious | Rivalen gewinnen | 29 |
+| space-resort: Crew explosive vs. Rivalen showboat | Rivalen gewinnen | 11 |
+| space-resort: Crew showboat vs. Rivalen cautious | Crew gewinnt | 17 |

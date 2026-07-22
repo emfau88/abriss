@@ -285,3 +285,13 @@ Hover-Bewegung besitzen keine Gameplay-Autorität.
 **Konsequenz:** Der Streukegel benachteiligt real kurzreichweitige Waffen, weil die Kandidatenbewertung weiter auf die perfekte Vorschau plant; der Panzerfaust-Anteil stieg dadurch von 37,5 %/47,8 % (D-032) auf 62 %/57 %. Diese Balance-Wechselwirkung ist dokumentiert und bewusst nicht durch stille Balance-Verschlechterung oder Entfernen des Streukegels kaschiert, sondern als **Task 026** (streuungsbewusste Bewertung) ausgelagert. Damit ist Task 011 (direktes Steuerungsexperiment) jetzt fair vergleichbar, sollte aber erst nach Task 026 durchgeführt werden.
 
 **Umsetzung:** Task 024, ausgeführt von Claude Fable 5 (Anthropic) am 22. Juli 2026.
+
+## 2026-07-22 – D-034: Streuungsbewusste Bewertung; Waffendominanz ist ein Verfügbarkeitsproblem
+
+**Entscheidung:** Der Streuradius liegt in einer geteilten Quelle (`ai/executionSpreadModel.ts`), aus der sowohl die Ausführung als auch die KI-Bewertung lesen. `measureCandidate` dämpft den erwarteten Schaden um den Streuverlust (`~1,4·s/r`), sodass die KI streuungsbewusst plant statt auf die perfekte Vorschau. Die Persönlichkeits-Streuwahrnehmung (`perceivedSpreadRadius`: Explosiv ×0,5, Vorsichtig ×1,35) ersetzt den früheren separaten `aimError`-Blindfleck. Der Streukegel wurde auf 5/12/9 Weltpunkte verkleinert.
+
+**Grund:** Task 024 hatte den Streukegel eingeführt, ohne dass die KI ihn einplante; die Balance verschob sich auf 62/57 % Panzerfaust. Task 026 sollte das zurückholen.
+
+**Konsequenz und Befund:** Die Messung zeigt, dass die Bewertungsdämpfung die Waffenwahl kaum verändert, weil Rakete und Granate denselben Explosionsradius (62) haben und daher gleich gedämpft werden – die Panzerfaust-Dominanz ist ein **Verfügbarkeits-**, kein Score-Problem (ihre flachere Bahn scheitert seltener an Terrain-Deckung). Wirksam war der kleinere Streukegel: Sonneninseln zurück auf 51,6 % (Referenz ohne Kegel: 48,2 %), Space-Resort seedabhängig 51–68 %. Die streuungsbewusste Bewertung bleibt trotzdem als korrekte Grundlage erhalten (KI plant ehrlich, Erstzug-Divergenz im Space-Resort auf 4/4 gestiegen). Der verbleibende Hebel gegen die Panzerfaust-Verfügbarkeit ist sichtlinien-bewusste Zielpunktwahl oder Kartentuning – ein Kartenthema, kein KI-Bewertungsthema.
+
+**Umsetzung:** Task 026, ausgeführt von Claude Fable 5 (Anthropic) am 22. Juli 2026.

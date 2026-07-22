@@ -6,6 +6,10 @@ import {
   type Vector2,
 } from "../ballistics/Ballistics";
 import { keyedSignedVariation } from "../random/SeededRandom";
+import {
+  expectedSpreadDamageLoss,
+  perceivedSpreadRadius,
+} from "./executionSpreadModel";
 
 export type Personality = "cautious" | "explosive" | "showboat";
 export type WeaponId = "rocket" | "grenade" | "breaker";
@@ -183,8 +187,11 @@ export interface PersonalityPerception {
 }
 
 export const PERSONALITY_PERCEPTION: Record<Personality, PersonalityPerception> = {
-  cautious: { selfRisk: 1.45, friendlyRisk: 1.3, showmanship: 1, aimError: 1.15 },
-  explosive: { selfRisk: 0.4, friendlyRisk: 0.55, showmanship: 1, aimError: 0.9 },
+  // Task 026: Die Streuungs-Wahrnehmung liegt jetzt im geteilten Streumodell
+  // (perceivedSpreadRadius); der aimError-Faktor bleibt neutral, damit die
+  // Streuung nicht doppelt gewichtet wird.
+  cautious: { selfRisk: 1.45, friendlyRisk: 1.3, showmanship: 1, aimError: 1 },
+  explosive: { selfRisk: 0.4, friendlyRisk: 0.55, showmanship: 1, aimError: 1 },
   showboat: { selfRisk: 0.8, friendlyRisk: 0.85, showmanship: 1.75, aimError: 1 },
 };
 
@@ -301,6 +308,14 @@ export function planRocketAction(input: RocketPlannerInput): RocketActionPlan {
           trajectoryInput,
           input.terrain,
         );
+        // Task 026: erwarteter Streuverlust aus der wahrgenommenen Streuung
+        // dieser Persönlichkeit und dem Explosionsradius der Waffe.
+        const perceivedSpread = perceivedSpreadRadius(
+          input.personality,
+          weapon.id,
+        );
+        const spreadDamageFactor =
+          1 - expectedSpreadDamageLoss(perceivedSpread, explosionRadius);
         const metrics = measureCandidate(
           trajectory,
           target,
@@ -309,6 +324,7 @@ export function planRocketAction(input: RocketPlannerInput): RocketActionPlan {
           input.terrain,
           explosionRadius,
           weapon.maximumDamage,
+          spreadDamageFactor,
         );
         const invalidReason = candidateInvalidReason(
           trajectory,
@@ -439,6 +455,7 @@ function measureCandidate(
   terrain: RocketPlannerTerrain,
   explosionRadius: number,
   maximumDamage: number,
+  spreadDamageFactor: number,
 ): RocketCandidateMetrics {
   const center = trajectory.explosion?.center;
 
@@ -464,12 +481,12 @@ function measureCandidate(
       continue;
     }
 
-    const damage = calculateBlastDamage(
-      center,
-      unit.position,
-      explosionRadius,
-      maximumDamage,
-    );
+    // Task 026: Der erwartete Schaden wird um den Streuverlust gedämpft.
+    // Kurzreichweitige Waffen (kleiner Radius) verlieren dabei anteilig
+    // mehr, sodass die KI die Streuung realistisch einplant.
+    const damage =
+      calculateBlastDamage(center, unit.position, explosionRadius, maximumDamage) *
+      spreadDamageFactor;
 
     if (unit.id === target.id) {
       targetDamage = damage;

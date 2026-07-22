@@ -1,8 +1,5 @@
-import {
-  type Personality,
-  type RocketCandidate,
-  type WeaponId,
-} from "../ai/RocketActionPlanner";
+import { type Personality, type RocketCandidate } from "../ai/RocketActionPlanner";
+import { executionSpreadRadius } from "../ai/executionSpreadModel";
 import {
   simulateRocketTrajectory,
   type RocketTrajectoryResult,
@@ -17,7 +14,9 @@ import type { BinaryTerrainMask } from "../terrain/TerrainMask";
  * geseedetes Sample aus diesem Kegel und steht bereits zur Planungszeit
  * fest. D-011 bleibt gewahrt: Vorschau und Wiedergabe der ausgeführten
  * Flugbahn nutzen dasselbe unveränderliche Trajektorienresultat; neu ist
- * nur, dass Absicht und Ausführung ehrlich getrennt angekündigt werden.
+ * nur, dass Absicht und Ausführung ehrlich getrennt angekündigt werden. Der
+ * Streuradius stammt seit Task 026 aus dem geteilten Modell in
+ * `ai/executionSpreadModel.ts`, damit auch die KI ihn einplanen kann.
  */
 
 export interface PlannedExecution {
@@ -27,32 +26,6 @@ export interface PlannedExecution {
   readonly aimOffset: Vector2;
   /** Die tatsächlich auszuführende Flugbahn. */
   readonly trajectory: RocketTrajectoryResult;
-}
-
-const PERSONALITY_SPREAD: Record<Personality, number> = {
-  cautious: 9,
-  explosive: 22,
-  showboat: 16,
-};
-
-// Task 024: Der Streufaktor ist bewusst waffenneutral. Ein je Waffe
-// unterschiedlicher Faktor verzerrt die Balance, weil die KI die Streuung
-// nicht in die Kandidatenbewertung einrechnet (sie plant auf die perfekte
-// Vorschau). Gleiche Faktoren halten die Waffenwahl aus Task 023 stabil und
-// liefern trotzdem den sichtbaren Ausführungs-Wobble.
-const WEAPON_SPREAD_FACTOR: Record<WeaponId, number> = {
-  rocket: 1,
-  grenade: 1,
-  breaker: 1,
-};
-
-export function executionSpreadRadius(
-  personality: Personality,
-  weaponId: WeaponId,
-): number {
-  return Math.round(
-    PERSONALITY_SPREAD[personality] * WEAPON_SPREAD_FACTOR[weaponId],
-  );
 }
 
 export function planExecution(

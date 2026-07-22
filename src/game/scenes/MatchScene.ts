@@ -29,7 +29,6 @@ import {
   type SecondaryVfx,
 } from "../../content/vfx/secondaryVfxKit";
 import {
-  calculateBlastDamage,
   topUtilityReasons,
   WEAPON_PROFILES,
   type Personality,
@@ -42,22 +41,20 @@ import {
   type MatchSimulationState,
   type SimulationUnit,
 } from "../../simulation/match/matchSimulationState";
-import { planTurn } from "../../simulation/match/planTurn";
+import { planTurn, type TurnPlan } from "../../simulation/match/planTurn";
+import {
+  concludeTurn,
+  resolveTurn,
+  type MatchTurnEvent,
+} from "../../simulation/match/resolveTurn";
 import {
   sampleTrajectoryAtElapsed,
   type Vector2,
 } from "../../simulation/ballistics/Ballistics";
 import type { LocalMovementPlan } from "../../simulation/movement/LocalMovementPlanner";
+import type { ExplosionKnockbackResult } from "../../simulation/movement/ExplosionKnockback";
 import {
-  simulateExplosionKnockback,
-  type ExplosionKnockbackResult,
-} from "../../simulation/movement/ExplosionKnockback";
-import { resolveTerrainFall } from "../../simulation/movement/TerrainFall";
-import {
-  advanceTurn,
-  determineMatchOutcome,
   upcomingLivingCombatants,
-  updateCombatantHitPoints,
   type MatchState,
   type TeamId,
 } from "../../simulation/state/matchState";
@@ -208,6 +205,8 @@ export class MatchScene extends Phaser.Scene {
   private units: UnitView[] = [];
   private simulation!: MatchSimulationState;
   private setupUnits: readonly MatchSetupUnit[] = [];
+  private turnPlan!: TurnPlan;
+  private pendingEvents: readonly MatchTurnEvent[] = [];
   private plan!: RocketActionPlan;
   private movementPlan!: LocalMovementPlan;
   private personality: Personality = "cautious";
@@ -1041,8 +1040,10 @@ export class MatchScene extends Phaser.Scene {
       status = `${status} Loadout-Präferenz: ${WEAPON_PROFILES[turnPlan.usedPreferredWeaponId].displayName}.`;
     }
 
+    this.turnPlan = turnPlan;
     this.movementPlan = turnPlan.movement;
     this.plan = turnPlan.action;
+    this.pendingEvents = [];
 
     this.updateActiveUnitPresentation();
     this.renderPlan();
@@ -1286,6 +1287,10 @@ export class MatchScene extends Phaser.Scene {
     this.autoActionTimer?.remove(false);
     this.autoActionTimer = undefined;
 
+    // Die Engine löst den gesamten Zug sofort fachlich auf; die Szene spielt
+    // anschließend nur noch das Ereignisprotokoll als Animation ab.
+    this.pendingEvents = resolveTurn(this.simulation, this.turnPlan);
+
     if (this.movementPlan.kind !== "hold") {
       this.executeMovementThenProjectile(active, this.movementPlan);
       return;
@@ -1322,13 +1327,9 @@ export class MatchScene extends Phaser.Scene {
         if (!sample) {
           return;
         }
-        active.unit.position.x = sample.x;
-        active.unit.position.y = sample.y;
         active.container.setPosition(sample.x, sample.y);
       },
       onComplete: () => {
-        active.unit.position.x = movement.destination.x;
-        active.unit.position.y = movement.destination.y;
         active.container.setPosition(
           movement.destination.x,
           movement.destination.y,
@@ -1405,19 +1406,22 @@ export class MatchScene extends Phaser.Scene {
     this.projectile.setVisible(false);
     this.pathGraphics.clear();
     this.effectGraphics.clear();
-    const explosion = candidate.trajectory.explosion;
+    const explosionEvent = this.pendingEvents.find(
+      (event): event is Extract<MatchTurnEvent, { type: "terrain-mutated" }> =>
+        event.type === "terrain-mutated",
+    );
 
-    if (!explosion) {
+    if (!candidate.trajectory.explosion || !explosionEvent) {
       this.scheduleTurnAdvance(700, "Aktion beendet, aber ohne Explosion.");
       this.updateButtons();
       return;
     }
 
-    const mutation = this.terrainMask.removeCircle(
-      explosion.center.x,
-      explosion.center.y,
-      explosion.radius,
-    );
+    const mutation = explosionEvent.mutation;
+    const explosion = {
+      center: explosionEvent.center,
+      radius: explosionEvent.radius,
+    };
     const dirtyUpdateStart = performance.now();
     this.terrainRenderer.applyMutation(mutation);
     this.lastDirtyUpdateMilliseconds = performance.now() - dirtyUpdateStart;
@@ -1425,11 +1429,8 @@ export class MatchScene extends Phaser.Scene {
       ? `${mutation.dirtyCells.width}×${mutation.dirtyCells.height}`
       : "0×0";
     this.showExplosion(explosion.center.x, explosion.center.y, explosion.radius);
-    const affectedViews = this.applyPredictedDamage(candidate);
-    const knockbackAnimations = this.createKnockbackAnimations(
-      candidate,
-      affectedViews,
-    );
+    this.presentDamageEvents();
+    const knockbackAnimations = this.knockbackAnimationsFromEvents();
     const knockbackPoints = knockbackAnimations.flatMap((animation) =>
       animation.result.samples
         .filter((_sample, index) => index % 8 === 0)
@@ -1445,8 +1446,7 @@ export class MatchScene extends Phaser.Scene {
           : "."),
     );
     this.animateKnockback(knockbackAnimations, () => {
-      const fallPoints = this.resolveFallsAfterTerrainChange();
-      this.synchronizeMatchHitPoints();
+      const fallPoints = this.presentFallEvents();
       this.updateTurnHud();
       this.updateTeamHud();
       const knockbackEndPoints = knockbackAnimations
@@ -1466,43 +1466,26 @@ export class MatchScene extends Phaser.Scene {
     });
   }
 
-  private applyPredictedDamage(candidate: RocketCandidate): UnitView[] {
-    const explosion = candidate.trajectory.explosion;
-
-    if (!explosion) {
-      return [];
-    }
-
-    const affectedViews: UnitView[] = [];
-
-    for (const view of this.units) {
-      if (view.unit.hitPoints <= 0) {
+  /**
+   * Zeigt die von der Engine gemeldeten Schadensereignisse an. Die Position
+   * stammt vom Container (visueller Ist-Stand), weil die Engine die
+   * Figurenpositionen bereits auf das Zug-Ende gesetzt hat.
+   */
+  private presentDamageEvents(): void {
+    for (const event of this.pendingEvents) {
+      if (event.type !== "damage-applied") {
         continue;
       }
 
-      const damage = Math.round(
-        calculateBlastDamage(
-          explosion.center,
-          view.unit.position,
-          explosion.radius,
-          candidate.maximumDamage,
-        ),
-      );
-
-      if (damage <= 0) {
-        continue;
-      }
-
-      affectedViews.push(view);
-      view.unit.hitPoints = Math.max(0, view.unit.hitPoints - damage);
+      const view = this.findUnitView(event.unitId);
       this.updateUnitHealthBar(view);
       this.setCreaturePose(view.unit.id, "startled");
       const damageText = this.registerWorldObject(
         this.add
           .text(
-            view.unit.position.x,
-            view.unit.position.y - 125,
-            `−${damage}`,
+            view.container.x,
+            view.container.y - 125,
+            `−${event.damage}`,
             {
               fontFamily: "Segoe UI, Arial, sans-serif",
               fontSize: "24px",
@@ -1523,32 +1506,23 @@ export class MatchScene extends Phaser.Scene {
         onComplete: () => damageText.destroy(),
       });
     }
-
-    return affectedViews;
   }
 
-  private createKnockbackAnimations(
-    candidate: RocketCandidate,
-    affectedViews: readonly UnitView[],
-  ): KnockbackAnimation[] {
-    const explosion = candidate.trajectory.explosion;
+  private knockbackAnimationsFromEvents(): KnockbackAnimation[] {
+    const animations: KnockbackAnimation[] = [];
 
-    if (!explosion) {
-      return [];
+    for (const event of this.pendingEvents) {
+      if (event.type !== "knockback-resolved") {
+        continue;
+      }
+
+      animations.push({
+        view: this.findUnitView(event.unitId),
+        result: event.result,
+      });
     }
 
-    return affectedViews
-      .map((view) => ({
-        view,
-        result: simulateExplosionKnockback({
-          terrain: this.terrainMask,
-          startPosition: { ...view.unit.position },
-          explosionCenter: explosion.center,
-          explosionRadius: explosion.radius,
-          maximumSpeed: candidate.maximumKnockbackSpeed,
-        }),
-      }))
-      .filter((animation) => animation.result.outcome !== "unaffected");
+    return animations;
   }
 
   private animateKnockback(
@@ -1593,20 +1567,15 @@ export class MatchScene extends Phaser.Scene {
           if (!sample) {
             return;
           }
-          view.unit.position.x = sample.position.x;
-          view.unit.position.y = sample.position.y;
           view.container
             .setPosition(sample.position.x, sample.position.y)
             .setAngle(Phaser.Math.Clamp(sample.velocity.x * 0.035, -18, 18));
         },
         onComplete: () => {
-          view.unit.position.x = lastSample.position.x;
-          view.unit.position.y = lastSample.position.y;
           view.container
             .setPosition(lastSample.position.x, lastSample.position.y)
             .setAngle(0);
           if (result.outcome === "out-of-world") {
-            view.unit.hitPoints = 0;
             this.updateUnitHealthBar(view);
             view.container.setVisible(false);
           } else {
@@ -1625,49 +1594,43 @@ export class MatchScene extends Phaser.Scene {
     }
   }
 
-  private resolveFallsAfterTerrainChange(): CameraPoint[] {
+  /** Spielt die von der Engine gemeldeten Fallereignisse als Animation ab. */
+  private presentFallEvents(): CameraPoint[] {
     const fallPoints: CameraPoint[] = [];
 
-    for (const view of this.units) {
-      const resolution = resolveTerrainFall(
-        this.terrainMask,
-        view.unit.position.x,
-        view.unit.position.y,
-      );
+    for (const event of this.pendingEvents) {
+      if (event.type !== "fall-resolved") {
+        continue;
+      }
 
-      if (resolution.state === "supported") {
-        view.unit.position.y = resolution.landingY;
-        view.container.y = resolution.landingY;
+      const view = this.findUnitView(event.unitId);
+
+      if (event.state === "supported") {
+        view.container.y = event.toY;
         continue;
       }
 
       this.setCreaturePose(view.unit.id, "startled");
-      const startY = view.unit.position.y;
-      const destinationY =
-        resolution.state === "fall"
-          ? resolution.landingY
-          : WORLD_HEIGHT + 150;
-      view.unit.position.y = destinationY;
+      const destinationY = event.toY;
       fallPoints.push({ x: view.unit.position.x, y: destinationY });
 
-      if (resolution.state === "out-of-world") {
-        view.unit.hitPoints = 0;
+      if (event.defeated) {
         this.updateUnitHealthBar(view);
       }
 
       const duration = Phaser.Math.Clamp(
-        Math.sqrt((2 * Math.max(1, destinationY - startY)) / 1100) * 1000,
+        Math.sqrt((2 * Math.max(1, destinationY - event.fromY)) / 1100) * 1000,
         260,
         1200,
       );
       this.tweens.add({
         targets: view.container,
         y: destinationY,
-        angle: resolution.state === "fall" ? 8 : 42,
+        angle: event.state === "fall" ? 8 : 42,
         duration,
         ease: "Quad.easeIn",
         onComplete: () => {
-          if (resolution.state === "fall") {
+          if (event.state === "fall") {
             this.showSecondaryVfx(
               "landing",
               view.unit.position.x,
@@ -1687,6 +1650,16 @@ export class MatchScene extends Phaser.Scene {
     }
 
     return fallPoints;
+  }
+
+  private findUnitView(unitId: string): UnitView {
+    const view = this.units.find((unit) => unit.unit.id === unitId);
+
+    if (!view) {
+      throw new Error(`Unit view ${unitId} is missing from the scene.`);
+    }
+
+    return view;
   }
 
   private activeUnit(): UnitView {
@@ -1742,16 +1715,6 @@ export class MatchScene extends Phaser.Scene {
     this.updateTeamHud();
   }
 
-  private synchronizeMatchHitPoints(): void {
-    for (const view of this.units) {
-      this.simulation.matchState = updateCombatantHitPoints(
-        this.simulation.matchState,
-        view.unit.id,
-        view.unit.hitPoints,
-      );
-    }
-  }
-
   private scheduleOpponentAction(): void {
     const activeId = this.matchState.activeCombatantId;
 
@@ -1785,20 +1748,18 @@ export class MatchScene extends Phaser.Scene {
     this.autoActionTimer?.remove(false);
     this.autoActionTimer = this.time.delayedCall(delayMilliseconds, () => {
       this.autoActionTimer = undefined;
-      const outcome = determineMatchOutcome(this.matchState);
+      const conclusion = concludeTurn(this.simulation);
 
-      if (outcome) {
-        this.finishMatch(outcome);
+      if (conclusion.kind === "match-ended") {
+        this.finishMatch(conclusion.outcome);
         return;
       }
 
-      this.simulation.matchState = advanceTurn(this.simulation.matchState);
-      this.simulation.rejectedCandidateIds = [];
-      this.simulation.forcedWeaponId = null;
       this.actionState = "planning";
+      this.pendingEvents = [];
       const next = this.activeUnit();
       this.replan(
-        `Zug ${this.matchState.turnNumber}: ${next.unit.displayName} ist am Zug.`,
+        `Zug ${conclusion.turnNumber}: ${next.unit.displayName} ist am Zug.`,
       );
     });
   }

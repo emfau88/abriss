@@ -365,6 +365,24 @@ bewusst aus dem Testumfang und verwenden vorerst die Idle-Pose.
 
 **Umsetzung:** ausgeführt von Claude Opus 4.8 (Anthropic) am 23. Juli 2026.
 
+## 2026-07-23 – D-044: Ghost und GLIB folgen dem reduzierten Animationsstandard
+
+**Entscheidung:** Ghost und GLIB ersetzen ihre komplexen 32-Frame-Sheets durch
+direkt aus `beispiele figuren/2.jpg` abgeleitete 4×4-Sheets. Wie Moki, Diva,
+Henne und RINGO erhalten sie nur Idle, Laufen, Sprung und Treffer mit je vier
+stabilisierten Frames. Zusätzliche Ghost-Schwebe- und beide kosmetischen
+Skalierungs-Tweens entfallen.
+
+**Grund:** Die vorigen Sheets blieben trotz rechnerischer Ausrichtung sichtbar
+jitterig, weil ihre Konturen und Volumen zwischen den Einzelbildern zu stark
+wechselten. Klare Silhouetten, große Farbflächen und eine feste Basis sind für
+die kleine Matchkamera wichtiger als zusätzliche Posen.
+
+**Konsequenz:** Ghost bleibt als heller, leicht frecher Tuchgeist und GLIB als
+grüner Cartoon-Schleim lesbar. Waffen- und Siegeszustände verwenden vorläufig
+die Idle-Pose; Simulation, Kollisionsform und Kampfwerte bleiben unverändert.
+Die Idle-Basis beider Figuren wird weiterhin pixelbasiert regressionsgetestet.
+
 ## 2026-07-23 – D-041: Waschbär-Bandit als dritter reduzierter Charaktertest
 
 **Entscheidung:** Der Waschbär-Bandit aus `beispiele figuren/1.jpg` ergänzt

@@ -8,7 +8,20 @@ Der Spieler führt eine Crew eigenwilliger Spezialisten. Er stellt Team, Ausrüs
 
 ## Projektstatus
 
-Die Produktvision und der erste Vertical Slice sind festgelegt. Das interne 3-gegen-3-Match ist spielbar: Figuren laufen oder springen lokal, wählen zwischen Panzerfaust, zeitgezündeter Wurfgranate und Geländebrecher, verändern Terrain und werden von Explosionen zurückgeschleudert. Zwei Fullscreen-HD-Karten – Sonneninseln und ein humorvoller Space-Resort – sind im Hauptmenü wählbar. GLIB und Ghost zeigen mit je 32 Frames, höheren Bildraten und stabilen Ankern die flüssigere Zielqualität für Figuren. Ein dünner Manager-Loop führt vom Hauptmenü über Auswahl von drei Wesen und deren Waffenpräferenzen ins Match und danach in einen humorvollen Einsatzbericht mit einer kleinen Freischaltung. „Lass das!“ und ein einmaliger Waffenbefehl bleiben die direkten Managerinterventionen im Match.
+Die Produktvision und der erste Vertical Slice sind festgelegt. Das interne 3-gegen-3-Match ist spielbar: Figuren laufen oder springen lokal, wählen zwischen Panzerfaust, zeitgezündeter Wurfgranate und Geländebrecher, verändern Terrain und werden von Explosionen zurückgeschleudert. Zwei Fullscreen-HD-Karten – Sonneninseln und ein humorvoller Space-Resort – sind im Hauptmenü wählbar. Sieben klar unterscheidbare Cartoon-Figuren stehen im normalen Match zur Auswahl; ihre reduzierten 4×4-Sheets priorisieren große Farbflächen, starke Konturen und stabile Animationen. Ein dünner Manager-Loop führt vom Hauptmenü über Auswahl von drei Wesen und deren Waffenpräferenzen ins Match und danach in einen humorvollen Einsatzbericht mit einer kleinen Freischaltung. „Lass das!“ und ein einmaliger Waffenbefehl bleiben die direkten Managerinterventionen im Match.
+
+## Figuren im Spiel
+
+<p align="center">
+  <img src="public/assets/characters/moki-mushroom-sheet.png" alt="Moki – reduziertes Pilz-Spritesheet" width="31%">
+  <img src="public/assets/characters/slime-fluid-sheet.png" alt="GLIB – reduziertes Schleim-Spritesheet" width="31%">
+  <img src="public/assets/characters/ghost-fluid-sheet.png" alt="Ghost – reduziertes Geist-Spritesheet" width="31%">
+</p>
+
+Die Sheets zeigen jeweils vier kontrollierte Frames für Idle, Laufen, Sprung und
+Treffer. Dadurch bleiben Moki, GLIB und Ghost auch bei der kleinen Matchkamera
+klar lesbar und ohne zusätzliche Render-Tweens ruhig. Weitere Kaderfiguren:
+Pop Diva, Henne, RINGO und Hornling.
 
 ## Lokal starten
 
@@ -37,7 +50,7 @@ Die Spielhülle passt das feste 16:9-Sichtfenster an Desktop, mobiles Querformat
 
 Aktueller spielbarer Ablauf:
 
-- `Einsatz planen`: drei aus vier Wesen wählen, Waffenpräferenzen setzen und nach dem Match den Bericht öffnen,
+- `Einsatz planen`: drei aus sieben Wesen wählen, Waffenpräferenzen setzen und nach dem Match den Bericht öffnen,
 - `Schnelles Testmatch`: Manager-Ebene für die Entwicklung überspringen,
 - `P`: Persönlichkeit wechseln,
 - `D`: alle bewerteten Kandidaten anzeigen,

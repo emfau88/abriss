@@ -12,10 +12,9 @@ import { decodeRgbaPng } from "../../testing/pngTerrain";
 import { CREATURE_VISUALS } from "./creatureKits";
 
 /**
- * Regressionstest aus Task 025: Die Idle-Loops der flüssigen 32-Frame-Wesen
- * müssen zyklisch stabil sein. Vor der Neuausrichtung ruckte GLIB beim
- * Loop-Wrap um ~22 px und GHOST um ~28 px Basis-Schwerpunkt – „jitterfrei“
- * ist seitdem eine Testaussage, keine Behauptung.
+ * Regressionstest aus Task 025: Auch die reduzierten Vier-Frame-Loops müssen
+ * zyklisch stabil bleiben. Eine feste Fußlinie und eine ruhige Basisachse
+ * machen „jitterfrei“ zu einer prüfbaren Qualitätsschranke.
  */
 
 const FLUID_SHEETS = [
@@ -26,7 +25,7 @@ const FLUID_SHEETS = [
 const MAX_IDLE_BASE_JUMP = 4;
 const MAX_IDLE_FOOT_DRIFT = 3;
 
-describe("fluid sheet idle stability (Task 025)", () => {
+describe("ghost and slime sheet idle stability (Task 025)", () => {
   for (const sheet of FLUID_SHEETS) {
     it(`keeps the ${sheet.visualId} idle loop cyclic`, () => {
       const visual = CREATURE_VISUALS[sheet.visualId];

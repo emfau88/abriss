@@ -46,7 +46,13 @@ interface FighterCard {
     }
   >;
 }
-const CARD_X = [220, 607, 993, 1380] as const;
+// Task „6er-Kader": Auswahl in zwei Reihen à drei Karten (Fenster 1600×900).
+// Drei Spalten geben jeder Karte Breite; zwei Reihen passen zwischen Kopf- und
+// Fußzeile.
+const CARD_COLUMN_X = [428, 800, 1172] as const;
+const CARD_ROW_Y = [272, 636] as const;
+const CARD_WIDTH = 360;
+const CARD_HEIGHT = 330;
 
 export class ManagerScene extends Phaser.Scene {
   private managerState!: ManagerState;
@@ -99,14 +105,17 @@ export class ManagerScene extends Phaser.Scene {
       .setOrigin(1, 0.5);
 
     FIGHTER_IDS.forEach((fighterId, index) => {
-      const x = CARD_X[index] ?? CARD_X[0];
-      this.cards.push(this.createFighterCard(fighterId, x));
+      const column = index % CARD_COLUMN_X.length;
+      const row = Math.floor(index / CARD_COLUMN_X.length);
+      const x = CARD_COLUMN_X[column] ?? CARD_COLUMN_X[0];
+      const y = CARD_ROW_Y[row] ?? CARD_ROW_Y[0];
+      this.cards.push(this.createFighterCard(fighterId, x, y));
     });
 
     this.statusText = this.add
-      .text(RENDER_WIDTH / 2, 734, "", {
+      .text(RENDER_WIDTH / 2, 826, "", {
         fontFamily: "Segoe UI, Arial, sans-serif",
-        fontSize: "17px",
+        fontSize: "16px",
         fontStyle: "bold",
         color: "#fff5d6",
         align: "center",
@@ -115,18 +124,18 @@ export class ManagerScene extends Phaser.Scene {
 
     createMenuButton(this, {
       x: 165,
-      y: 832,
+      y: 866,
       width: 220,
-      height: 58,
+      height: 54,
       label: "HAUPTMENÜ",
       accent: 0xfff5d6,
       onClick: () => this.scene.start("MainMenuScene"),
     });
     this.deployButton = createMenuButton(this, {
       x: 1260,
-      y: 832,
+      y: 866,
       width: 520,
-      height: 66,
+      height: 60,
       label: "CREW IN DEN EINSATZ SCHICKEN",
       onClick: () => this.launchMatch(),
     });
@@ -134,47 +143,69 @@ export class ManagerScene extends Phaser.Scene {
     this.renderState("Klicke eine Karte zum Ein- oder Auswechseln.");
   }
 
-  private createFighterCard(fighterId: FighterId, x: number): FighterCard {
+  private createFighterCard(
+    fighterId: FighterId,
+    x: number,
+    centerY: number,
+  ): FighterCard {
     const fighter = FIGHTER_ROSTER[fighterId];
     const visual = CREATURE_VISUALS[fighter.visualId];
+    // Alle Elemente relativ zur Kartenmitte, damit dieselbe Karte in Reihe 1
+    // und Reihe 2 (unterschiedliches centerY) identisch aussieht.
+    const top = centerY - CARD_HEIGHT / 2;
     const background = this.add
-      .rectangle(x, 400, 344, 548, 0x102a36, 0.94)
+      .rectangle(x, centerY, CARD_WIDTH, CARD_HEIGHT, 0x102a36, 0.94)
       .setStrokeStyle(4, 0xfff5d6, 0.52)
       .setInteractive({ useHandCursor: true });
     background.on("pointerdown", () => this.toggleFighter(fighterId));
 
+    // Sprite links, Kopfzeile rechts daneben – spart Höhe für zwei Reihen.
     const sprite = this.add
-      .sprite(x, 262, visual.textureKey, visual.poseFrames.ready)
-      .setDisplaySize(150, 150);
+      .sprite(x - 118, top + 78, visual.textureKey, visual.poseFrames.ready)
+      .setDisplaySize(120, 120);
     if ((visual.motionFrames.idle?.length ?? 0) > 1) {
       sprite.play(creatureAnimationKey(fighter.visualId, "idle"), true);
     }
 
     this.add
-      .text(x, 151, fighter.displayName, {
+      .text(x - 44, top + 34, fighter.displayName, {
         fontFamily: "Segoe UI, Arial, sans-serif",
-        fontSize: "31px",
+        fontSize: "28px",
         fontStyle: "bold",
         color: "#fff5d6",
       })
-      .setOrigin(0.5);
+      .setOrigin(0, 0.5);
     this.add
-      .text(x, 190, fighter.species, {
+      .text(x - 44, top + 62, fighter.species, {
         fontFamily: "Consolas, ui-monospace, monospace",
-        fontSize: "13px",
+        fontSize: "12px",
         fontStyle: "bold",
         color: "#55d7c2",
       })
-      .setOrigin(0.5);
+      .setOrigin(0, 0.5);
+    this.createTraitRow(x - 44, top + 92, "#8fe6c8", "KANN GUT", fighter.strength);
+    this.createTraitRow(
+      x - 44,
+      top + 122,
+      "#ffb199",
+      "KANN NICHT",
+      fighter.weakness,
+    );
 
-    this.createTraitRow(x, 356, "#8fe6c8", "KANN GUT", fighter.strength);
-    this.createTraitRow(x, 400, "#ffb199", "KANN NICHT", fighter.weakness);
-    this.createTraitRow(x, 444, "#ffcd5d", "BERÜCHTIGT FÜR", fighter.knownFor);
+    // „Berüchtigt für" quer unter Sprite und Kopf, volle Kartenbreite.
+    this.createTraitRow(
+      x,
+      top + 176,
+      "#ffcd5d",
+      "BERÜCHTIGT FÜR",
+      fighter.knownFor,
+      CARD_WIDTH - 40,
+    );
 
     this.add
-      .text(x, 486, "WAFFENPRÄFERENZ", {
+      .text(x, top + 214, "WAFFENPRÄFERENZ", {
         fontFamily: "Consolas, ui-monospace, monospace",
-        fontSize: "12px",
+        fontSize: "11px",
         fontStyle: "bold",
         color: "#ffcd5d",
       })
@@ -190,13 +221,13 @@ export class ManagerScene extends Phaser.Scene {
       }
     >();
     WEAPON_IDS.forEach((weaponId, index) => {
-      const y = 512 + index * 52;
+      const y = top + 240 + index * 30;
       const weaponBackground = this.add
-        .rectangle(x, y, 282, 42, 0x23454d, 1)
+        .rectangle(x, y, CARD_WIDTH - 44, 26, 0x23454d, 1)
         .setStrokeStyle(2, 0xfff5d6, 0.35)
         .setInteractive({ useHandCursor: true });
       const weaponLabel = this.add
-        .text(x + 16, y, WEAPON_PROFILES[weaponId].displayName, {
+        .text(x - 6, y, WEAPON_PROFILES[weaponId].displayName, {
           fontFamily: "Consolas, ui-monospace, monospace",
           fontSize: "12px",
           fontStyle: "bold",
@@ -205,16 +236,15 @@ export class ManagerScene extends Phaser.Scene {
         .setOrigin(0.5);
       const weaponIcon = this.add
         .sprite(
-          x - 108,
+          x - CARD_WIDTH / 2 + 40,
           y,
           FEEDBACK_ICON_TEXTURE_KEY,
           feedbackIconFrame(weaponId),
         )
-        .setDisplaySize(30, 30);
-      // Tag als kleiner Chip an der oberen rechten Ecke des Buttons – aus der
-      // horizontalen Beschriftungsspur heraus, damit nichts kollidiert.
+        .setDisplaySize(22, 22);
+      // Tag als kleiner Chip rechts im Button.
       const weaponTag = this.add
-        .text(x + 137, y - 21, WEAPON_FLAVOR[weaponId].tag, {
+        .text(x + CARD_WIDTH / 2 - 36, y, WEAPON_FLAVOR[weaponId].tag, {
           fontFamily: "Consolas, ui-monospace, monospace",
           fontSize: "9px",
           fontStyle: "bold",
@@ -242,7 +272,7 @@ export class ManagerScene extends Phaser.Scene {
     });
 
     const selectionText = this.add
-      .text(x + 142, 148, "", {
+      .text(x + CARD_WIDTH / 2 - 12, top + 20, "", {
         fontFamily: "Segoe UI, Arial, sans-serif",
         fontSize: "18px",
         fontStyle: "bold",
@@ -256,8 +286,10 @@ export class ManagerScene extends Phaser.Scene {
   }
 
   /**
-   * Eine Merkmalszeile auf der Figurenkarte: kleines farbiges Label plus
-   * kurzer Charaktertext darunter. Rein kosmetisch, verändert kein Verhalten.
+   * Eine kompakte Merkmalszeile: kleines farbiges Label, darunter kurzer
+   * Charaktertext. Rein kosmetisch. `originX` steuert Ausrichtung (links für
+   * die Spaltentexte neben dem Sprite, zentriert für die Querzeile);
+   * `wrapWidth` begrenzt den Umbruch. Verändert kein Verhalten.
    */
   private createTraitRow(
     x: number,
@@ -265,25 +297,28 @@ export class ManagerScene extends Phaser.Scene {
     accentHex: string,
     label: string,
     text: string,
+    wrapWidth = 210,
   ): void {
+    const centered = wrapWidth > 260;
+    const originX = centered ? 0.5 : 0;
     this.add
       .text(x, y, label, {
         fontFamily: "Consolas, ui-monospace, monospace",
-        fontSize: "11px",
+        fontSize: "10px",
         fontStyle: "bold",
         color: accentHex,
         letterSpacing: 1,
       })
-      .setOrigin(0.5);
+      .setOrigin(originX, 0.5);
     this.add
-      .text(x, y + 17, text, {
+      .text(x, y + 14, text, {
         fontFamily: "Segoe UI, Arial, sans-serif",
-        fontSize: "13px",
+        fontSize: "12px",
         color: "#fff5d6",
-        align: "center",
-        wordWrap: { width: 300 },
+        align: centered ? "center" : "left",
+        wordWrap: { width: wrapWidth },
       })
-      .setOrigin(0.5);
+      .setOrigin(originX, 0.5);
   }
 
   private toggleFighter(fighterId: FighterId): void {

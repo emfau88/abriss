@@ -354,3 +354,13 @@ komplette Aktionsposen.
 **Konsequenz:** Beide Sheets erhalten eine pixelgeprüfte feste Idle-Fußlinie;
 Kollision und Simulation bleiben unverändert. Waffen- und Siegesposen fallen
 bewusst aus dem Testumfang und verwenden vorerst die Idle-Pose.
+
+## 2026-07-23 – D-040: Sechs wählbare Kaderfiguren; Einsatzplanung in zwei Reihen
+
+**Entscheidung:** Diva und Henne (zuvor nur im isolierten Character-Asset-Test) sind nun reguläre Kaderfiguren: `FIGHTER_IDS` umfasst alle sechs. Die Einsatzplanung (`ManagerScene`) zeigt die sechs Figuren in zwei Reihen à drei Karten (Fenster 1600×900); die Karten sind kompakter und über eine gemeinsame Kartenmitte (`centerY`) positioniert, sodass beide Reihen identisch aufgebaut sind. Die englischen Platzhaltertexte beider Figuren wurden auf den durchgängig deutschen, warmen Ton angeglichen. Die Auswahlregel bleibt: genau drei aus dem Kader.
+
+**Grund:** Der Nutzer möchte die neuen Figuren vollständig ins Spiel integriert und als Crew wählbar haben, nicht nur als Test-Loadout. Vier Karten passten in eine Reihe, sechs nicht.
+
+**Konsequenz:** Golden-Master- und Simulator-Snapshots wurden bewusst erneuert – die Änderung ist rein additiv (neue `pop-diva`-/`chicken`-Schlüssel; die Pläne der bestehenden vier Figuren sind unverändert, geprüft). Jede der sechs Figuren erhält auf beiden Karten einen spielbaren Eröffnungszug (Test grün). `managerState`-Defaults und Rivalenauswahl decken den erweiterten Kader bereits ab. Die Browser-Darstellung des Zwei-Reihen-Layouts ist arithmetisch auf Bounds/Überlappung geprüft, aber noch nicht visuell im Browser abgenommen.
+
+**Umsetzung:** ausgeführt von Claude Opus 4.8 (Anthropic) am 23. Juli 2026.

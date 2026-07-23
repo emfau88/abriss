@@ -4,7 +4,13 @@ import type {
   WeaponId,
 } from "../simulation/ai/RocketActionPlanner";
 
-export type FighterId = "slime" | "hornling" | "moki" | "ghost";
+export type FighterId =
+  | "slime"
+  | "hornling"
+  | "moki"
+  | "ghost"
+  | "pop-diva"
+  | "chicken";
 
 export interface FighterDefinition {
   readonly id: FighterId;
@@ -82,5 +88,29 @@ export const FIGHTER_ROSTER: Readonly<Record<FighterId, FighterDefinition>> = {
     strength: "Trifft spektakulär, wenn es klappt.",
     weakness: "Überschätzt den eigenen Showfaktor massiv.",
     knownFor: "Fehlschüsse, die angeblich Absicht waren.",
+  },
+  "pop-diva": {
+    id: "pop-diva",
+    displayName: "DIVA",
+    species: "POP-DIVA",
+    visualId: "pop-diva",
+    personality: "showboat",
+    preferredWeaponId: "rocket",
+    description: "Treats even a jump as an encore.",
+    strength: "Stays highly visible in the action.",
+    weakness: "Confuses presence with cover.",
+    knownFor: "Perfect posture at the worst time.",
+  },
+  chicken: {
+    id: "chicken",
+    displayName: "CHICKEN",
+    species: "HUHN",
+    visualId: "chicken",
+    personality: "explosive",
+    preferredWeaponId: "grenade",
+    description: "Has a plan. It is just very loud.",
+    strength: "Makes movement especially clear.",
+    weakness: "Reacts to its own drama first.",
+    knownFor: "Panic with surprisingly good rhythm.",
   },
 };

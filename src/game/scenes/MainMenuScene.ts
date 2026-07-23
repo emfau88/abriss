@@ -23,7 +23,7 @@ import {
 } from "../../manager/managerState";
 import { RENDER_HEIGHT, RENDER_WIDTH } from "../config";
 import {
-  createQuickMatchConfig,
+  createCharacterAssetTestConfig,
   type ControlMode,
 } from "../session/matchSession";
 import { FIGHTER_QUIPS, randomTagline } from "../ui/menuFlavor";
@@ -101,11 +101,11 @@ export class MainMenuScene extends Phaser.Scene {
       y: 751,
       width: 520,
       height: 60,
-      label: `TESTMATCH · ${selectedMap.displayName}`,
+      label: "ASSET-TEST · POP-DIVA + CHICKEN",
       accent: 0x55d7c2,
       onClick: () =>
         this.scene.start("MatchScene", {
-          launchConfig: createQuickMatchConfig(
+          launchConfig: createCharacterAssetTestConfig(
             this.managerState.selectedMapId,
             this.controlMode,
           ),

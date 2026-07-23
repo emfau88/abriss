@@ -255,6 +255,33 @@ Constraints: no text, UI, characters, weapons, buildings, construction props, lo
 
 **Imagegen-Original:** `C:\Users\madde\.codex\generated_images\019f859c-8d0d-73c0-89ac-43f40a2637a4\exec-d29ff169-000c-482a-83c9-99f25dd7e4f0.png`
 
+## Pop-Diva und Chicken: `pop-diva-sheet.png`, `chicken-sheet.png`
+
+**Verfahren:** Built-in Imagegen mit `beispiele figuren/3.jpg` (Pop-Diva)
+und `beispiele figuren/1.jpg` (Chicken) als direkte projektspezifische
+Designvorlagen. Die einfarbigen Chroma-Key-Hintergründe wurden mit Soft-Matte
+und Despill entfernt. Anschließend wurden die 4×4-Ergebnisse in 16 einzelne
+Zellen geteilt, einheitlich auf 256×256 Pixel normalisiert und je Zustand an
+einer festen Fußlinie ausgerichtet. Die neuen Testassets sind bewusst eine
+Stufe einfacher als die 32-Frame-Sheets: nur Idle, Laufen, Sprung und Treffer
+mit je vier klar unterscheidbaren Phasen.
+
+**Imagegen-Prompt (zusammengefasst):**
+
+```text
+Create a 4 columns × 4 rows character sheet closely reproducing the Pop Diva
+or Chicken from the supplied project reference. Make idle, walk, jump and
+slapstick hurt with four frames each. Simplify one production level with large
+readable color regions, thick dark navy outlines, one cel-shadow, fixed scale
+and foot line. Use a flat chroma-key background; no text, borders, weapons,
+scenery or other characters.
+```
+
+**Imagegen-Originale:**
+`C:\Users\madde\.codex\generated_images\019f8bb5-2912-7fe2-ba57-5b71981f52d6\exec-2ff04f3f-5708-46b3-b59e-ac033232ae3c.png`
+und
+`C:\Users\madde\.codex\generated_images\019f8bb5-2912-7fe2-ba57-5b71981f52d6\exec-88fb8f16-615e-4e5b-a0e2-e8ba1ef369f7.png`.
+
 ## Flüssiger Ghost: `ghost-fluid-sheet.png`
 
 **Verfahren:** Built-in Imagegen mit `beispiele figuren/2.jpg` als direkte

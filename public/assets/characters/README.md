@@ -28,6 +28,14 @@ Moki bleibt ein brauchbares Vertical-Slice-Testasset. Das blaue Hornwesen ist
 für die gewünschte Richtung zu niedlich und kitschig und wird nicht als
 verbindliche Vorlage fortgeführt.
 
+## Pop-Diva und Chicken
+
+`pop-diva-sheet.png` und `chicken-sheet.png` sind kompakte 4×4-Testsheets
+mit jeweils vier stabilisierten Idle-, Lauf-, Sprung- und Trefferframes zu
+256×256 Pixeln. Die bewusst einfachen Silhouetten, klaren Farbflächen und
+festen Fußlinien testen Lesbarkeit im normalen Schnellmatch-Kameraablauf.
+Die Sheets enthalten absichtlich noch keine Waffen- oder Siegesposen.
+
 ## Generierung
 
 Die transparenten Sheets wurden mit Built-in Imagegen auf einheitlichem

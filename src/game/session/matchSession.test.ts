@@ -6,6 +6,7 @@ import {
 } from "../../manager/managerState";
 import {
   createManagerMatchConfig,
+  createCharacterAssetTestConfig,
   createQuickMatchConfig,
 } from "./matchSession";
 
@@ -24,11 +25,17 @@ describe("matchSession", () => {
     expect(createQuickMatchConfig().mapId).toBe("good-mood");
   });
 
-  it("uses Ghost in the active quick crew", () => {
+  it("keeps Ghost in the active default quick crew", () => {
     expect(createQuickMatchConfig().crew.map((fighter) => fighter.fighterId)).toEqual([
       "slime",
       "moki",
       "ghost",
     ]);
+  });
+
+  it("exposes Pop-Diva and Chicken in the dedicated asset test", () => {
+    expect(
+      createCharacterAssetTestConfig().crew.map((fighter) => fighter.fighterId),
+    ).toEqual(["pop-diva", "chicken", "ghost"]);
   });
 });

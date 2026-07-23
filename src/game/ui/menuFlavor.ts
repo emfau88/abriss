@@ -23,6 +23,8 @@ export const FIGHTER_QUIPS: Readonly<Record<FighterId, string>> = {
   hornling: "„Zeig mir das Handbuch. Dann zeig ich dir das Problem.“",
   moki: "„Zu groß gibt es nicht.“",
   ghost: "„War Absicht. Alles war Absicht.“",
+  "pop-diva": "„Ein Sprung braucht ein Finale.“",
+  chicken: "„Ich renne nicht. Ich choreografiere Panik.“",
 };
 
 export function randomTagline(random: () => number = Math.random): string {

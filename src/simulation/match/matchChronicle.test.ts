@@ -92,6 +92,8 @@ describe("buildMatchChronicle (Task 027)", () => {
             fromY: 400,
             toY: 2000,
             defeated: true,
+            damage: 0,
+            remainingHitPoints: 0,
           },
         ],
       },
@@ -101,6 +103,53 @@ describe("buildMatchChronicle (Task 027)", () => {
 
     expect(chronicle[0]?.type).toBe("world-fall");
     expect(chronicle[0]?.subjectUnitId).toBe("glib");
+  });
+
+  it("erkennt eine harte Landung mit Fall-Schaden, aber keinen folgenlosen Sturz", () => {
+    const withDamage: ChronicleTurnInput[] = [
+      {
+        turnNumber: 4,
+        activeUnitId: "moki",
+        events: [
+          projectile,
+          {
+            type: "fall-resolved",
+            unitId: "moki",
+            state: "fall",
+            fromY: 200,
+            toY: 620,
+            defeated: false,
+            damage: 35,
+            remainingHitPoints: 105,
+          },
+        ],
+      },
+    ];
+    const harmless: ChronicleTurnInput[] = [
+      {
+        turnNumber: 4,
+        activeUnitId: "moki",
+        // Nur ein folgenloser Sturz, kein Schuss – isoliert von anderen Momenten.
+        events: [
+          {
+            type: "fall-resolved",
+            unitId: "moki",
+            state: "fall",
+            fromY: 200,
+            toY: 230,
+            defeated: false,
+            damage: 0,
+            remainingHitPoints: 140,
+          },
+        ],
+      },
+    ];
+
+    expect(buildMatchChronicle({ turns: withDamage, unitInfo })[0]?.type).toBe(
+      "hard-landing",
+    );
+    // Ein folgenloser Stolperer ist kein erzählenswerter Vorfall.
+    expect(buildMatchChronicle({ turns: harmless, unitInfo })).toHaveLength(0);
   });
 
   it("erkennt einen wirkungslosen Fehlschuss", () => {

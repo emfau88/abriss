@@ -11,7 +11,7 @@ import {
   type ExplosionKnockbackResult,
 } from "../movement/ExplosionKnockback";
 import type { LocalMovementPlan } from "../movement/LocalMovementPlanner";
-import { resolveTerrainFall } from "../movement/TerrainFall";
+import { fallDamageForDrop, resolveTerrainFall } from "../movement/TerrainFall";
 import {
   resolveReactionChain,
   type InteractableObject,
@@ -98,6 +98,14 @@ export type MatchTurnEvent =
       readonly fromY: number;
       readonly toY: number;
       readonly defeated: boolean;
+      /**
+       * Fall-Schaden aus der Sturzhöhe (0 bei kleinen Stürzen unter der
+       * Schwelle bzw. bei „supported"/„out-of-world"). Wird direkt hier
+       * verrechnet, nicht als separates damage-applied, damit ein Sturz nicht
+       * fälschlich als Treffer gewertet wird.
+       */
+      readonly damage: number;
+      readonly remainingHitPoints: number;
     };
 
 export type TurnConclusion =
@@ -208,6 +216,8 @@ export function resolveTurn(
           fromY,
           toY: resolution.landingY,
           defeated: false,
+          damage: 0,
+          remainingHitPoints: unit.hitPoints,
         });
       }
       continue;
@@ -218,9 +228,20 @@ export function resolveTurn(
         ? resolution.landingY
         : state.terrain.worldHeight + WORLD_EXIT_FALL_MARGIN;
     unit.position.y = toY;
-    const defeated = resolution.state === "out-of-world";
 
-    if (defeated) {
+    // Fall-Schaden nur bei echtem Sturz auf Boden; ein Sturz aus der Welt tötet
+    // ohnehin komplett und braucht keinen zusätzlichen Höhenschaden.
+    const fallDamage =
+      resolution.state === "fall" ? fallDamageForDrop(resolution.distance) : 0;
+
+    if (fallDamage > 0) {
+      unit.hitPoints = Math.max(0, unit.hitPoints - fallDamage);
+    }
+
+    const defeated =
+      resolution.state === "out-of-world" || unit.hitPoints <= 0;
+
+    if (resolution.state === "out-of-world") {
       unit.hitPoints = 0;
     }
 
@@ -231,6 +252,8 @@ export function resolveTurn(
       fromY,
       toY,
       defeated,
+      damage: fallDamage,
+      remainingHitPoints: unit.hitPoints,
     });
   }
 

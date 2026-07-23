@@ -393,3 +393,13 @@ sichtbar; die neue Form soll auf Distanz als Cartoon-Pilz lesbar bleiben.
 **Konsequenz:** Idle-Schleife und Fußlinie sind pixelbasiert regressionsgetestet.
 Waffenaktionen nutzen bis zu einer späteren Erweiterung die Idle-Pose; Simulation
 und Werte ändern sich nicht.
+
+## 2026-07-23 – D-043: Fall-Schaden aus der Sturzhöhe
+
+**Entscheidung:** Ein echter Sturz auf Boden (`resolveTerrainFall` → `state: "fall"`) verursacht jetzt Schaden proportional zur Sturzhöhe. Die reine Funktion `fallDamageForDrop` (`simulation/movement/TerrainFall.ts`) lässt kleine Stürze unter einer Schwelle (120 Weltpunkte) folgenlos, wächst darüber linear (0,22 HP je Weltpunkt) und ist bei 110 gedeckelt. Der Schaden wird in `resolveTurn` direkt verrechnet und über das erweiterte `fall-resolved`-Event (`damage`, `remainingHitPoints`) gemeldet – **nicht** als separates `damage-applied`, damit ein Sturz nicht fälschlich als Treffer gewertet wird. Ein Sturz, der die HP auf 0 bringt, gilt als besiegt. Sturz aus der Welt tötet weiterhin komplett ohne zusätzlichen Höhenschaden.
+
+**Grund:** Bisher waren Stürze folgenlos; nur der Fall aus der Welt tötete. Damit fehlte dem Kern das physische Risiko, das die Produktvision verspricht (Designpfeiler 1 „nachvollziehbares Chaos aus Physik" und 4 „Zerstörung verändert Entscheidungen"). Ein Gegner von einer Kante zu sprengen oder ein riskanter Sprung soll spürbare Konsequenzen haben – genau die Spannung, die klassische Artillery-Spiele lebendig macht.
+
+**Konsequenz:** Schwelle und Rate sind an echten Headless-Matches kalibriert (reale „fall"-Stürze: meist 7–60 Weltpunkte Stolperer, gelegentlich 300–560 echte Abstürze). Gemessene Wirkung: auf den flachen Sonneninseln fällt kaum jemand tief genug (0 Fall-Schaden-Events), auf dem vertikalen Space-Resort dagegen spürbar (3 Events, davon 2 tödlich) – Fall-Schaden ist bewusst kartenabhängig. Der Simulator-Snapshot wurde bewusst erneuert; der Golden Master (Erstzug-Planung) bleibt unverändert, weil Fall-Schaden nur die Auflösung betrifft, nicht die Planung. Die Chronik meldet eine „harte Landung" (`hard-landing`) als neuen Vorfallstyp; die Szene zeigt eine schwebende „−N"-Zahl am Landepunkt. Determinismus gewahrt (reine Höhenformel, kein Zufall).
+
+**Umsetzung:** ausgeführt von Claude Opus 4.8 (Anthropic) am 23. Juli 2026.

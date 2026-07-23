@@ -48,3 +48,25 @@ export function resolveTerrainFall(
     distance: Math.max(0, landingY - currentFeetY),
   };
 }
+
+/**
+ * Fall-Schaden. Kleine Stürze (Stolperer) bleiben folgenlos; erst oberhalb
+ * einer Schwelle wächst der Schaden linear mit der Sturzhöhe und ist gedeckelt.
+ * Rein deterministisch – gleiche Höhe, gleicher Schaden.
+ *
+ * Kalibriert an echten Headless-Matches (Claude Opus 4.8): reale „fall"-Stürze
+ * lagen meist bei 7–60 Weltpunkten (Stolperer, kein Schaden), gelegentlich bei
+ * 300–560 (echte Abstürze, spürbar bis fast tödlich).
+ */
+export const FALL_DAMAGE_MIN_DROP = 120;
+export const FALL_DAMAGE_PER_UNIT = 0.22;
+export const FALL_DAMAGE_MAXIMUM = 110;
+
+export function fallDamageForDrop(dropDistance: number): number {
+  if (!Number.isFinite(dropDistance) || dropDistance <= FALL_DAMAGE_MIN_DROP) {
+    return 0;
+  }
+
+  const raw = (dropDistance - FALL_DAMAGE_MIN_DROP) * FALL_DAMAGE_PER_UNIT;
+  return Math.min(FALL_DAMAGE_MAXIMUM, Math.round(raw));
+}

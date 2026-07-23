@@ -2181,8 +2181,12 @@ export class MatchScene extends Phaser.Scene {
       const destinationY = event.toY;
       fallPoints.push({ x: view.unit.position.x, y: destinationY });
 
-      if (event.defeated) {
+      // Fall-Schaden ist bereits fachlich verrechnet – hier nur anzeigen.
+      if (event.defeated || event.damage > 0) {
         this.updateUnitHealthBar(view);
+      }
+      if (event.damage > 0) {
+        this.showFallDamageNumber(view.unit.position.x, destinationY, event.damage);
       }
 
       const duration = Phaser.Math.Clamp(
@@ -2217,6 +2221,34 @@ export class MatchScene extends Phaser.Scene {
     }
 
     return fallPoints;
+  }
+
+  /**
+   * Fall-Schaden als schwebende „−N"-Zahl am Landepunkt. Rein visuell; der
+   * Schaden ist bereits von der Engine verrechnet.
+   */
+  private showFallDamageNumber(x: number, y: number, damage: number): void {
+    const label = this.registerWorldObject(
+      this.add
+        .text(x, y - 90, `−${damage}`, {
+          fontFamily: "Segoe UI, Arial, sans-serif",
+          fontSize: "22px",
+          fontStyle: "bold",
+          color: "#ffe6a3",
+          stroke: "#8a5a1e",
+          strokeThickness: 6,
+        })
+        .setOrigin(0.5)
+        .setDepth(90),
+    );
+    this.tweens.add({
+      targets: label,
+      y: label.y - 30,
+      alpha: 0,
+      duration: 1000,
+      delay: 220,
+      onComplete: () => label.destroy(),
+    });
   }
 
   private findUnitView(unitId: string): UnitView {

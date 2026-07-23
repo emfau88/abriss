@@ -9,7 +9,7 @@ Gleiche Szenarien ergeben byte-identische Berichte.
 - Ausgänge: Crew 1 · Rivalen 2 · Unentschieden 0
 - Zuglängen: Minimum 11 · Median 17 · Maximum 18
 - Plan-Arten: 46 Angriffe · 0 Positionszüge · 0 Aussetzer
-- Trefferbild: 0 Eigentreffer · 0 Kameradentreffer · 0 Out-of-world-Ausschaltungen
+- Trefferbild: 0 Eigentreffer · 0 Kameradentreffer · 3 Out-of-world-Ausschaltungen
 
 | Waffe | Angriffe | Anteil | Gesamtschaden |
 | --- | ---: | ---: | ---: |
@@ -32,11 +32,11 @@ Erstzug-Divergenz über 7 Eröffnungssonden × 3 Persönlichkeiten:
 - Ausgänge: Crew 3 · Rivalen 0 · Unentschieden 0
 - Zuglängen: Minimum 13 · Median 14 · Maximum 17
 - Plan-Arten: 43 Angriffe · 1 Positionszüge · 0 Aussetzer
-- Trefferbild: 0 Eigentreffer · 1 Kameradentreffer · 1 Out-of-world-Ausschaltungen
+- Trefferbild: 0 Eigentreffer · 0 Kameradentreffer · 7 Out-of-world-Ausschaltungen
 
 | Waffe | Angriffe | Anteil | Gesamtschaden |
 | --- | ---: | ---: | ---: |
-| Panzerfaust | 24 von 43 | 55.8 % | 2265 |
+| Panzerfaust | 24 von 43 | 55.8 % | 2213 |
 | Wurfgranate | 9 von 43 | 20.9 % | 262 |
 | Geländebrecher | 10 von 43 | 23.3 % | 0 |
 
@@ -56,7 +56,7 @@ alle Figuren der Seite mit derselben Persönlichkeit).
 
 | Paarung | Ausgang | Züge |
 | --- | --- | ---: |
-| good-mood: Crew cautious vs. Rivalen explosive | Crew gewinnt | 16 |
+| good-mood: Crew cautious vs. Rivalen explosive | Crew gewinnt | 15 |
 | good-mood: Crew explosive vs. Rivalen showboat | Rivalen gewinnen | 12 |
 | good-mood: Crew showboat vs. Rivalen cautious | Rivalen gewinnen | 11 |
 | space-resort: Crew cautious vs. Rivalen explosive | Rivalen gewinnen | 16 |

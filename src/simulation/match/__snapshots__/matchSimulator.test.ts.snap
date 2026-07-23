@@ -13,7 +13,7 @@ exports[`mass simulator (Task 022, Teil B) > aggregates a deterministic report o
       "friendlyHits": 0,
       "mapId": "good-mood",
       "matches": 3,
-      "outOfWorldKnockouts": 0,
+      "outOfWorldKnockouts": 3,
       "outcomes": {
         "crew": 1,
         "draw": 0,
@@ -91,10 +91,10 @@ exports[`mass simulator (Task 022, Teil B) > aggregates a deterministic report o
         "divergentWeapons": 0,
         "probes": 7,
       },
-      "friendlyHits": 1,
+      "friendlyHits": 0,
       "mapId": "space-resort",
       "matches": 3,
-      "outOfWorldKnockouts": 1,
+      "outOfWorldKnockouts": 7,
       "outcomes": {
         "crew": 3,
         "draw": 0,
@@ -148,7 +148,7 @@ exports[`mass simulator (Task 022, Teil B) > aggregates a deterministic report o
         {
           "attacks": 24,
           "share": 0.5581,
-          "totalDamage": 2265,
+          "totalDamage": 2213,
           "weaponId": "rocket",
         },
         {
@@ -174,7 +174,7 @@ exports[`mass simulator (Task 022, Teil B) > aggregates a deterministic report o
   {
     "label": "good-mood: Crew cautious vs. Rivalen explosive",
     "outcome": "crew",
-    "turnCount": 16,
+    "turnCount": 15,
   },
   {
     "label": "good-mood: Crew explosive vs. Rivalen showboat",

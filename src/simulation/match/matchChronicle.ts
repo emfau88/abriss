@@ -21,6 +21,7 @@ export type ChronicleMomentType =
   | "self-hit"
   | "friendly-fire"
   | "world-fall"
+  | "hard-landing"
   | "misfire"
   | "large-crater"
   | "turn-skipped";
@@ -65,6 +66,7 @@ const BASE_SEVERITY: Record<ChronicleMomentType, number> = {
   "self-hit": 90,
   "world-fall": 80,
   "friendly-fire": 70,
+  "hard-landing": 55,
   "large-crater": 40,
   misfire: 30,
   "turn-skipped": 15,
@@ -256,6 +258,26 @@ function collectTurnMoments(
         subjectUnitId: event.unitId === actorId ? null : event.unitId,
         severity: BASE_SEVERITY["world-fall"] + (selfInflicted ? 15 : 0),
         text,
+      });
+      continue;
+    }
+
+    // Harte Landung: ein echter Sturz auf Boden mit spürbarem Fall-Schaden.
+    if (
+      event.type === "fall-resolved" &&
+      event.state === "fall" &&
+      event.damage > 0
+    ) {
+      const isSelf = event.unitId === actorId;
+      out.push({
+        type: "hard-landing",
+        turnNumber: turn.turnNumber,
+        actorUnitId: actorId,
+        subjectUnitId: isSelf ? null : event.unitId,
+        severity: BASE_SEVERITY["hard-landing"] + Math.min(25, event.damage / 3),
+        text: isSelf
+          ? `${actorName} unterschätzt die Falltiefe und landet schmerzhaft.`
+          : `${nameOf(event.unitId)} lernt die Schwerkraft neu kennen.`,
       });
     }
   }

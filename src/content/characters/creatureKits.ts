@@ -59,7 +59,7 @@ export const CREATURE_VISUALS: Readonly<
     sheetPath: BLUE_HORNLING_SHEET_PATH,
     frameWidth: BLUE_HORNLING_FRAME_WIDTH,
     frameHeight: BLUE_HORNLING_FRAME_HEIGHT,
-    displaySize: 116,
+    displaySize: 93,
     poseFrames: {
       ready: 0,
       planning: 1,
@@ -76,7 +76,7 @@ export const CREATURE_VISUALS: Readonly<
     sheetPath: publicAssetPath("assets/characters/moki-mushroom-sheet.png"),
     frameWidth: STANDARD_FRAME_SIZE,
     frameHeight: STANDARD_FRAME_SIZE,
-    displaySize: 140,
+    displaySize: 112,
     poseFrames: {
       ready: 0,
       planning: 1,
@@ -97,7 +97,7 @@ export const CREATURE_VISUALS: Readonly<
     sheetPath: publicAssetPath("assets/characters/ghost-fluid-sheet.png"),
     frameWidth: STANDARD_FRAME_SIZE,
     frameHeight: STANDARD_FRAME_SIZE,
-    displaySize: 150,
+    displaySize: 120,
     poseFrames: {
       ready: 0,
       planning: 3,
@@ -148,7 +148,7 @@ export const CREATURE_VISUALS: Readonly<
     sheetPath: publicAssetPath("assets/characters/slime-fluid-sheet.png"),
     frameWidth: STANDARD_FRAME_SIZE,
     frameHeight: STANDARD_FRAME_SIZE,
-    displaySize: 146,
+    displaySize: 117,
     poseFrames: {
       ready: 0,
       planning: 2,
@@ -199,7 +199,7 @@ export const CREATURE_VISUALS: Readonly<
     sheetPath: publicAssetPath("assets/characters/pop-diva-sheet.png"),
     frameWidth: STANDARD_FRAME_SIZE,
     frameHeight: STANDARD_FRAME_SIZE,
-    displaySize: 146,
+    displaySize: 117,
     poseFrames: {
       ready: 0,
       planning: 2,
@@ -241,7 +241,7 @@ export const CREATURE_VISUALS: Readonly<
     sheetPath: publicAssetPath("assets/characters/chicken-sheet.png"),
     frameWidth: STANDARD_FRAME_SIZE,
     frameHeight: STANDARD_FRAME_SIZE,
-    displaySize: 146,
+    displaySize: 117,
     poseFrames: {
       ready: 0,
       planning: 2,

@@ -13,6 +13,10 @@ import {
 import type { LocalMovementPlan } from "../movement/LocalMovementPlanner";
 import { resolveTerrainFall } from "../movement/TerrainFall";
 import {
+  resolveReactionChain,
+  type InteractableObject,
+} from "../interactables/interactables";
+import {
   advanceTurn,
   determineMatchOutcome,
   updateCombatantHitPoints,
@@ -62,6 +66,18 @@ export type MatchTurnEvent =
       readonly mutation: TerrainMutation;
       readonly center: Vector2;
       readonly radius: number;
+    }
+  | {
+      // Task 028: Ein interaktives Objekt (Fass) detoniert als Teil der
+      // Reaktionskette. Die eigentlichen Folgen (Terrain, Schaden, Rückstoß)
+      // erscheinen als die üblichen Folge-Events – so sehen Chronik,
+      // Präsentation und Tests die Kette ohne Sonderfall.
+      readonly type: "interactable-triggered";
+      readonly interactableId: string;
+      readonly center: Vector2;
+      readonly radius: number;
+      /** Kettentiefe: 1 = direkt vom Schuss, 2 = von einem anderen Fass usw. */
+      readonly depth: number;
     }
   | {
       readonly type: "damage-applied";
@@ -145,83 +161,23 @@ export function resolveTurn(
     return events;
   }
 
-  const mutation = state.terrain.removeCircle(
-    explosion.center.x,
-    explosion.center.y,
-    explosion.radius,
+  // Primärexplosion des Projektils (unverändertes Verhalten für Karten ohne
+  // interaktive Objekte – der Golden Master bleibt dadurch stabil).
+  applyExplosionEffects(
+    state,
+    {
+      center: explosion.center,
+      radius: explosion.radius,
+      maximumDamage: candidate.maximumDamage,
+      maximumKnockbackSpeed: candidate.maximumKnockbackSpeed,
+    },
+    events,
   );
-  events.push({
-    type: "terrain-mutated",
-    mutation,
-    center: { ...explosion.center },
-    radius: explosion.radius,
-  });
 
-  // Schaden vor Rückstoß, auf den Positionen zum Explosionszeitpunkt –
-  // identisch zur früheren Reihenfolge in completeAction().
-  const affectedUnits = [];
-
-  for (const unit of state.units) {
-    if (unit.hitPoints <= 0) {
-      continue;
-    }
-
-    const damage = Math.round(
-      calculateBlastDamage(
-        explosion.center,
-        unit.position,
-        explosion.radius,
-        candidate.maximumDamage,
-      ),
-    );
-
-    if (damage <= 0) {
-      continue;
-    }
-
-    unit.hitPoints = Math.max(0, unit.hitPoints - damage);
-    affectedUnits.push(unit);
-    events.push({
-      type: "damage-applied",
-      unitId: unit.id,
-      damage,
-      remainingHitPoints: unit.hitPoints,
-    });
-  }
-
-  for (const unit of affectedUnits) {
-    const result = simulateExplosionKnockback({
-      terrain: state.terrain,
-      startPosition: { ...unit.position },
-      explosionCenter: explosion.center,
-      explosionRadius: explosion.radius,
-      maximumSpeed: candidate.maximumKnockbackSpeed,
-    });
-
-    if (result.outcome === "unaffected") {
-      continue;
-    }
-
-    const lastSample = result.samples[result.samples.length - 1];
-
-    if (lastSample) {
-      unit.position.x = lastSample.position.x;
-      unit.position.y = lastSample.position.y;
-    }
-
-    const defeatedOutOfWorld = result.outcome === "out-of-world";
-
-    if (defeatedOutOfWorld) {
-      unit.hitPoints = 0;
-    }
-
-    events.push({
-      type: "knockback-resolved",
-      unitId: unit.id,
-      result,
-      defeatedOutOfWorld,
-    });
-  }
+  // Task 028: Reaktionskette – im Radius liegende Fässer detonieren und
+  // erzeugen ihre eigenen Explosionen (deterministisch, tiefenbegrenzt). Jede
+  // Fass-Detonation läuft durch dieselbe Effektlogik wie die Primärexplosion.
+  resolveInteractableChain(state, explosion, events);
 
   for (const unit of state.units) {
     // Figuren, die bereits außerhalb der Welt liegen, können nicht erneut
@@ -287,6 +243,162 @@ export function resolveTurn(
   }
 
   return events;
+}
+
+interface ExplosionEffect {
+  readonly center: Vector2;
+  readonly radius: number;
+  readonly maximumDamage: number;
+  readonly maximumKnockbackSpeed: number;
+}
+
+/**
+ * Task 028: Wendet eine einzelne Explosion auf Terrain und Figuren an –
+ * Terrain entfernen, Schaden (vor Rückstoß), dann Rückstoß. Diese Reihenfolge
+ * ist exakt die frühere Inline-Logik der Primärexplosion, jetzt geteilt von
+ * Projektil- und Fass-Explosionen. Fall-Auflösung läuft bewusst NICHT hier,
+ * sondern einmal am Ende des Zuges, damit mehrere Explosionen dieselbe
+ * abschließende Sturzprüfung teilen.
+ */
+function applyExplosionEffects(
+  state: MatchSimulationState,
+  explosion: ExplosionEffect,
+  events: MatchTurnEvent[],
+): void {
+  const mutation = state.terrain.removeCircle(
+    explosion.center.x,
+    explosion.center.y,
+    explosion.radius,
+  );
+  events.push({
+    type: "terrain-mutated",
+    mutation,
+    center: { ...explosion.center },
+    radius: explosion.radius,
+  });
+
+  const affectedUnits = [];
+
+  for (const unit of state.units) {
+    if (unit.hitPoints <= 0) {
+      continue;
+    }
+
+    const damage = Math.round(
+      calculateBlastDamage(
+        explosion.center,
+        unit.position,
+        explosion.radius,
+        explosion.maximumDamage,
+      ),
+    );
+
+    if (damage <= 0) {
+      continue;
+    }
+
+    unit.hitPoints = Math.max(0, unit.hitPoints - damage);
+    affectedUnits.push(unit);
+    events.push({
+      type: "damage-applied",
+      unitId: unit.id,
+      damage,
+      remainingHitPoints: unit.hitPoints,
+    });
+  }
+
+  for (const unit of affectedUnits) {
+    const result = simulateExplosionKnockback({
+      terrain: state.terrain,
+      startPosition: { ...unit.position },
+      explosionCenter: explosion.center,
+      explosionRadius: explosion.radius,
+      maximumSpeed: explosion.maximumKnockbackSpeed,
+    });
+
+    if (result.outcome === "unaffected") {
+      continue;
+    }
+
+    const lastSample = result.samples[result.samples.length - 1];
+
+    if (lastSample) {
+      unit.position.x = lastSample.position.x;
+      unit.position.y = lastSample.position.y;
+    }
+
+    const defeatedOutOfWorld = result.outcome === "out-of-world";
+
+    if (defeatedOutOfWorld) {
+      unit.hitPoints = 0;
+    }
+
+    events.push({
+      type: "knockback-resolved",
+      unitId: unit.id,
+      result,
+      defeatedOutOfWorld,
+    });
+  }
+}
+
+/**
+ * Task 028: Löst die Fass-Kette einer Primärexplosion auf und wendet jede
+ * Fass-Detonation an. `resolveReactionChain` bestimmt deterministisch, welche
+ * Fässer in welcher Reihenfolge und Tiefe detonieren; hier werden ihre
+ * Zustände gesetzt und ihre Explosionen wie Primärexplosionen ausgeführt.
+ */
+function resolveInteractableChain(
+  state: MatchSimulationState,
+  primary: { center: Vector2; radius: number },
+  events: MatchTurnEvent[],
+): void {
+  if (state.interactables.length === 0) {
+    return;
+  }
+
+  const chain = resolveReactionChain({
+    trigger: { center: primary.center, radius: primary.radius },
+    interactables: state.interactables,
+  });
+
+  if (chain.explosions.length === 0) {
+    return;
+  }
+
+  const byId = new Map<string, InteractableObject>();
+  for (const object of state.interactables) {
+    byId.set(object.id, object);
+  }
+
+  for (const explosion of chain.explosions) {
+    // `explosions` enthält ausschließlich Fass-Detonationen, die Quelle ist
+    // daher immer ein bekanntes Fass.
+    const barrel = byId.get(explosion.sourceInteractableId);
+
+    if (barrel) {
+      barrel.state = "destroyed";
+    }
+
+    events.push({
+      type: "interactable-triggered",
+      interactableId: explosion.sourceInteractableId,
+      center: { ...explosion.center },
+      radius: explosion.radius,
+      depth: explosion.depth,
+    });
+
+    applyExplosionEffects(
+      state,
+      {
+        center: explosion.center,
+        radius: explosion.radius,
+        maximumDamage: explosion.maximumDamage,
+        maximumKnockbackSpeed: explosion.maximumKnockbackSpeed,
+      },
+      events,
+    );
+  }
 }
 
 export function concludeTurn(state: MatchSimulationState): TurnConclusion {

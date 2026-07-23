@@ -15,12 +15,12 @@ exports[`mass simulator (Task 022, Teil B) > aggregates a deterministic report o
       "matches": 3,
       "outOfWorldKnockouts": 0,
       "outcomes": {
-        "crew": 2,
+        "crew": 1,
         "draw": 0,
-        "rivals": 1,
+        "rivals": 2,
       },
       "planKinds": {
-        "attack": 59,
+        "attack": 46,
         "reposition": 0,
         "skip": 0,
       },
@@ -31,55 +31,55 @@ exports[`mass simulator (Task 022, Teil B) > aggregates a deterministic report o
       ],
       "selfHits": 0,
       "turnStats": {
-        "maximum": 21,
-        "median": 20,
-        "minimum": 18,
+        "maximum": 18,
+        "median": 17,
+        "minimum": 11,
       },
       "weaponDiagnosis": [
         {
-          "consideredTurns": 53,
+          "consideredTurns": 40,
           "invalidReasons": {
-            "Ziel liegt außerhalb wirksamer Reichweite": 355,
+            "Ziel liegt außerhalb wirksamer Reichweite": 360,
           },
-          "validTurns": 27,
+          "validTurns": 28,
           "weaponId": "rocket",
         },
         {
-          "consideredTurns": 56,
+          "consideredTurns": 43,
           "invalidReasons": {
             "Flugbahn endet ohne Einschlag": 1,
             "Flugbahn verlässt das Einsatzgebiet": 5,
-            "Ziel liegt außerhalb wirksamer Reichweite": 883,
+            "Ziel liegt außerhalb wirksamer Reichweite": 896,
           },
-          "validTurns": 27,
+          "validTurns": 22,
           "weaponId": "grenade",
         },
         {
-          "consideredTurns": 50,
+          "consideredTurns": 37,
           "invalidReasons": {
-            "Ziel liegt außerhalb wirksamer Reichweite": 103,
+            "Ziel liegt außerhalb wirksamer Reichweite": 83,
           },
-          "validTurns": 50,
+          "validTurns": 37,
           "weaponId": "breaker",
         },
       ],
       "weaponUsage": [
         {
           "attacks": 27,
-          "share": 0.4576,
-          "totalDamage": 2497,
+          "share": 0.587,
+          "totalDamage": 2327,
           "weaponId": "rocket",
         },
         {
-          "attacks": 14,
-          "share": 0.2373,
-          "totalDamage": 418,
+          "attacks": 10,
+          "share": 0.2174,
+          "totalDamage": 595,
           "weaponId": "grenade",
         },
         {
-          "attacks": 18,
-          "share": 0.3051,
-          "totalDamage": 66,
+          "attacks": 9,
+          "share": 0.1957,
+          "totalDamage": 0,
           "weaponId": "breaker",
         },
       ],
@@ -87,11 +87,11 @@ exports[`mass simulator (Task 022, Teil B) > aggregates a deterministic report o
     {
       "firstTurnDivergence": {
         "divergentMovements": 4,
-        "divergentSelections": 4,
+        "divergentSelections": 2,
         "divergentWeapons": 0,
         "probes": 4,
       },
-      "friendlyHits": 0,
+      "friendlyHits": 1,
       "mapId": "space-resort",
       "matches": 3,
       "outOfWorldKnockouts": 1,
@@ -101,8 +101,8 @@ exports[`mass simulator (Task 022, Teil B) > aggregates a deterministic report o
         "rivals": 0,
       },
       "planKinds": {
-        "attack": 39,
-        "reposition": 0,
+        "attack": 43,
+        "reposition": 1,
         "skip": 0,
       },
       "seeds": [
@@ -112,32 +112,33 @@ exports[`mass simulator (Task 022, Teil B) > aggregates a deterministic report o
       ],
       "selfHits": 0,
       "turnStats": {
-        "maximum": 15,
-        "median": 12,
-        "minimum": 12,
+        "maximum": 17,
+        "median": 14,
+        "minimum": 13,
       },
       "weaponDiagnosis": [
         {
-          "consideredTurns": 36,
+          "consideredTurns": 38,
           "invalidReasons": {
-            "Ziel liegt außerhalb wirksamer Reichweite": 224,
+            "Ziel liegt außerhalb wirksamer Reichweite": 267,
           },
-          "validTurns": 25,
+          "validTurns": 24,
           "weaponId": "rocket",
         },
         {
-          "consideredTurns": 36,
+          "consideredTurns": 41,
           "invalidReasons": {
-            "Flugbahn verlässt das Einsatzgebiet": 24,
-            "Ziel liegt außerhalb wirksamer Reichweite": 599,
+            "Flugbahn endet ohne Einschlag": 2,
+            "Flugbahn verlässt das Einsatzgebiet": 43,
+            "Ziel liegt außerhalb wirksamer Reichweite": 832,
           },
-          "validTurns": 18,
+          "validTurns": 27,
           "weaponId": "grenade",
         },
         {
-          "consideredTurns": 33,
+          "consideredTurns": 35,
           "invalidReasons": {
-            "Ziel liegt außerhalb wirksamer Reichweite": 84,
+            "Ziel liegt außerhalb wirksamer Reichweite": 114,
           },
           "validTurns": 33,
           "weaponId": "breaker",
@@ -145,20 +146,20 @@ exports[`mass simulator (Task 022, Teil B) > aggregates a deterministic report o
       ],
       "weaponUsage": [
         {
-          "attacks": 25,
-          "share": 0.641,
-          "totalDamage": 2030,
+          "attacks": 24,
+          "share": 0.5581,
+          "totalDamage": 2265,
           "weaponId": "rocket",
         },
         {
-          "attacks": 6,
-          "share": 0.1538,
-          "totalDamage": 252,
+          "attacks": 9,
+          "share": 0.2093,
+          "totalDamage": 262,
           "weaponId": "grenade",
         },
         {
-          "attacks": 8,
-          "share": 0.2051,
+          "attacks": 10,
+          "share": 0.2326,
           "totalDamage": 0,
           "weaponId": "breaker",
         },
@@ -173,7 +174,7 @@ exports[`mass simulator (Task 022, Teil B) > aggregates a deterministic report o
   {
     "label": "good-mood: Crew cautious vs. Rivalen explosive",
     "outcome": "crew",
-    "turnCount": 18,
+    "turnCount": 16,
   },
   {
     "label": "good-mood: Crew explosive vs. Rivalen showboat",
@@ -183,12 +184,12 @@ exports[`mass simulator (Task 022, Teil B) > aggregates a deterministic report o
   {
     "label": "good-mood: Crew showboat vs. Rivalen cautious",
     "outcome": "rivals",
-    "turnCount": 10,
+    "turnCount": 11,
   },
   {
     "label": "space-resort: Crew cautious vs. Rivalen explosive",
-    "outcome": "crew",
-    "turnCount": 9,
+    "outcome": "rivals",
+    "turnCount": 16,
   },
   {
     "label": "space-resort: Crew explosive vs. Rivalen showboat",
@@ -197,8 +198,8 @@ exports[`mass simulator (Task 022, Teil B) > aggregates a deterministic report o
   },
   {
     "label": "space-resort: Crew showboat vs. Rivalen cautious",
-    "outcome": "crew",
-    "turnCount": 17,
+    "outcome": "rivals",
+    "turnCount": 8,
   },
 ]
 `;

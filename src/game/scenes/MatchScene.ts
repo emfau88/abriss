@@ -42,6 +42,7 @@ import {
   type MatchSimulationState,
   type SimulationUnit,
 } from "../../simulation/match/matchSimulationState";
+import type { InteractableObject } from "../../simulation/interactables/interactables";
 import {
   commandWeapon,
   cycleActivePersonality,
@@ -58,6 +59,11 @@ import {
   resolveTurn,
   type MatchTurnEvent,
 } from "../../simulation/match/resolveTurn";
+import {
+  buildMatchChronicle,
+  type ChronicleTurnInput,
+  type ChronicleUnitInfo,
+} from "../../simulation/match/matchChronicle";
 import {
   sampleTrajectoryAtElapsed,
   type Vector2,
@@ -96,10 +102,12 @@ import { summarizeTeamStatus } from "../hud/TeamStatus";
 import { TerrainMaskRenderer } from "../rendering/TerrainMaskRenderer";
 import {
   createQuickMatchConfig,
+  type ChronicleReportMoment,
   type MatchLaunchConfig,
   type MatchReport,
 } from "../session/matchSession";
 import {
+  buildMatchInteractableDefinitions,
   buildMatchUnitDefinitions,
   type MatchSetupUnit,
 } from "../session/matchSetup";
@@ -141,6 +149,12 @@ interface UnitView {
   readonly baseSpriteScaleX: number;
   readonly baseSpriteScaleY: number;
   readonly baseSpriteY: number;
+}
+
+/** Task 028: Darstellungszustand eines interaktiven Objekts (Platzhalter). */
+interface InteractableView {
+  readonly object: InteractableObject;
+  readonly container: Phaser.GameObjects.Container;
 }
 
 interface CameraKeys {
@@ -208,10 +222,19 @@ export class MatchScene extends Phaser.Scene {
     zoom: 0.4,
   };
   private units: UnitView[] = [];
+  /** Task 028: Darstellungen der interaktiven Objekte (Fässer). */
+  private interactableViews: InteractableView[] = [];
   private simulation!: MatchSimulationState;
   private setupUnits: readonly MatchSetupUnit[] = [];
   private turnPlan!: TurnPlan;
   private pendingEvents: readonly MatchTurnEvent[] = [];
+  /**
+   * Task 027: Über das ganze Match akkumulierte Zug-Ereignisse. Speist die
+   * reine Chronik-Funktion beim Bau des Einsatzberichts. Wird bei Matchstart
+   * geleert und bei jeder Zugauflösung ergänzt (nicht in `pendingEvents`, das
+   * pro Zug transient bleibt). Ergänzt von Claude Opus 4.8.
+   */
+  private chronicleTurns: ChronicleTurnInput[] = [];
   private plan!: RocketActionPlan;
   private movementPlan!: LocalMovementPlan;
   private personality: Personality = "cautious";
@@ -267,7 +290,11 @@ export class MatchScene extends Phaser.Scene {
       seed: this.launchConfig.seed,
       terrain: this.terrainMask,
       unitDefinitions: this.setupUnits,
+      interactableDefinitions: buildMatchInteractableDefinitions(
+        this.launchConfig,
+      ),
     });
+    this.chronicleTurns = [];
     this.debugEnabled = false;
     this.cameraMovementReduced = false;
     this.actionState = "planning";
@@ -278,6 +305,7 @@ export class MatchScene extends Phaser.Scene {
     this.autoActionTimer = undefined;
     this.opponentAutoReady = false;
     this.units = [];
+    this.interactableViews = [];
     this.teamHudTitleTexts = new Map();
     this.teamHudTotalTexts = new Map();
     this.teamHudUnitTexts = new Map();
@@ -310,6 +338,7 @@ export class MatchScene extends Phaser.Scene {
     this.effectGraphics = this.add.graphics().setDepth(27);
     this.cameraDebugGraphics = this.add.graphics().setDepth(95).setVisible(false);
     registerCreatureAnimations(this);
+    this.createInteractables();
     this.createUnits();
     this.createProjectile();
 
@@ -646,6 +675,107 @@ export class MatchScene extends Phaser.Scene {
       }
 
       this.units.push(this.drawUnit(unit, index === 0, setup.visualId));
+    }
+  }
+
+  /**
+   * Task 028: Zeichnet die interaktiven Objekte als klar lesbare Platzhalter.
+   * Bewusst als Vektor-Platzhalter angelegt – ein späteres Asset ersetzt nur
+   * diese Zeichnung, ohne die Fachlogik zu berühren. Erstellt von
+   * Claude Opus 4.8.
+   */
+  private createInteractables(): void {
+    this.interactableViews = [];
+
+    for (const object of this.simulation.interactables) {
+      this.interactableViews.push(this.drawBarrelPlaceholder(object));
+    }
+  }
+
+  private drawBarrelPlaceholder(object: InteractableObject): InteractableView {
+    // Fasskörper: dunkles Metall mit Warnstreifen und Gefahrensymbol. Der
+    // Container sitzt auf der Fußlinie (origin unten), Höhe ~54 px.
+    const bodyWidth = 40;
+    const bodyHeight = 52;
+    const container = this.add.container(object.position.x, object.position.y);
+    container.setDepth(9);
+
+    const shadow = this.add.ellipse(0, -2, bodyWidth + 10, 12, 0x10242a, 0.28);
+    const body = this.add
+      .rectangle(0, -bodyHeight / 2, bodyWidth, bodyHeight, 0x394653, 1)
+      .setStrokeStyle(3, 0x1d2831, 1);
+    // Zwei gelb-schwarze Warnstreifen.
+    const stripeTop = this.add.rectangle(
+      0,
+      -bodyHeight + 16,
+      bodyWidth,
+      9,
+      COLORS.yellow,
+      1,
+    );
+    const stripeBottom = this.add.rectangle(
+      0,
+      -14,
+      bodyWidth,
+      9,
+      COLORS.yellow,
+      1,
+    );
+    const glyph = this.add
+      .text(0, -bodyHeight / 2, "☢", {
+        fontFamily: "Segoe UI Symbol, Segoe UI, sans-serif",
+        fontSize: "22px",
+        color: "#1d2831",
+      })
+      .setOrigin(0.5);
+    const label = this.add
+      .text(0, 4, "FASS", {
+        fontFamily: "Consolas, ui-monospace, monospace",
+        fontSize: "9px",
+        fontStyle: "bold",
+        color: COLORS.cream,
+        backgroundColor: "#b8463c",
+        padding: { x: 4, y: 2 },
+      })
+      .setOrigin(0.5);
+
+    container.add([shadow, body, stripeTop, stripeBottom, glyph, label]);
+
+    return { object, container };
+  }
+
+  /**
+   * Task 028: Spielt die Detonation interaktiver Objekte ab – ein kurzer Blitz
+   * und das dauerhafte „zerstört"-Aussehen des Fasses. Die eigentlichen Folgen
+   * (Terrain, Schaden, Rückstoß) laufen bereits über die üblichen Event-Pässe.
+   */
+  private presentInteractableEvents(): void {
+    for (const event of this.pendingEvents) {
+      if (event.type !== "interactable-triggered") {
+        continue;
+      }
+
+      const view = this.interactableViews.find(
+        (candidate) => candidate.object.id === event.interactableId,
+      );
+
+      if (!view) {
+        continue;
+      }
+
+      // Ein Fass detoniert genau einmal pro Match (die Engine markiert es
+      // danach als zerstört und die Kette überspringt zerstörte Fässer), daher
+      // erscheint jede interactableId hier höchstens einmal – kein Extra-Schutz.
+      // Kurzer Detonationsblitz am Fassort.
+      this.showExplosion(event.center.x, event.center.y, event.radius);
+      // Fass verblasst zu einem verkohlten Rest.
+      this.tweens.add({
+        targets: view.container,
+        alpha: 0.25,
+        scaleY: 0.55,
+        duration: 260,
+        ease: "Quad.easeIn",
+      });
     }
   }
 
@@ -1394,7 +1524,7 @@ export class MatchScene extends Phaser.Scene {
     this.turnPlan = turnPlan;
     this.movementPlan = turnPlan.movement;
     this.plan = turnPlan.action;
-    this.pendingEvents = resolveTurn(this.simulation, turnPlan);
+    this.pendingEvents = this.resolveAndRecordTurn(turnPlan);
     this.startProjectileExecution(this.activeUnit());
   }
 
@@ -1717,7 +1847,7 @@ export class MatchScene extends Phaser.Scene {
 
     // Die Engine löst den gesamten Zug sofort fachlich auf; die Szene spielt
     // anschließend nur noch das Ereignisprotokoll als Animation ab.
-    this.pendingEvents = resolveTurn(this.simulation, this.turnPlan);
+    this.pendingEvents = this.resolveAndRecordTurn(this.turnPlan);
 
     if (this.movementPlan.kind !== "hold") {
       this.executeMovementThenProjectile(active, this.movementPlan);
@@ -1852,12 +1982,20 @@ export class MatchScene extends Phaser.Scene {
       radius: explosionEvent.radius,
     };
     const dirtyUpdateStart = performance.now();
-    this.terrainRenderer.applyMutation(mutation);
+    // Task 028: Alle Terrain-Mutationen des Zuges anwenden (Primärexplosion
+    // plus Fass-Detonationen), sonst driftet die Darstellung von der Engine ab.
+    for (const event of this.pendingEvents) {
+      if (event.type === "terrain-mutated") {
+        this.terrainRenderer.applyMutation(event.mutation);
+      }
+    }
     this.lastDirtyUpdateMilliseconds = performance.now() - dirtyUpdateStart;
     this.lastDirtyRegionCells = mutation.dirtyCells
       ? `${mutation.dirtyCells.width}×${mutation.dirtyCells.height}`
       : "0×0";
     this.showExplosion(explosion.center.x, explosion.center.y, explosion.radius);
+    // Task 028: Fass-Detonationen sichtbar machen (Blitz + verkohltes Fass).
+    this.presentInteractableEvents();
     this.presentDamageEvents();
     const knockbackAnimations = this.knockbackAnimationsFromEvents();
     const knockbackPoints = knockbackAnimations.flatMap((animation) =>
@@ -2169,6 +2307,45 @@ export class MatchScene extends Phaser.Scene {
     });
   }
 
+  /**
+   * Task 027: Löst den Zug auf und hängt sein Ereignisprotokoll an die
+   * Match-Chronik. Zugnummer und aktive Einheit werden zum Auflösungszeitpunkt
+   * festgehalten – vor dem späteren Zugwechsel durch `concludeTurn`. Die
+   * Auflösung selbst ist unverändert; hier wird nur zusätzlich mitgeschrieben.
+   */
+  private resolveAndRecordTurn(turnPlan: TurnPlan): readonly MatchTurnEvent[] {
+    const turnNumber = this.simulation.matchState.turnNumber;
+    const activeUnitId = this.simulation.matchState.activeCombatantId;
+    const events = resolveTurn(this.simulation, turnPlan);
+    this.chronicleTurns.push({ turnNumber, activeUnitId, events });
+    return events;
+  }
+
+  /**
+   * Task 027: Erzeugt aus den akkumulierten Zug-Ereignissen die erzählte
+   * Match-Chronik für den Einsatzbericht. Die Team-/Namensauflösung kommt aus
+   * den geladenen Einheiten; die Texte werden hier bereits mit Figurennamen
+   * gerendert, damit die DebriefScene reine Anzeige bleibt.
+   */
+  private buildChronicleForReport(): readonly ChronicleReportMoment[] {
+    const unitInfo = new Map<string, ChronicleUnitInfo>();
+
+    for (const view of this.units) {
+      unitInfo.set(view.unit.id, {
+        team: view.unit.team,
+        displayName: view.unit.displayName,
+      });
+    }
+
+    return buildMatchChronicle({ turns: this.chronicleTurns, unitInfo }).map(
+      (moment) => ({
+        type: moment.type,
+        turnNumber: moment.turnNumber,
+        text: moment.text,
+      }),
+    );
+  }
+
   private scheduleTurnAdvance(delayMilliseconds: number, status?: string): void {
     if (status) {
       this.updateStatus(status);
@@ -2273,6 +2450,7 @@ export class MatchScene extends Phaser.Scene {
         survivingRivals: this.units.filter(
           (view) => view.unit.team === "rivals" && view.unit.hitPoints > 0,
         ).length,
+        chronicle: this.buildChronicleForReport(),
       };
       this.scene.start("DebriefScene", { report });
     });

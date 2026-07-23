@@ -1,6 +1,7 @@
 import type { CreatureVisualId } from "../../content/characters/creatureKits";
 import { MAP_DEFINITIONS } from "../../content/maps/mapCatalog";
 import { FIGHTER_ROSTER } from "../../manager/fighterRoster";
+import type { InteractableDefinition } from "../../simulation/interactables/interactables";
 import type { MatchUnitDefinition } from "../../simulation/match/matchSimulationState";
 import type { MatchLaunchConfig } from "./matchSession";
 
@@ -47,4 +48,15 @@ export function buildMatchUnitDefinitions(
   });
 
   return definitions;
+}
+
+/**
+ * Task 028: Die interaktiven Objekte der gewählten Karte. Reine Weitergabe der
+ * Kartendaten; die Höhe wird beim Erzeugen der Simulation aus dem Terrain
+ * bestimmt.
+ */
+export function buildMatchInteractableDefinitions(
+  config: MatchLaunchConfig,
+): readonly InteractableDefinition[] {
+  return MAP_DEFINITIONS[config.mapId].interactables ?? [];
 }

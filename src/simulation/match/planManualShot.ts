@@ -83,6 +83,7 @@ export function planManualShot(
       terrainEffect: 0,
       showmanship: 0,
       aimError: 0,
+      chainEffect: 0,
     },
     components: [],
     score: 0,

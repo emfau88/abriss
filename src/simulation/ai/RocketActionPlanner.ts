@@ -5,6 +5,11 @@ import {
   type RocketTrajectoryResult,
   type Vector2,
 } from "../ballistics/Ballistics";
+import {
+  resolveReactionChain,
+  type ChainExplosion,
+  type InteractableObject,
+} from "../interactables/interactables";
 import { keyedSignedVariation } from "../random/SeededRandom";
 import {
   expectedSpreadDamageLoss,
@@ -75,6 +80,11 @@ export interface RocketCandidateMetrics {
   readonly terrainEffect: number;
   readonly showmanship: number;
   readonly aimError: number;
+  /**
+   * Task 028: Erwarteter Zusatzschaden an Gegnern durch ausgelöste Fässer
+   * (Reaktionskette). 0, wenn kein Fass in Reichweite des Einschlags liegt.
+   */
+  readonly chainEffect: number;
 }
 
 export type UtilityReasonCode =
@@ -84,6 +94,7 @@ export type UtilityReasonCode =
   | "demolition"
   | "showmanship"
   | "aim-error"
+  | "chain-effect"
   | "seed-variation";
 
 export interface UtilityComponent {
@@ -134,6 +145,12 @@ export interface RocketPlannerInput {
   readonly maximumDurationSeconds?: number;
   readonly explosionRadius?: number;
   readonly weaponIds?: readonly WeaponId[];
+  /**
+   * Task 028: Interaktive Objekte (Fässer). Wenn gesetzt, erzeugt der Planner
+   * zusätzlich Kandidaten, die auf Fässer in Gegnernähe zielen, und bewertet
+   * deren Kettenschaden.
+   */
+  readonly interactables?: readonly InteractableObject[];
 }
 
 interface PersonalityWeights {
@@ -143,6 +160,8 @@ interface PersonalityWeights {
   readonly demolition: number;
   readonly showmanship: number;
   readonly aimError: number;
+  /** Task 028: Gewicht des erwarteten Kettenschadens durch Fässer. */
+  readonly chainEffect: number;
 }
 
 const PERSONALITY_WEIGHTS: Record<Personality, PersonalityWeights> = {
@@ -153,6 +172,10 @@ const PERSONALITY_WEIGHTS: Record<Personality, PersonalityWeights> = {
     demolition: 0.08,
     showmanship: -0.1,
     aimError: -0.22,
+    // Vorsichtig nutzt Ketten nüchtern: als Wirkung willkommen, aber ohne
+    // Begeisterung – das Kettenrisiko in Kameradennähe wiegt über die
+    // Risiko-Komponenten ohnehin schwer.
+    chainEffect: 0.9,
   },
   explosive: {
     enemyEffect: 0.9,
@@ -161,6 +184,8 @@ const PERSONALITY_WEIGHTS: Record<Personality, PersonalityWeights> = {
     demolition: 0.62,
     showmanship: 0.1,
     aimError: -0.15,
+    // Sprengfreudig liebt Ketten – höchstes Gewicht.
+    chainEffect: 1.35,
   },
   showboat: {
     enemyEffect: 0.8,
@@ -169,6 +194,8 @@ const PERSONALITY_WEIGHTS: Record<Personality, PersonalityWeights> = {
     demolition: 0.12,
     showmanship: 0.9,
     aimError: -0.18,
+    // Angeberisch findet die Kette spektakulär und bewertet sie überdurchschnittlich.
+    chainEffect: 1.15,
   },
 };
 
@@ -208,6 +235,7 @@ const REASON_LABELS: Record<UtilityReasonCode, string> = {
   demolition: "Geländewirkung",
   showmanship: "Showfaktor",
   "aim-error": "Zielabweichung",
+  "chain-effect": "Kettenwirkung",
   "seed-variation": "Spontaneität",
 };
 
@@ -230,9 +258,14 @@ export function planRocketAction(input: RocketPlannerInput): RocketActionPlan {
   const gravity = input.gravity ?? DEFAULT_GRAVITY;
   const weaponIds = input.weaponIds ?? ["rocket"];
   const rejected = new Set(input.rejectedCandidateIds ?? []);
+  const barrels = (input.interactables ?? []).filter(
+    (object) => object.type === "explosive-barrel" && object.state === "intact",
+  );
+  const aimTargets = buildAimTargets(targets, barrels);
   const candidates: RocketCandidate[] = [];
 
-  for (const target of targets) {
+  for (const aimTarget of aimTargets) {
+    const target = aimTarget.referenceEnemy;
     for (const weaponId of weaponIds) {
       const weapon = WEAPON_PROFILES[weaponId];
       const baseFlightTimes =
@@ -250,10 +283,12 @@ export function planRocketAction(input: RocketPlannerInput): RocketActionPlan {
           ? input.explosionRadius
           : weapon.explosionRadius;
 
+      // Task 028: Der Zielbasis-Punkt ist entweder der Gegner selbst oder ein
+      // Fass in Gegnernähe (dann läuft die Wirkung über die Kette).
+      const aimBase = aimTarget.aimBase;
       // Task 023: Granaten zielen zusätzlich bewusst kurz, damit die
       // Abpraller zum Ziel rollen statt darüber hinaus.
-      const aimSign =
-        Math.sign(target.position.x - activeUnit.position.x) || 1;
+      const aimSign = Math.sign(aimBase.x - activeUnit.position.x) || 1;
       const aimOffsets: readonly number[] =
         weaponId === "grenade" ? [0, -110 * aimSign] : [0];
 
@@ -266,16 +301,14 @@ export function planRocketAction(input: RocketPlannerInput): RocketActionPlan {
 
         for (const aimOffset of aimOffsets) {
         const id =
-          `${weapon.id}:${target.id}:arc-${index + 1}` +
+          `${weapon.id}:${aimTarget.idKey}:arc-${index + 1}` +
           (aimOffset !== 0 ? ":kurz" : "");
         const aimPoint = {
-          x: target.position.x + aimOffset,
-          y: target.position.y,
+          x: aimBase.x + aimOffset,
+          y: aimBase.y,
         };
         const launchPosition = {
-          x:
-            activeUnit.position.x +
-            Math.sign(target.position.x - activeUnit.position.x) * 18,
+          x: activeUnit.position.x + aimSign * 18,
           y: activeUnit.position.y - 46,
         };
         const trajectoryInput: RocketTrajectoryInput = {
@@ -325,16 +358,26 @@ export function planRocketAction(input: RocketPlannerInput): RocketActionPlan {
           explosionRadius,
           weapon.maximumDamage,
           spreadDamageFactor,
+          barrels,
+          aimBase,
         );
         const invalidReason = candidateInvalidReason(
           trajectory,
           metrics,
           weapon.id,
+          aimTarget.isBarrel,
         );
         // Task 023: Geländewirkung zählt nur als Fallback-Nutzen, wenn der
         // Kandidat selbst keinen wirksamen Schadensschuss darstellt (D-020).
+        // Task 028: Ein wirksamer Kettenschuss (Fass) zählt hier ebenfalls als
+        // „wirksam", damit ein Fass-Schuss keine zusätzliche Geländegutschrift
+        // erhält.
+        const effectiveDirectDamage = Math.max(
+          metrics.targetDamage,
+          metrics.chainEffect,
+        );
         const scoringMetrics =
-          metrics.targetDamage >= MINIMUM_TARGET_DAMAGE
+          effectiveDirectDamage >= MINIMUM_TARGET_DAMAGE
             ? { ...metrics, terrainEffect: 0 }
             : metrics;
         const components = scoreRocketMetrics(
@@ -349,8 +392,10 @@ export function planRocketAction(input: RocketPlannerInput): RocketActionPlan {
           weaponName: weapon.displayName,
           maximumDamage: weapon.maximumDamage,
           maximumKnockbackSpeed: weapon.maximumKnockbackSpeed,
-          targetId: target.id,
-          targetName: target.displayName,
+          targetId: aimTarget.isBarrel ? aimTarget.idKey : target.id,
+          targetName: aimTarget.isBarrel
+            ? `FASS (→ ${target.displayName})`
+            : target.displayName,
           flightTimeSeconds: flightTime,
           input: trajectoryInput,
           trajectory,
@@ -401,6 +446,7 @@ export function scoreRocketMetrics(
       weights.showmanship,
     ],
     ["aim-error", metrics.aimError * perception.aimError, weights.aimError],
+    ["chain-effect", metrics.chainEffect, weights.chainEffect],
     ["seed-variation", 1, seedVariation],
   ];
 
@@ -427,6 +473,68 @@ export function topUtilityReasons(
     .sort((left, right) => left.contribution - right.contribution)[0] ?? null;
 
   return { positive, negative };
+}
+
+/** Ein Zielpunkt der Kandidatenerzeugung: entweder ein Gegner oder ein Fass. */
+interface AimTarget {
+  /** ID-Fragment für stabile, eindeutige Kandidaten-IDs. */
+  readonly idKey: string;
+  /** Punkt, auf den gezielt wird (Gegner- oder Fassposition). */
+  readonly aimBase: Vector2;
+  /** Gegner, auf den sich Schaden/Zielabweichung beziehen. */
+  readonly referenceEnemy: PlannerUnit;
+  readonly isBarrel: boolean;
+}
+
+/**
+ * Task 028: Nur Fässer „in Gegnernähe" sind lohnende Zielpunkte – ein Fass weit
+ * weg von jedem Gegner würde die Kandidatenmenge nur aufblähen. Ein Fass gilt
+ * als relevant, wenn ein Gegner innerhalb dieses Radius steht (etwas mehr als
+ * der Fass-Explosionsradius, damit auch knappe Ketten erwogen werden).
+ */
+const BARREL_RELEVANCE_RADIUS = 150;
+
+function buildAimTargets(
+  enemies: readonly PlannerUnit[],
+  barrels: readonly InteractableObject[],
+): readonly AimTarget[] {
+  const aimTargets: AimTarget[] = [];
+
+  for (const enemy of enemies) {
+    aimTargets.push({
+      idKey: enemy.id,
+      aimBase: enemy.position,
+      referenceEnemy: enemy,
+      isBarrel: false,
+    });
+  }
+
+  for (const barrel of barrels) {
+    let nearest: PlannerUnit | undefined;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+
+    for (const enemy of enemies) {
+      const distance = Math.hypot(
+        barrel.position.x - enemy.position.x,
+        barrel.position.y - enemy.position.y,
+      );
+      if (distance < nearestDistance) {
+        nearest = enemy;
+        nearestDistance = distance;
+      }
+    }
+
+    if (nearest && nearestDistance <= BARREL_RELEVANCE_RADIUS) {
+      aimTargets.push({
+        idKey: `barrel-${barrel.id}`,
+        aimBase: barrel.position,
+        referenceEnemy: nearest,
+        isBarrel: true,
+      });
+    }
+  }
+
+  return aimTargets;
 }
 
 function velocityForArrival(
@@ -456,6 +564,8 @@ function measureCandidate(
   explosionRadius: number,
   maximumDamage: number,
   spreadDamageFactor: number,
+  barrels: readonly InteractableObject[],
+  aimReference: Vector2,
 ): RocketCandidateMetrics {
   const center = trajectory.explosion?.center;
 
@@ -468,13 +578,25 @@ function measureCandidate(
       terrainEffect: 0,
       showmanship: trajectory.samples.length,
       aimError: terrain.worldWidth,
+      chainEffect: 0,
     };
   }
+
+  // Task 028: Die Fass-Kette hängt nur vom Einschlag (center/radius) und den
+  // Fässern ab – einmal pro Kandidat auflösen, nicht je Gegner.
+  const chainExplosions =
+    barrels.length > 0
+      ? resolveReactionChain({
+          trigger: { center, radius: explosionRadius },
+          interactables: barrels,
+        }).explosions
+      : [];
 
   let enemyDamage = 0;
   let targetDamage = 0;
   let friendlyDamage = 0;
   let selfDamage = 0;
+  let chainEffect = 0;
 
   for (const unit of units) {
     if (unit.hitPoints <= 0) {
@@ -494,6 +616,10 @@ function measureCandidate(
 
     if (unit.team !== activeUnit.team) {
       enemyDamage += damage;
+      // Task 028: Kettenschaden dieser (bereits aufgelösten) Fass-Explosionen
+      // an Gegnern – im selben Durchlauf, ohne zweite Gegnerschleife.
+      chainEffect +=
+        chainDamageToPoint(chainExplosions, unit.position) * spreadDamageFactor;
     } else if (unit.id === activeUnit.id) {
       selfDamage += damage;
     } else {
@@ -516,8 +642,33 @@ function measureCandidate(
     selfDamage,
     terrainEffect: estimateTerrainEffect(center, explosionRadius, terrain),
     showmanship: Math.min(100, duration * 26 + arcRise * 0.16),
-    aimError: Math.hypot(center.x - target.position.x, center.y - target.position.y),
+    // Task 028: Zielgenauigkeit relativ zu dem, worauf tatsächlich gezielt
+    // wird (Fass oder Gegner), nicht immer zum Gegner.
+    aimError: Math.hypot(center.x - aimReference.x, center.y - aimReference.y),
+    chainEffect,
   };
+}
+
+/**
+ * Task 028: Summiert den Explosionsschaden bereits aufgelöster Fass-Detonationen
+ * an einem Punkt. Nutzt dieselbe Falloff-Formel wie die tatsächliche Auflösung
+ * (`calculateBlastDamage`), damit KI-Vorschau und Ausführung im Gleichschritt
+ * bleiben.
+ */
+function chainDamageToPoint(
+  explosions: readonly ChainExplosion[],
+  point: Vector2,
+): number {
+  let total = 0;
+  for (const explosion of explosions) {
+    total += calculateBlastDamage(
+      explosion.center,
+      point,
+      explosion.radius,
+      explosion.maximumDamage,
+    );
+  }
+  return total;
 }
 
 export function calculateBlastDamage(
@@ -576,6 +727,7 @@ function candidateInvalidReason(
   trajectory: RocketTrajectoryResult,
   metrics: RocketCandidateMetrics,
   weaponId: WeaponId,
+  isBarrelShot: boolean,
 ): string | null {
   const expectedImpact =
     trajectory.outcome === "terrain-impact" ||
@@ -588,6 +740,11 @@ function candidateInvalidReason(
   }
 
   if (metrics.targetDamage < MINIMUM_TARGET_DAMAGE) {
+    // Task 028: Ein Schuss auf ein Fass ist gültig, wenn die ausgelöste Kette
+    // nennenswerten Gegnerschaden erwarten lässt – auch ohne Direkttreffer.
+    if (isBarrelShot && metrics.chainEffect >= MINIMUM_TARGET_DAMAGE) {
+      return null;
+    }
     // Task 023: Die Fallback-Ausnahme des Geländebrechers verlangt jetzt
     // nennenswerte Terrainwirkung statt beliebiger Kratzer – zuvor war er
     // dadurch in praktisch jedem Zug die gültige Standardwahl.

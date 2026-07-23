@@ -1,5 +1,6 @@
 import type { WeaponId } from "../../simulation/ai/RocketActionPlanner";
 import type { TeamId } from "../../simulation/state/matchState";
+import type { ChronicleMoment } from "../../simulation/match/matchChronicle";
 import { FIGHTER_ROSTER, type FighterId } from "../../manager/fighterRoster";
 import type { ManagerState } from "../../manager/managerState";
 import type { MapId } from "../../content/maps/mapCatalog";
@@ -34,6 +35,19 @@ export interface MatchReport {
   readonly turnNumber: number;
   readonly survivingCrew: number;
   readonly survivingRivals: number;
+  /**
+   * Task 027: Die 2–3 markantesten, bereits erzählten Momente dieses Matches.
+   * Von der reinen Chronik-Funktion aus dem Ereignisprotokoll abgeleitet;
+   * jeder Eintrag trägt seinen fertig gerenderten Text mit Figurennamen.
+   */
+  readonly chronicle: readonly ChronicleReportMoment[];
+}
+
+/** Ein Chronik-Moment mit bereits eingesetzten Figurennamen (siehe Task 027). */
+export interface ChronicleReportMoment {
+  readonly type: ChronicleMoment["type"];
+  readonly turnNumber: number;
+  readonly text: string;
 }
 
 const DEFAULT_SEED = 21_072_026;
@@ -72,6 +86,27 @@ export function createQuickMatchConfig(
     crew: [
       { fighterId: "slime", preferredWeaponId: "rocket" },
       { fighterId: "moki", preferredWeaponId: "grenade" },
+      { fighterId: "ghost", preferredWeaponId: "grenade" },
+    ],
+  };
+}
+
+/**
+ * Isolierter Ingame-Test für neue Character-Sheets. Der normale Schnellmatch
+ * und damit die Balancematrix bleiben unverändert.
+ */
+export function createCharacterAssetTestConfig(
+  mapId: MapId = "good-mood",
+  controlMode: ControlMode = "auto",
+): MatchLaunchConfig {
+  return {
+    mode: "quick",
+    seed: DEFAULT_SEED,
+    mapId,
+    controlMode,
+    crew: [
+      { fighterId: "pop-diva", preferredWeaponId: "rocket" },
+      { fighterId: "chicken", preferredWeaponId: "grenade" },
       { fighterId: "ghost", preferredWeaponId: "grenade" },
     ],
   };

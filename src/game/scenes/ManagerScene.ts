@@ -46,12 +46,14 @@ interface FighterCard {
     }
   >;
 }
-// Task „6er-Kader": Auswahl in zwei Reihen à drei Karten (Fenster 1600×900).
-// Drei Spalten geben jeder Karte Breite; zwei Reihen passen zwischen Kopf- und
-// Fußzeile.
-const CARD_COLUMN_X = [428, 800, 1172] as const;
+// Sieben Figuren bleiben in zwei Reihen lesbar: oben vier, unten drei
+// zentrierte Karten. Die Kompaktkarten passen zwischen Kopf- und Fußzeile.
+const CARD_ROW_XS = [
+  [250, 617, 983, 1350],
+  [430, 800, 1170],
+] as const;
 const CARD_ROW_Y = [272, 636] as const;
-const CARD_WIDTH = 360;
+const CARD_WIDTH = 340;
 const CARD_HEIGHT = 330;
 
 export class ManagerScene extends Phaser.Scene {
@@ -105,9 +107,9 @@ export class ManagerScene extends Phaser.Scene {
       .setOrigin(1, 0.5);
 
     FIGHTER_IDS.forEach((fighterId, index) => {
-      const column = index % CARD_COLUMN_X.length;
-      const row = Math.floor(index / CARD_COLUMN_X.length);
-      const x = CARD_COLUMN_X[column] ?? CARD_COLUMN_X[0];
+      const row = index < 4 ? 0 : 1;
+      const column = index < 4 ? index : index - 4;
+      const x = CARD_ROW_XS[row]?.[column] ?? CARD_ROW_XS[0][0];
       const y = CARD_ROW_Y[row] ?? CARD_ROW_Y[0];
       this.cards.push(this.createFighterCard(fighterId, x, y));
     });

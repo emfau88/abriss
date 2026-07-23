@@ -107,7 +107,7 @@ export function createCharacterAssetTestConfig(
     crew: [
       { fighterId: "pop-diva", preferredWeaponId: "rocket" },
       { fighterId: "chicken", preferredWeaponId: "grenade" },
-      { fighterId: "ghost", preferredWeaponId: "grenade" },
+      { fighterId: "raccoon-bandit", preferredWeaponId: "rocket" },
     ],
   };
 }

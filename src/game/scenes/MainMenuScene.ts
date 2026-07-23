@@ -101,7 +101,7 @@ export class MainMenuScene extends Phaser.Scene {
       y: 751,
       width: 520,
       height: 60,
-      label: "ASSET-TEST · POP-DIVA + CHICKEN",
+      label: "ASSET-TEST · DIVA + HENNE + RINGO",
       accent: 0x55d7c2,
       onClick: () =>
         this.scene.start("MatchScene", {

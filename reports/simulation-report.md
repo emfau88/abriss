@@ -23,8 +23,8 @@ Gleiche Szenarien ergeben byte-identische Berichte.
 | Wurfgranate | 43 | 22 | Ziel liegt außerhalb wirksamer Reichweite (896) · Flugbahn verlässt das Einsatzgebiet (5) |
 | Geländebrecher | 37 | 37 | Ziel liegt außerhalb wirksamer Reichweite (83) |
 
-Erstzug-Divergenz über 6 Eröffnungssonden × 3 Persönlichkeiten:
-3 Sonden wählen unterschiedliche Kandidaten, 0 unterschiedliche Waffen, 6 unterschiedliche Bewegungen.
+Erstzug-Divergenz über 7 Eröffnungssonden × 3 Persönlichkeiten:
+4 Sonden wählen unterschiedliche Kandidaten, 0 unterschiedliche Waffen, 7 unterschiedliche Bewegungen.
 
 ## Karte `space-resort`
 
@@ -46,8 +46,8 @@ Erstzug-Divergenz über 6 Eröffnungssonden × 3 Persönlichkeiten:
 | Wurfgranate | 41 | 27 | Ziel liegt außerhalb wirksamer Reichweite (832) · Flugbahn verlässt das Einsatzgebiet (43) |
 | Geländebrecher | 35 | 33 | Ziel liegt außerhalb wirksamer Reichweite (114) |
 
-Erstzug-Divergenz über 6 Eröffnungssonden × 3 Persönlichkeiten:
-3 Sonden wählen unterschiedliche Kandidaten, 0 unterschiedliche Waffen, 6 unterschiedliche Bewegungen.
+Erstzug-Divergenz über 7 Eröffnungssonden × 3 Persönlichkeiten:
+4 Sonden wählen unterschiedliche Kandidaten, 0 unterschiedliche Waffen, 7 unterschiedliche Bewegungen.
 
 ## Persönlichkeits-Matchups
 

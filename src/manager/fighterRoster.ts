@@ -10,7 +10,8 @@ export type FighterId =
   | "moki"
   | "ghost"
   | "pop-diva"
-  | "chicken";
+  | "chicken"
+  | "raccoon-bandit";
 
 export interface FighterDefinition {
   readonly id: FighterId;
@@ -40,6 +41,7 @@ export const FIGHTER_IDS: readonly FighterId[] = [
   "ghost",
   "pop-diva",
   "chicken",
+  "raccoon-bandit",
 ];
 
 export const FIGHTER_ROSTER: Readonly<Record<FighterId, FighterDefinition>> = {
@@ -114,5 +116,17 @@ export const FIGHTER_ROSTER: Readonly<Record<FighterId, FighterDefinition>> = {
     strength: "Macht jede Bewegung besonders deutlich.",
     weakness: "Reagiert zuerst auf das eigene Drama.",
     knownFor: "Panik mit erstaunlich gutem Rhythmus.",
+  },
+  "raccoon-bandit": {
+    id: "raccoon-bandit",
+    displayName: "RINGO",
+    species: "WASCHBÄR",
+    visualId: "raccoon-bandit",
+    personality: "cautious",
+    preferredWeaponId: "rocket",
+    description: "Zählt erst die Ausgänge. Dann die Taschen.",
+    strength: "Bleibt auch auf Entfernung gut lesbar.",
+    weakness: "Traut einer Abkürzung grundsätzlich nicht.",
+    knownFor: "Verschwindet genau vor dem Aufräumen.",
   },
 };

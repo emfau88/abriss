@@ -25,6 +25,7 @@ export const FIGHTER_QUIPS: Readonly<Record<FighterId, string>> = {
   ghost: "„War Absicht. Alles war Absicht.“",
   "pop-diva": "„Ein Sprung braucht ein Finale.“",
   chicken: "„Ich renne nicht. Ich choreografiere Panik.“",
+  "raccoon-bandit": "„Ich war nie hier. Das war strategisch.“",
 };
 
 export function randomTagline(random: () => number = Math.random): string {

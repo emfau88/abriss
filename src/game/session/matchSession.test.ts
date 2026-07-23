@@ -33,9 +33,9 @@ describe("matchSession", () => {
     ]);
   });
 
-  it("exposes Pop-Diva and Chicken in the dedicated asset test", () => {
+  it("exposes the reduced character trio in the dedicated asset test", () => {
     expect(
       createCharacterAssetTestConfig().crew.map((fighter) => fighter.fighterId),
-    ).toEqual(["pop-diva", "chicken", "ghost"]);
+    ).toEqual(["pop-diva", "chicken", "raccoon-bandit"]);
   });
 });

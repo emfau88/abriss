@@ -5,10 +5,10 @@ exports[`mass simulator (Task 022, Teil B) > aggregates a deterministic report o
   "maps": [
     {
       "firstTurnDivergence": {
-        "divergentMovements": 6,
-        "divergentSelections": 3,
+        "divergentMovements": 7,
+        "divergentSelections": 4,
         "divergentWeapons": 0,
-        "probes": 6,
+        "probes": 7,
       },
       "friendlyHits": 0,
       "mapId": "good-mood",
@@ -86,10 +86,10 @@ exports[`mass simulator (Task 022, Teil B) > aggregates a deterministic report o
     },
     {
       "firstTurnDivergence": {
-        "divergentMovements": 6,
-        "divergentSelections": 3,
+        "divergentMovements": 7,
+        "divergentSelections": 4,
         "divergentWeapons": 0,
-        "probes": 6,
+        "probes": 7,
       },
       "friendlyHits": 1,
       "mapId": "space-resort",

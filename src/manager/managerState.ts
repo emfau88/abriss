@@ -20,6 +20,7 @@ const DEFAULT_WEAPON_PREFERENCES: Readonly<Record<FighterId, WeaponId>> = {
   ghost: "grenade",
   "pop-diva": "rocket",
   chicken: "grenade",
+  "raccoon-bandit": "rocket",
 };
 
 export interface ManagerState {

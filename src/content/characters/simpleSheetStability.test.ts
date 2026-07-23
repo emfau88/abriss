@@ -12,8 +12,10 @@ import { decodeRgbaPng } from "../../testing/pngTerrain";
 import { CREATURE_VISUALS } from "./creatureKits";
 
 const SIMPLE_SHEETS = [
+  { visualId: "moki", file: "moki-mushroom-sheet.png" },
   { visualId: "pop-diva", file: "pop-diva-sheet.png" },
   { visualId: "chicken", file: "chicken-sheet.png" },
+  { visualId: "raccoon-bandit", file: "raccoon-bandit-sheet.png" },
 ] as const;
 
 describe("simple character-sheet stability", () => {

@@ -364,3 +364,32 @@ bewusst aus dem Testumfang und verwenden vorerst die Idle-Pose.
 **Konsequenz:** Golden-Master- und Simulator-Snapshots wurden bewusst erneuert – die Änderung ist rein additiv (neue `pop-diva`-/`chicken`-Schlüssel; die Pläne der bestehenden vier Figuren sind unverändert, geprüft). Jede der sechs Figuren erhält auf beiden Karten einen spielbaren Eröffnungszug (Test grün). `managerState`-Defaults und Rivalenauswahl decken den erweiterten Kader bereits ab. Die Browser-Darstellung des Zwei-Reihen-Layouts ist arithmetisch auf Bounds/Überlappung geprüft, aber noch nicht visuell im Browser abgenommen.
 
 **Umsetzung:** ausgeführt von Claude Opus 4.8 (Anthropic) am 23. Juli 2026.
+
+## 2026-07-23 – D-041: Waschbär-Bandit als dritter reduzierter Charaktertest
+
+**Entscheidung:** Der Waschbär-Bandit aus `beispiele figuren/1.jpg` ergänzt
+den regulär wählbaren Kader als RINGO. Er verwendet dasselbe reduzierte
+4×4-Format wie Diva und Henne: Idle, Laufen, Sprung und Treffer mit je vier
+Frames.
+
+**Grund:** Maskenkopf und Ringelschwanz liefern im kleinen Kameramaßstab eine
+besonders robuste, von den bestehenden Wesen klar abweichende Silhouette.
+
+**Konsequenz:** Die Einsatzplanung verwendet jetzt zwei Reihen mit vier bzw.
+drei Karten. Der Asset-Test führt Diva, Henne und RINGO vor; Simulation und
+Balancewerte bleiben unverändert.
+
+## 2026-07-23 – D-042: Moki wird zum reduzierten Pilz-Animationsstandard
+
+**Entscheidung:** Das bisherige Moki-Sheet wird durch eine direkte, deutlich
+einfachere Rekonstruktion des Pilzwesens aus `beispiele figuren/1.jpg`
+ersetzt: rote Punktkappe, heller kompakter Körper und Rucksack. Es verwendet
+nun dieselben vier stabilisierten Idle-, Lauf-, Sprung- und Trefferphasen wie
+die jüngeren Charaktertests.
+
+**Grund:** Die frühere Figur war in der Bewegung zu detailreich und jitterte
+sichtbar; die neue Form soll auf Distanz als Cartoon-Pilz lesbar bleiben.
+
+**Konsequenz:** Idle-Schleife und Fußlinie sind pixelbasiert regressionsgetestet.
+Waffenaktionen nutzen bis zu einer späteren Erweiterung die Idle-Pose; Simulation
+und Werte ändern sich nicht.

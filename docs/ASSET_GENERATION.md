@@ -282,6 +282,46 @@ scenery or other characters.
 und
 `C:\Users\madde\.codex\generated_images\019f8bb5-2912-7fe2-ba57-5b71981f52d6\exec-88fb8f16-615e-4e5b-a0e2-e8ba1ef369f7.png`.
 
+## Moki-Überarbeitung: `moki-mushroom-sheet.png`
+
+**Verfahren:** Built-in Imagegen mit `beispiele figuren/1.jpg` als direkter
+Vorlage, ausschließlich für das Pilzwesen in der unteren Mitte. Der grüne
+Chroma-Key wurde mit Soft-Matte, Despill und 1px-Kantenkontraktion entfernt.
+Danach wurde das 4×4-Sheet in 256×256-Zellen normalisiert und an einer festen
+Fußlinie ausgerichtet.
+
+```text
+Create a 4×4 Mushroom Folk sheet closely matching the project mockup: a very
+large red-orange cap with four cream spots, a compact pale cream body, stubby
+arms and feet, warm dot eyes, and a simple olive backpack. Use idle, walk,
+jump and slapstick hurt, four frames each. Simplify for 45px readability with
+thick navy outline, fixed scale and foot line. Flat #00ff00 chroma-key only.
+```
+
+**Imagegen-Original:**
+`C:\Users\madde\.codex\generated_images\019f8bb5-2912-7fe2-ba57-5b71981f52d6\exec-13934b1b-3130-41c4-a2ec-cef97f2cce1d.png`.
+
+## Waschbär-Bandit: `raccoon-bandit-sheet.png`
+
+**Verfahren:** Built-in Imagegen mit `beispiele figuren/1.jpg` als direkter
+Vorlage, ausschließlich für den Waschbär-Banditen in der unteren Reihe. Der
+grüne Chroma-Key wurde mit Soft-Matte, Despill und einer 1px-Kantenkontraktion
+freigestellt. Das 4×4-Ergebnis wurde in 16 einzelne Zellen geteilt, auf
+256×256 Pixel normalisiert und für Idle-/Laufphasen an derselben Fußlinie
+ausgerichtet.
+
+```text
+Create a 4×4 Raccoon Bandit sprite sheet from the supplied project reference:
+compact grey raccoon, cream-and-charcoal mask, small dark cap, brown satchel
+and a three-ring tail. Use idle, walk, jump and slapstick hurt, four frames
+each. Simplify for 45px gameplay readability with large color regions, thick
+navy contours, fixed scale and foot line. Flat #00ff00 chroma-key only; no
+weapons, text, scenery, borders or extra characters.
+```
+
+**Imagegen-Original:**
+`C:\Users\madde\.codex\generated_images\019f8bb5-2912-7fe2-ba57-5b71981f52d6\exec-e1213a3e-4351-42dc-9914-7999fbefe19b.png`.
+
 ## Flüssiger Ghost: `ghost-fluid-sheet.png`
 
 **Verfahren:** Built-in Imagegen mit `beispiele figuren/2.jpg` als direkte

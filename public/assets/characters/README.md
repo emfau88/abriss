@@ -4,8 +4,8 @@
 
 - `blue-hornling-sheet.png`: technischer 2×2-Platzhalter; kein Stilanker.
 - `moki-mushroom-sheet.png`: 4×4-Testsheet zu je 256×256 Pixeln.
-- `slime-fluid-sheet.png`: 8×4-Sheet mit 32 Frames zu je 256×256 Pixeln.
-- `ghost-fluid-sheet.png`: 8×4-Sheet mit 32 Frames zu je 256×256 Pixeln.
+- `slime-fluid-sheet.png`: reduziertes 4×4-Sheet zu je 256×256 Pixeln.
+- `ghost-fluid-sheet.png`: reduziertes 4×4-Sheet zu je 256×256 Pixeln.
 - `raccoon-bandit-sheet.png`: 4×4-Testsheet mit klaren Idle-, Lauf-,
   Sprung- und Trefferframes zu je 256×256 Pixeln.
 
@@ -20,11 +20,11 @@ Ghost rekonstruiert den hellen Geist oben, zweite Figur von links, aus demselben
 projektspezifischen Mockup. Fantasietitel, Logo und andere Figuren wurden nicht
 übernommen.
 
-Beide 2048×1024-Sheets enthalten achtphasige Ruhe-, Bewegungs- und
-Sprungzyklen sowie Panzerfaust-, Granaten-, Treffer- und Jubelbilder. Sie laufen
-im Spiel mit 8–16 fps. Ghost verwendet zusätzlich eine stabilisierte
-Schwebeachse und ein sehr kleines kosmetisches Hover-Tween; Bewegung, Kollision
-und Physik bleiben rendererunabhängig.
+Beide 1024×1024-Sheets folgen jetzt dem reduzierten Qualitätsstandard: vier
+stabilisierte Idle-, Lauf-, Sprung- und Trefferframes, große Farbflächen und
+eine kräftige marineblaue Kontur. Sie laufen mit 8–12 fps; zusätzliche
+Schwebe-, Scale- oder Squash-Tweens gibt es nicht mehr. Waffen- und Siegesposen
+verwenden bis zu einer späteren Erweiterung die Idle-Pose.
 
 Moki bleibt ein brauchbares Vertical-Slice-Testasset. Das blaue Hornwesen ist
 für die gewünschte Richtung zu niedlich und kitschig und wird nicht als

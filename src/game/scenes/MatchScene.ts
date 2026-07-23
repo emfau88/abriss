@@ -3335,7 +3335,7 @@ export class MatchScene extends Phaser.Scene {
 
   private animateCreatureTransition(
     view: UnitView,
-    animation: CreatureMotion | CreaturePose,
+    _animation: CreatureMotion | CreaturePose,
   ): void {
     if (view.visualId !== "slime" && view.visualId !== "ghost") {
       return;
@@ -3347,71 +3347,6 @@ export class MatchScene extends Phaser.Scene {
       .setAngle(0)
       .setY(view.baseSpriteY);
 
-    const isLooping =
-      animation === "idle" ||
-      animation === "ready" ||
-      animation === "planning" ||
-      animation === "walk" ||
-      animation === "jump" ||
-      animation === "victory";
-
-    if (view.visualId === "ghost") {
-      const lift =
-        animation === "jump"
-          ? 7
-          : animation === "walk"
-            ? 4
-            : animation === "action" || animation === "grenade"
-              ? 3
-              : 2.5;
-      const duration =
-        animation === "jump"
-          ? 180
-          : animation === "walk"
-            ? 150
-            : animation === "victory"
-              ? 240
-              : 340;
-
-      // Task 025: Loop-Zustände schweben nur noch vertikal – dauerhafte
-      // Scale-Tweens auf dem verkleinerten Sheet erzeugten Kantenflimmern.
-      this.tweens.add({
-        targets: view.sprite,
-        y: view.baseSpriteY - lift,
-        ...(isLooping
-          ? {}
-          : {
-              scaleX: view.baseSpriteScaleX * 1.018,
-              scaleY: view.baseSpriteScaleY * 0.988,
-            }),
-        duration,
-        ease: "Sine.easeInOut",
-        yoyo: true,
-        repeat: isLooping ? -1 : 0,
-      });
-      return;
-    }
-
-    // Task 025: Das Slime-Sheet atmet selbst; Loop-Zustände erhalten keinen
-    // zusätzlichen Endlos-Scale-Tween mehr.
-    if (isLooping) {
-      return;
-    }
-
-    const stretch =
-      animation === "startled"
-        ? { x: 1.16, y: 0.74, duration: 85 }
-        : { x: 1.09, y: 0.9, duration: 95 };
-
-    this.tweens.add({
-      targets: view.sprite,
-      scaleX: view.baseSpriteScaleX * stretch.x,
-      scaleY: view.baseSpriteScaleY * stretch.y,
-      duration: stretch.duration,
-      ease: "Sine.easeInOut",
-      yoyo: true,
-      repeat: 0,
-    });
   }
 }
 

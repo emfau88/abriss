@@ -322,6 +322,30 @@ weapons, text, scenery, borders or extra characters.
 **Imagegen-Original:**
 `C:\Users\madde\.codex\generated_images\019f8bb5-2912-7fe2-ba57-5b71981f52d6\exec-e1213a3e-4351-42dc-9914-7999fbefe19b.png`.
 
+## Ghost und GLIB: reduzierte Neufassung
+
+**Verfahren:** Die bisherigen 32-Frame-Sheets wurden ersetzt, weil ihre
+wechselnden Konturen und Volumen selbst nach der Ausrichtung sichtbar jitterten.
+Built-in Imagegen verwendete erneut ausschließlich die hellen Ghost- und grünen
+Slime-Mockups aus `beispiele figuren/2.jpg`. Beide neuen Sheets sind 4×4,
+wurden über Magenta-Chroma-Key mit Soft-Matte, Despill und 1px-Kantenkontraktion
+freigestellt und anschließend pro Zelle auf eine feste Basis normalisiert.
+
+```text
+Create a 4 columns × 4 rows sprite sheet closely reproducing only the specified
+project mockup character. Use four clear idle, walk, jump and slapstick hurt
+frames. Simplify for small in-game readability: large flat color regions,
+heavy navy contour, one restrained cel shadow, fixed scale and a stable base.
+No weapons, text, scenery, borders or additional characters. Use only a flat
+#ff00ff chroma-key background.
+```
+
+**Imagegen-Originale:**
+`C:\Users\madde\.codex\generated_images\019f8bb5-2912-7fe2-ba57-5b71981f52d6\exec-ca4cb847-6c64-4a00-8439-d2191ba30e74.png`
+(Ghost) und
+`C:\Users\madde\.codex\generated_images\019f8bb5-2912-7fe2-ba57-5b71981f52d6\exec-b46b5a36-a316-4e26-8598-c8f7597d6fdf.png`
+(GLIB).
+
 ## Flüssiger Ghost: `ghost-fluid-sheet.png`
 
 **Verfahren:** Built-in Imagegen mit `beispiele figuren/2.jpg` als direkte

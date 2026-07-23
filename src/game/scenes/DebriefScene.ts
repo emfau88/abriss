@@ -77,18 +77,23 @@ export class DebriefScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
     this.add
-      .text(RENDER_WIDTH / 2, 325, remark, {
+      .text(RENDER_WIDTH / 2, 300, remark, {
         fontFamily: "Segoe UI, Arial, sans-serif",
-        fontSize: "20px",
+        fontSize: "19px",
         color: "#fff5d6",
         align: "center",
         wordWrap: { width: 700 },
       })
       .setOrigin(0.5);
+
+    // Task 027: Die konkreten Momente dieses Matches, mit Figurennamen.
+    // Ersetzen den früheren rein generischen Bericht durch echte Begebenheiten.
+    this.renderChronicle(report.chronicle);
+
     this.add
       .text(
         RENDER_WIDTH / 2,
-        410,
+        470,
         `ZÜGE ${report.turnNumber}   ·   CREW ÜBRIG ${report.survivingCrew}   ·   RIVALEN ÜBRIG ${report.survivingRivals}\nSEED ${report.seed}   ·   EINSATZ ${completion.state.completedMissions}`,
         {
           fontFamily: "Consolas, ui-monospace, monospace",
@@ -105,7 +110,7 @@ export class DebriefScene extends Phaser.Scene {
       this.add
         .text(
           RENDER_WIDTH / 2,
-          505,
+          540,
           `NEU FREIGESCHALTET: ${WEAPON_PROFILES[completion.newlyUnlockedWeaponId].displayName}\nAb dem nächsten Einsatz als Waffenpräferenz verfügbar.`,
           {
             fontFamily: "Segoe UI, Arial, sans-serif",
@@ -138,5 +143,49 @@ export class DebriefScene extends Phaser.Scene {
       onClick: () => this.scene.start("MainMenuScene"),
     });
 
+  }
+
+  /**
+   * Task 027: Zeigt die benannten Momente des Matches als kurze Liste. Ein
+   * kleines Symbol je Vorfallstyp macht die Art auf einen Blick lesbar. Leer,
+   * wenn ein Match ganz ohne markanten Vorfall verlief – dann trägt der
+   * generische Rahmentext allein. Ergänzt von Claude Opus 4.8.
+   */
+  private renderChronicle(
+    chronicle: MatchReport["chronicle"],
+  ): void {
+    if (chronicle.length === 0) {
+      return;
+    }
+
+    const icons: Record<string, string> = {
+      "self-hit": "✷",
+      "friendly-fire": "✷",
+      "world-fall": "⬇",
+      misfire: "✦",
+      "large-crater": "◎",
+      "turn-skipped": "…",
+    };
+    const top = 340;
+    const lineHeight = 34;
+
+    chronicle.forEach((moment, index) => {
+      const icon = icons[moment.type] ?? "•";
+      this.add
+        .text(
+          RENDER_WIDTH / 2,
+          top + index * lineHeight,
+          `${icon}  ${moment.text}`,
+          {
+            fontFamily: "Segoe UI, Arial, sans-serif",
+            fontSize: "18px",
+            fontStyle: "bold",
+            color: "#ffe6a3",
+            align: "center",
+            wordWrap: { width: 760 },
+          },
+        )
+        .setOrigin(0.5);
+    });
   }
 }

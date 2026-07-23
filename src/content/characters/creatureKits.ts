@@ -9,7 +9,14 @@ import {
   BLUE_HORNLING_TEXTURE_KEY,
 } from "./blueHornlingKit";
 
-export type CreatureVisualId = "hornling" | "moki" | "ghost" | "slime";
+export type CreatureVisualId =
+  | "hornling"
+  | "moki"
+  | "ghost"
+  | "slime"
+  | "pop-diva"
+  | "chicken"
+  | "raccoon-bandit";
 export type CreaturePose =
   | "ready"
   | "planning"
@@ -53,7 +60,7 @@ export const CREATURE_VISUALS: Readonly<
     sheetPath: BLUE_HORNLING_SHEET_PATH,
     frameWidth: BLUE_HORNLING_FRAME_WIDTH,
     frameHeight: BLUE_HORNLING_FRAME_HEIGHT,
-    displaySize: 116,
+    displaySize: 93,
     poseFrames: {
       ready: 0,
       planning: 1,
@@ -70,19 +77,40 @@ export const CREATURE_VISUALS: Readonly<
     sheetPath: publicAssetPath("assets/characters/moki-mushroom-sheet.png"),
     frameWidth: STANDARD_FRAME_SIZE,
     frameHeight: STANDARD_FRAME_SIZE,
-    displaySize: 140,
+    displaySize: 112,
     poseFrames: {
       ready: 0,
-      planning: 1,
-      action: 12,
-      grenade: 13,
-      startled: 14,
-      victory: 15,
+      planning: 2,
+      action: 0,
+      grenade: 0,
+      startled: 12,
+      victory: 3,
     },
     motionFrames: {
       idle: [0, 1, 2, 3],
       walk: [4, 5, 6, 7],
       jump: [8, 9, 10, 11],
+    },
+    poseAnimationFrames: {
+      ready: [0, 1, 2, 3],
+      planning: [1, 2, 3, 0],
+      startled: [12, 13, 14, 15],
+    },
+    animationFrameRates: {
+      idle: 8,
+      ready: 8,
+      planning: 8,
+      walk: 12,
+      jump: 11,
+      startled: 10,
+    },
+    animationRepeats: {
+      idle: -1,
+      ready: -1,
+      planning: -1,
+      walk: -1,
+      jump: 0,
+      startled: 0,
     },
   },
   ghost: {
@@ -91,7 +119,7 @@ export const CREATURE_VISUALS: Readonly<
     sheetPath: publicAssetPath("assets/characters/ghost-fluid-sheet.png"),
     frameWidth: STANDARD_FRAME_SIZE,
     frameHeight: STANDARD_FRAME_SIZE,
-    displaySize: 150,
+    displaySize: 120,
     poseFrames: {
       ready: 0,
       planning: 3,
@@ -142,7 +170,7 @@ export const CREATURE_VISUALS: Readonly<
     sheetPath: publicAssetPath("assets/characters/slime-fluid-sheet.png"),
     frameWidth: STANDARD_FRAME_SIZE,
     frameHeight: STANDARD_FRAME_SIZE,
-    displaySize: 146,
+    displaySize: 117,
     poseFrames: {
       ready: 0,
       planning: 2,
@@ -185,6 +213,132 @@ export const CREATURE_VISUALS: Readonly<
       grenade: 0,
       startled: 0,
       victory: -1,
+    },
+  },
+  "pop-diva": {
+    id: "pop-diva",
+    textureKey: "pop-diva-kit",
+    sheetPath: publicAssetPath("assets/characters/pop-diva-sheet.png"),
+    frameWidth: STANDARD_FRAME_SIZE,
+    frameHeight: STANDARD_FRAME_SIZE,
+    displaySize: 117,
+    poseFrames: {
+      ready: 0,
+      planning: 2,
+      action: 0,
+      grenade: 0,
+      startled: 12,
+      victory: 3,
+    },
+    motionFrames: {
+      idle: [0, 1, 2, 3],
+      walk: [4, 5, 6, 7],
+      jump: [8, 9, 10, 11],
+    },
+    poseAnimationFrames: {
+      ready: [0, 1, 2, 3],
+      planning: [1, 2, 3, 0],
+      startled: [12, 13, 14, 15],
+    },
+    animationFrameRates: {
+      idle: 8,
+      ready: 8,
+      planning: 8,
+      walk: 12,
+      jump: 11,
+      startled: 10,
+    },
+    animationRepeats: {
+      idle: -1,
+      ready: -1,
+      planning: -1,
+      walk: -1,
+      jump: 0,
+      startled: 0,
+    },
+  },
+  chicken: {
+    id: "chicken",
+    textureKey: "chicken-kit",
+    sheetPath: publicAssetPath("assets/characters/chicken-sheet.png"),
+    frameWidth: STANDARD_FRAME_SIZE,
+    frameHeight: STANDARD_FRAME_SIZE,
+    displaySize: 117,
+    poseFrames: {
+      ready: 0,
+      planning: 2,
+      action: 0,
+      grenade: 0,
+      startled: 12,
+      victory: 3,
+    },
+    motionFrames: {
+      idle: [0, 1, 2, 3],
+      walk: [4, 5, 6, 7],
+      jump: [8, 9, 10, 11],
+    },
+    poseAnimationFrames: {
+      ready: [0, 1, 2, 3],
+      planning: [1, 2, 3, 0],
+      startled: [12, 13, 14, 15],
+    },
+    animationFrameRates: {
+      idle: 8,
+      ready: 8,
+      planning: 8,
+      walk: 14,
+      jump: 12,
+      startled: 11,
+    },
+    animationRepeats: {
+      idle: -1,
+      ready: -1,
+      planning: -1,
+      walk: -1,
+      jump: 0,
+      startled: 0,
+    },
+  },
+  "raccoon-bandit": {
+    id: "raccoon-bandit",
+    textureKey: "raccoon-bandit-kit",
+    sheetPath: publicAssetPath("assets/characters/raccoon-bandit-sheet.png"),
+    frameWidth: STANDARD_FRAME_SIZE,
+    frameHeight: STANDARD_FRAME_SIZE,
+    displaySize: 117,
+    poseFrames: {
+      ready: 0,
+      planning: 2,
+      action: 0,
+      grenade: 0,
+      startled: 12,
+      victory: 3,
+    },
+    motionFrames: {
+      idle: [0, 1, 2, 3],
+      walk: [4, 5, 6, 7],
+      jump: [8, 9, 10, 11],
+    },
+    poseAnimationFrames: {
+      ready: [0, 1, 2, 3],
+      planning: [1, 2, 3, 0],
+      startled: [12, 13, 14, 15],
+    },
+    animationFrameRates: {
+      idle: 8,
+      ready: 8,
+      planning: 8,
+      walk: 13,
+      jump: 12,
+      startled: 10,
+    },
+    animationRepeats: {
+      idle: -1,
+      ready: -1,
+      planning: -1,
+      walk: -1,
+      jump: 0,
+      startled: 0,
     },
   },
 };

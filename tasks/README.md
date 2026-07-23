@@ -33,6 +33,8 @@ andere Priorität bestätigt. Es darf höchstens ein Task als `in Arbeit` gelten
 | `024_RISK_CONE_AND_PERSONALITY_FLAWS.md` | überwiegend umgesetzt (Claude Fable 5, 22.07.2026) | Blindflecken ausgangswirksam, Streukegel live (D-011-konform); streuungsbewusste Bewertung → Task 026 |
 | `025_IDLE_JITTER_FIX.md` | umgesetzt (Claude Fable 5, 22.07.2026) – Browserprüfung ausstehend | Idle-Loops rechnerisch ausgerichtet, Stabilität testpflichtig, Endlos-Scale-Tweens entfernt |
 | `026_SPREAD_AWARE_TARGETING.md` | umgesetzt (Claude Fable 5, 22.07.2026) | KI plant streuungsbewusst, Streukegel verkleinert; Waffendominanz als Verfügbarkeitsproblem erkannt (Kartenthema) |
+| `027_LIVING_CREW_AND_MATCH_CHRONICLE.md` | umgesetzt (Claude Opus 4.8, 22.07.2026) – Browserprüfung ausstehend | Match-Chronik als reine Deutungsschicht; Einsatzbericht erzählt benannte Momente; +8 Tests, Golden Master unberührt |
+| `028_INTERACTIVE_OBJECTS_SLICE.md` | umgesetzt (Claude Opus 4.8, 22.07.2026) – Mechanik vollständig, Kartenwirkung als Restpunkt | explosives Fass mit deterministischer Reaktionskette + KI-Kettenbewertung; +13 Tests; ehrlicher Befund: Hebel hängt an Comedy-Pocket-Kartendesign, nicht am Score |
 
 Ein Status wird erst nach überprüfter Abnahme geändert. Scope-Erweiterungen
 gehören in einen neuen Task, nicht stillschweigend in einen bestehenden.

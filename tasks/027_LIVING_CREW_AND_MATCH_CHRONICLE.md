@@ -2,7 +2,8 @@
 
 ## Status
 
-`Entwurf`
+`umgesetzt (Schritte A/B; C bereits vorhanden) – Browserprüfung ausstehend`
+(Claude Opus 4.8, 22.07.2026; zuvor: `Entwurf`)
 
 ## Ziel
 
@@ -160,3 +161,65 @@ Der Bearbeiter berichtet:
 3. ausgeführte Prüfungen und Resultate,
 4. bekannte Einschränkungen,
 5. neue Einträge in `docs/DECISIONS.md`.
+
+## Abschlussbericht vom 22. Juli 2026
+
+Umgesetzt von **Claude Opus 4.8** (Anthropic, Claude Code).
+
+### Umgesetzt
+
+- **Schritt A – Chronik als reine Funktion** (`src/simulation/match/matchChronicle.ts`):
+  `buildMatchChronicle` deutet das vorhandene Ereignisprotokoll und liefert
+  bis zu drei nach Priorität sortierte `ChronicleMoment`. Erkannte Typen:
+  `self-hit`, `friendly-fire`, `world-fall`, `misfire`, `large-crater`,
+  `turn-skipped`. Deterministisch, ohne Zufall/Uhrzeit, ohne jede
+  Sim-Mutation. Häufige Typen werden entdoppelt; der Krater-Text hat
+  deterministische Varianten (Ton-Regel „keine Spruchflut“).
+- **Schritt B – Bericht erzählt die Momente**: `MatchReport.chronicle`
+  (`matchSession.ts`) neu; `MatchScene` akkumuliert die Zug-Ereignisse
+  (`resolveAndRecordTurn`, `buildChronicleForReport`) und rendert die Texte
+  bereits mit Figurennamen; `DebriefScene.renderChronicle` zeigt sie als
+  kurze, symbolgeführte Liste statt nur des generischen Spruchs.
+- **Schritt C – Persönlichkeit sichtbar**: Stärke/Schwäche/Ruf lagen in
+  `fighterRoster.ts` bereits vollständig vor (Felder `strength`, `weakness`,
+  `knownFor`). Kein weiterer Bedarf für die Kernkette dieses Tasks; die
+  optionale Menü-Umbauarbeit (Crew ins Hauptmenü) bleibt wie im Task
+  vorgesehen zurückgestellt.
+
+### Geänderte / neue Dateien
+
+- `src/simulation/match/matchChronicle.ts` (neu)
+- `src/simulation/match/matchChronicle.test.ts` (neu, 8 Tests)
+- `src/game/session/matchSession.ts` (`MatchReport.chronicle`, `ChronicleReportMoment`)
+- `src/game/scenes/MatchScene.ts` (Akkumulation + Chronikbau)
+- `src/game/scenes/DebriefScene.ts` (Anzeige der Momente)
+- `vitest.config.ts` (Voraussetzung D-036, s. u.)
+
+### Prüfungen
+
+- `npm run typecheck`: grün.
+- `npm test`: **88 bestanden, 2 übersprungen** (zuvor 80/2; +8 Chronik-Tests).
+  Golden-Master-, Planer- und Simulator-Snapshots unverändert grün.
+- `npm run build`: grün.
+- Zusätzliche Ad-hoc-Sonde (Headless-Match beider Karten) bestätigt, dass der
+  Bericht echte, benannte Momente mit korrekten Figurennamen erzeugt.
+
+### Bekannte Einschränkungen
+
+- **Browser-Smoke-Test steht aus**: Es ist keine Browser-Automatisierung
+  installiert (kein Playwright/Chromium); der genaue gerenderte Text ist
+  jedoch headless verifiziert. Manueller Check empfohlen: Einsatz planen →
+  Match → Bericht zeigt die Momentliste.
+- **Materialarmut auf aktuellen Karten**: Die kompetente KI produziert fast
+  nur `large-crater`-Momente; Selbsttreffer/Kettenreaktionen/Weltstürze
+  entstehen erst mit interaktiven Objekten (Task 028). Die Chronik ist dafür
+  vorbereitet – bewusste Build-Reihenfolge.
+- Stimmung/Form, persistenter Ruf und Beziehungen bleiben – wie im Task als
+  Nichtziel definiert – Folgearbeit (D–E).
+
+### Neue Einträge in `docs/DECISIONS.md`
+
+- **D-036**: `npm test` serialisiert Testdateien (`fileParallelism: false`),
+  Voraussetzung wegen einer Vitest-4/Windows-Worker-Regression.
+- **D-037**: Match-Chronik als reine Deutungsschicht über dem
+  Ereignisprotokoll.

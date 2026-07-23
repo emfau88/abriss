@@ -4,6 +4,11 @@ import type {
   WeaponId,
 } from "../ai/RocketActionPlanner";
 import {
+  EXPLOSIVE_BARREL_DEFAULTS,
+  type InteractableDefinition,
+  type InteractableObject,
+} from "../interactables/interactables";
+import {
   createInitialMatchState,
   type MatchState,
   type TeamId,
@@ -40,6 +45,8 @@ export interface MatchSimulationState {
   readonly seed: number;
   readonly terrain: BinaryTerrainMask;
   readonly units: readonly SimulationUnit[];
+  /** Interaktive Map-Objekte (Task 028); ihr Zustand ändert sich im Match. */
+  readonly interactables: readonly InteractableObject[];
   matchState: MatchState;
   /** Vom Manager per „Lass das!“ verworfene Kandidaten des laufenden Zugs. */
   rejectedCandidateIds: readonly string[];
@@ -57,6 +64,8 @@ export interface MatchSimulationOptions {
   readonly seed: number;
   readonly terrain: BinaryTerrainMask;
   readonly unitDefinitions: readonly MatchUnitDefinition[];
+  /** Optionale interaktive Objekte der Karte (Task 028). */
+  readonly interactableDefinitions?: readonly InteractableDefinition[];
 }
 
 const UNIT_HIT_POINTS = 140;
@@ -93,10 +102,36 @@ export function createMatchSimulation(
     };
   });
 
+  const interactables: InteractableObject[] = (
+    options.interactableDefinitions ?? []
+  ).map((definition) => {
+    const groundY = options.terrain.findGroundY(
+      definition.spawnX,
+      SPAWN_PROBE_TOP,
+      options.terrain.worldHeight - SPAWN_PROBE_BOTTOM_INSET,
+    );
+
+    if (groundY === null) {
+      throw new Error(`No terrain below interactable ${definition.id}.`);
+    }
+
+    // Erster und bislang einziger Typ: explosives Fass (Task 028).
+    return {
+      id: definition.id,
+      type: definition.type,
+      position: { x: definition.spawnX, y: groundY },
+      state: "intact" as const,
+      explosionRadius: EXPLOSIVE_BARREL_DEFAULTS.explosionRadius,
+      maximumDamage: EXPLOSIVE_BARREL_DEFAULTS.maximumDamage,
+      maximumKnockbackSpeed: EXPLOSIVE_BARREL_DEFAULTS.maximumKnockbackSpeed,
+    };
+  });
+
   return {
     seed: options.seed,
     terrain: options.terrain,
     units,
+    interactables,
     matchState: createInitialMatchState({
       seed: options.seed,
       combatants: units.map((unit) => ({
@@ -153,6 +188,15 @@ export function serializeMatchSimulation(state: MatchSimulationState): object {
     weaponCommandUsed: state.weaponCommandUsed,
     forcedWeaponId: state.forcedWeaponId,
     preferenceConsumedUnitIds: [...state.preferenceConsumedByUnitId].sort(),
+    interactables: state.interactables.map((object) => ({
+      id: object.id,
+      type: object.type,
+      state: object.state,
+      position: {
+        x: Math.round(object.position.x * 100) / 100,
+        y: Math.round(object.position.y * 100) / 100,
+      },
+    })),
     units: state.units.map((unit) => ({
       id: unit.id,
       team: unit.team,

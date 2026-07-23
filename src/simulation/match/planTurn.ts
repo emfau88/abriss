@@ -99,6 +99,7 @@ export function planTurn(state: MatchSimulationState): TurnPlan {
       seed: turnSeed,
       rejectedCandidateIds: state.rejectedCandidateIds,
       weaponIds: planningWeaponIds,
+      interactables: state.interactables,
     });
     fallbackPlan ??= weaponPlan;
 

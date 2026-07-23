@@ -4,7 +4,10 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { MAP_DEFINITIONS, MAP_IDS, type MapId } from "../../content/maps/mapCatalog";
-import { buildMatchUnitDefinitions } from "../../game/session/matchSetup";
+import {
+  buildMatchInteractableDefinitions,
+  buildMatchUnitDefinitions,
+} from "../../game/session/matchSetup";
 import {
   createQuickMatchConfig,
   type MatchLaunchConfig,
@@ -45,6 +48,8 @@ function stateForConfig(config: MatchLaunchConfig): MatchSimulationState {
     seed: config.seed,
     terrain: loadTerrainMaskForMap(MAP_DEFINITIONS[config.mapId]),
     unitDefinitions: buildMatchUnitDefinitions(config),
+    // Task 028: Der Simulator misst die Karten wie im Spiel – inklusive Fässer.
+    interactableDefinitions: buildMatchInteractableDefinitions(config),
   });
 }
 

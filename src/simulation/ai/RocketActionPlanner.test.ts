@@ -161,6 +161,7 @@ describe("rocket action planner", () => {
       terrainEffect: 85,
       showmanship: 30,
       aimError: 5,
+      chainEffect: 0,
     };
     const safeShow: RocketCandidateMetrics = {
       enemyDamage: 85,
@@ -170,6 +171,7 @@ describe("rocket action planner", () => {
       terrainEffect: 35,
       showmanship: 95,
       aimError: 5,
+      chainEffect: 0,
     };
     const total = (metrics: RocketCandidateMetrics, personality: "cautious" | "explosive" | "showboat") =>
       scoreRocketMetrics(metrics, personality).reduce(
@@ -233,6 +235,7 @@ describe("rocket action planner", () => {
       "demolition",
       "showmanship",
       "aim-error",
+      "chain-effect",
       "seed-variation",
     ]);
     expect(topUtilityReasons(selected).positive?.code).toBeTruthy();
@@ -264,5 +267,119 @@ describe("rocket action planner", () => {
           .map((candidate) => candidate.id),
       );
     }
+  });
+
+  // Task 028: KI erkennt Fässer und bewertet den Kettenschaden.
+  describe("explosive barrels as targets", () => {
+    // Gegner hinter einer hohen Wand: ein Direktschuss scheitert an der
+    // Deckung. Ein Fass steht auf der Schützenseite direkt neben der Wand –
+    // knapp genug am Gegner, dass die Detonation ihn trifft.
+    const coverTerrain = BinaryTerrainMask.fromWorldPredicate(
+      { worldWidth: 800, worldHeight: 450, cellSize: 2 },
+      (x, y) => y >= 300 || (x >= 430 && x <= 470 && y >= 120),
+    );
+    const coverUnits: readonly PlannerUnit[] = [
+      {
+        id: "active",
+        displayName: "Bruno",
+        team: "crew",
+        position: { x: 120, y: 300 },
+        hitPoints: 100,
+      },
+      {
+        id: "rival",
+        displayName: "Rivale A",
+        team: "rivals",
+        // Direkt hinter der Wand (aus Schützensicht).
+        position: { x: 500, y: 300 },
+        hitPoints: 100,
+      },
+    ];
+    const barrelNextToEnemy = {
+      id: "b1",
+      type: "explosive-barrel" as const,
+      // Auf der Schützenseite der Wand, nah am Gegner.
+      position: { x: 420, y: 300 },
+      state: "intact" as const,
+      explosionRadius: 92,
+      maximumDamage: 82,
+      maximumKnockbackSpeed: 470,
+    };
+
+    it("erzeugt gültige Fass-Kandidaten mit Kettenwirkung", () => {
+      const plan = planRocketAction({
+        terrain: coverTerrain,
+        units: coverUnits,
+        activeUnitId: "active",
+        personality: "explosive",
+        seed: 21_072_026,
+        weaponIds: ["rocket", "grenade", "breaker"],
+        interactables: [barrelNextToEnemy],
+      });
+
+      const barrelCandidates = plan.candidates.filter((candidate) =>
+        candidate.id.includes("barrel-b1"),
+      );
+      expect(barrelCandidates.length).toBeGreaterThan(0);
+      const validBarrelShot = barrelCandidates.find((candidate) => candidate.valid);
+      expect(validBarrelShot).toBeDefined();
+      expect(validBarrelShot?.metrics.chainEffect).toBeGreaterThan(0);
+    });
+
+    it("wählt den Fass-Schuss, wenn der Direktschuss an Deckung scheitert", () => {
+      const withoutBarrel = planRocketAction({
+        terrain: coverTerrain,
+        units: coverUnits,
+        activeUnitId: "active",
+        personality: "explosive",
+        seed: 21_072_026,
+        weaponIds: ["rocket"],
+      });
+      const withBarrel = planRocketAction({
+        terrain: coverTerrain,
+        units: coverUnits,
+        activeUnitId: "active",
+        personality: "explosive",
+        seed: 21_072_026,
+        weaponIds: ["rocket"],
+        interactables: [barrelNextToEnemy],
+      });
+
+      // Der gewählte Plan mit Fass zielt auf das Fass und nennt Kettenwirkung.
+      expect(withBarrel.selected?.id).toContain("barrel-b1");
+      const chain = withBarrel.selected?.components.find(
+        (component) => component.code === "chain-effect",
+      );
+      expect(chain?.contribution).toBeGreaterThan(0);
+
+      // Der Fass-Schuss ist mindestens so gut wie der beste Nicht-Fass-Plan.
+      const bestDirect = withoutBarrel.selected?.score ?? -Infinity;
+      const bestBarrel = withBarrel.selected?.score ?? -Infinity;
+      expect(bestBarrel).toBeGreaterThanOrEqual(bestDirect);
+    });
+
+    it("bewertet Kettenwirkung persönlichkeitsabhängig (explosiv > vorsichtig)", () => {
+      const measure = (personality: "cautious" | "explosive") =>
+        planRocketAction({
+          terrain: coverTerrain,
+          units: coverUnits,
+          activeUnitId: "active",
+          personality,
+          seed: 21_072_026,
+          weaponIds: ["rocket"],
+          interactables: [barrelNextToEnemy],
+        }).candidates.find(
+          (candidate) => candidate.id.includes("barrel-b1") && candidate.valid,
+        );
+
+      const explosiveShot = measure("explosive");
+      const cautiousShot = measure("cautious");
+      const chainOf = (candidate: typeof explosiveShot) =>
+        candidate?.components.find((c) => c.code === "chain-effect")?.contribution ??
+        0;
+
+      // Gleicher Rohschaden, aber Explosiv gewichtet die Kette höher.
+      expect(chainOf(explosiveShot)).toBeGreaterThan(chainOf(cautiousShot));
+    });
   });
 });

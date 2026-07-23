@@ -309,3 +309,97 @@ Hover-Bewegung besitzen keine Gameplay-Autorität.
 ## 2026-07-22 – D-035 Ergänzung: Manuelle Bewegung und Touch
 
 Der Testschalter aus D-035 wurde auf Nutzerwunsch vervollständigt. Der manuelle Crew-Zug läuft jetzt zweiphasig (erst bewegen, dann zielen): Bewegungsziele stammen aus demselben deterministischen `planLocalMovement` wie bei der KI (Laufen/Springen im 190-Weltpunkte-Limit) und werden als antippbare Weltmarker angeboten; `applyManualMovement` schreibt die gewählte Position in den Simulationszustand. Steuerung funktioniert per Maus und Touch: Ein-Finger-Zielen (Kamerapan in der Zielphase deaktiviert, Zwei-Finger-Zoom bleibt), antippbare Bewegungsmarker und HUD-Waffenbuttons als tastaturfreie Waffenwahl. Kein manueller Feinlauf jenseits der vorbereiteten Ziele – Bewegung bleibt terrain-sicher und begrenzt. Die Grenze aus D-029 bleibt gewahrt: `manualMovement` und `planManualShot` sind zusätzliche Plan-Quellen, keine parallele Ausführungslogik.
+
+## 2026-07-22 – D-036: `npm test` serialisiert Testdateien (Windows-Robustheit)
+
+**Entscheidung:** `vitest.config.ts` setzt `fileParallelism: false`. Testinhalte, Seeds und Erwartungen bleiben unverändert.
+
+**Grund:** Unter Windows brachen mit Vitest 4.1 und Vite 8.1 **alle** Testdateien beim parallelen Laden reproduzierbar mit `TypeError: Cannot read properties of undefined (reading 'config')` ab – schon beim Import, bevor ein einziger Test lief. Einzeln (`vitest run <datei>`) und seriell (`--no-file-parallelism`) laufen dieselben Dateien vollständig grün (80 bestanden, 2 übersprungen). Es ist also eine Worker-Pool-Regression des Runners, kein Testfehler. Der im Projekt verbindliche Ablauf (`npm test` muss grün sein, AGENTS.md „Definition of Done“) war dadurch komplett blockiert.
+
+**Konsequenz:** `npm test` ist wieder plattformrobust. Serielles Laden kostet Laufzeit (rund 25 s statt weniger), ist aber deterministisch und für die aktuelle Suite unkritisch. Sobald eine spätere Runner-/Vite-Version das Problem behebt, kann die Zeile ersatzlos entfallen.
+
+**Umsetzung:** ausgeführt von Claude Opus 4.8 (Anthropic) am 22. Juli 2026, als Voraussetzung für Task 027.
+
+## 2026-07-22 – D-037: Match-Chronik als reine Deutungsschicht über dem Ereignisprotokoll
+
+**Entscheidung:** Eine neue reine Funktion `buildMatchChronicle` (`simulation/match/matchChronicle.ts`) leitet aus dem bereits vorhandenen, deterministischen Ereignisprotokoll der Match-Engine die 2–3 markantesten Momente eines Matches ab (Selbsttreffer, Friendly Fire, Sturz aus der Welt, wirkungsloser Fehlschuss, sehr großer Krater, echter Aussetzer). Die Momente tragen tonrichtigen Text mit Figurennamen. `MatchReport` erhält ein Feld `chronicle`, die `DebriefScene` zeigt die Momente als kurze Liste statt nur des früheren generischen Spruchs. `MatchScene` akkumuliert die pro Zug ohnehin erzeugten Ereignisse in einer Match-lokalen Liste und speist damit die Chronik beim Berichtsbau.
+
+**Grund:** Die Vision verspricht „Crew statt Spielfiguren“ und „emergente Geschichten“ (Designpfeiler 5), aber der Einsatzbericht transportierte bisher keine einzige Begebenheit des gespielten Matches. Die Rohdaten lagen bereits deterministisch vor; es fehlte nur die deutende Schicht.
+
+**Konsequenz:** Die Chronik ändert **keinen** Simulationszustand und liest ausschließlich Events – Golden Master und Simulator-Snapshots bleiben unberührt (bestätigt: 88 Tests grün, zuvor 80). Auswahl und Text sind deterministisch (gleicher Verlauf ⇒ gleiche Chronik, per Unit-Test bewiesen). Häufige Momenttypen (großer Krater) werden auf den stärksten Eintrag entdoppelt und mit deterministischen Textvarianten versehen, um die Ton-Regel „keine Spruchflut, geringe Wiederholungsrate“ einzuhalten. Ehrlicher Befund: Auf den aktuellen Karten produziert die kompetente KI fast nur Krater-Momente – die charakterstarken Vorfälle (Selbsttreffer, Kettenreaktion, Weltsturz) entstehen erst mit den interaktiven Map-Objekten (Task 028). Die Chronik-Infrastruktur ist dafür vorbereitet. Der Schwellwert „großer Krater“ (2600 entfernte Zellen) ist an echten Headless-Matches kalibriert (median ~1790, p90 ~2600–3200).
+
+**Umsetzung:** Task 027 (Schritte A/B; Schritt C – Figurenkarten-Stärke/Schwäche – war in `fighterRoster.ts` bereits vorhanden), ausgeführt von Claude Opus 4.8 (Anthropic) am 22. Juli 2026.
+
+## 2026-07-22 – D-038: Interaktive Objekte als Reaktion in der Zugauflösung (erstes explosives Fass)
+
+**Entscheidung:** Interaktive Map-Objekte (erster Typ: explosives Fass) werden **nicht** in der Ballistik behandelt, sondern als Reaktion in der Zugauflösung. `simulation/interactables/interactables.ts` liefert das Objektmodell und einen reinen, tiefenbegrenzten `resolveReactionChain`. `resolveTurn` löst nach jeder Explosion die Fässer im Radius aus; die Effektlogik (Terrain/Schaden/Rückstoß) ist in `applyExplosionEffects` extrahiert und von Primär- und Fass-Explosionen geteilt. Die KI (`planRocketAction`) erzeugt zusätzlich Kandidaten auf Fässer in Gegnernähe und bewertet den erwarteten Kettenschaden über die neue Utility-Komponente `chain-effect` (persönlichkeitsgewichtet). Karten definieren ihre Fässer als Daten; der Simulator misst inklusive Fässer.
+
+**Grund:** Die Ballistik kennt bewusst nur Terrain (`isSolid`) und liefert eine `explosion: {center, radius}`. Objekte dort einzubauen hätte die fragile Trajektorienlogik berührt und die „Ballistik = eine Wahrheit"-Grenze (D-011) verwässert. Als Reaktion in der Engine bleibt D-029 (Match-Engine ist einzige Autorität) gewahrt, das Ganze ist deterministisch/testbar und es entsteht **keine** allgemeine Starrkörperphysik (Nichtziel aus AGENTS.md/D-022 bleibt: das Fass rollt nicht, es explodiert nur bei Treffer). Motivation war der gemessene Verfügbarkeits-Kern der Waffendominanz (D-032/D-034): ein Fass neben einem gedeckten Gegner soll direkte Waffen wieder lohnend machen.
+
+**Konsequenz und ehrlicher Befund:** Die **Mechanik** ist vollständig und getestet (deterministische, tiefenbegrenzte Kette; KI wählt den Fass-Schuss bei Deckung; Golden Master für fass-freie Karten byte-identisch; sichtbar im Rendering). Die **Messung** zeigt aber, dass der erhoffte Diversifizierungs-Effekt in den aktuellen Karten ausbleibt: Der Panzerfaust-Anteil **stieg** (good-mood 45,8 %→58,7 %, space-resort 64,1 %→66,7 %), weil das Fass der flachen Panzerfaust zusätzliche Ziele gibt, während Granate/Brecher weiter an Deckung scheitern; Matches wurden kürzer. Fässer detonieren noch überwiegend beiläufig, nicht gezielt, und stehen zu weit auseinander für Fass-zu-Fass-Ketten. **Der Gameplay-Hebel hängt damit an der Kartensituation, nicht am Score** – Fässer müssen in bewusst gebaute Situationszonen („Comedy Pockets": gedeckter Gegner + Fass in fester Reichweite, Fass-Cluster) gesetzt werden. Das ist der empfohlene nächste Schritt (handgebaute Testmap, Richtlinie §19), nicht weiteres KI-Tuning. Der Simulator-Snapshot wurde bewusst erneuert.
+
+**Umsetzung:** Task 028, ausgeführt von Claude Opus 4.8 (Anthropic) am 22. Juli 2026.
+
+## 2026-07-22 – D-039: Vereinfachte 16-Frame-Charaktertests vor weiterer Assetproduktion
+
+**Entscheidung:** Pop-Diva aus `beispiele figuren/3.jpg` und Chicken aus
+`beispiele figuren/1.jpg` werden als direkte, aber eine Stufe vereinfachte
+4×4-Spritesheets eingebunden. Sie liefern nur Idle, Laufen, Sprung und Treffer
+mit vier Frames je Zustand und erscheinen in der aktiven Schnellmatch-Crew.
+
+**Grund:** Der Nutzer möchte vorrangig Ingame-Lesbarkeit und flüssige
+Bewegung gegen die komplexeren bisherigen Assets testen, nicht neue Story oder
+komplette Aktionsposen.
+
+**Konsequenz:** Beide Sheets erhalten eine pixelgeprüfte feste Idle-Fußlinie;
+Kollision und Simulation bleiben unverändert. Waffen- und Siegesposen fallen
+bewusst aus dem Testumfang und verwenden vorerst die Idle-Pose.
+
+## 2026-07-23 – D-040: Sechs wählbare Kaderfiguren; Einsatzplanung in zwei Reihen
+
+**Entscheidung:** Diva und Henne (zuvor nur im isolierten Character-Asset-Test) sind nun reguläre Kaderfiguren: `FIGHTER_IDS` umfasst alle sechs. Die Einsatzplanung (`ManagerScene`) zeigt die sechs Figuren in zwei Reihen à drei Karten (Fenster 1600×900); die Karten sind kompakter und über eine gemeinsame Kartenmitte (`centerY`) positioniert, sodass beide Reihen identisch aufgebaut sind. Die englischen Platzhaltertexte beider Figuren wurden auf den durchgängig deutschen, warmen Ton angeglichen. Die Auswahlregel bleibt: genau drei aus dem Kader.
+
+**Grund:** Der Nutzer möchte die neuen Figuren vollständig ins Spiel integriert und als Crew wählbar haben, nicht nur als Test-Loadout. Vier Karten passten in eine Reihe, sechs nicht.
+
+**Konsequenz:** Golden-Master- und Simulator-Snapshots wurden bewusst erneuert – die Änderung ist rein additiv (neue `pop-diva`-/`chicken`-Schlüssel; die Pläne der bestehenden vier Figuren sind unverändert, geprüft). Jede der sechs Figuren erhält auf beiden Karten einen spielbaren Eröffnungszug (Test grün). `managerState`-Defaults und Rivalenauswahl decken den erweiterten Kader bereits ab. Die Browser-Darstellung des Zwei-Reihen-Layouts ist arithmetisch auf Bounds/Überlappung geprüft, aber noch nicht visuell im Browser abgenommen.
+
+**Umsetzung:** ausgeführt von Claude Opus 4.8 (Anthropic) am 23. Juli 2026.
+
+## 2026-07-23 – D-041: Waschbär-Bandit als dritter reduzierter Charaktertest
+
+**Entscheidung:** Der Waschbär-Bandit aus `beispiele figuren/1.jpg` ergänzt
+den regulär wählbaren Kader als RINGO. Er verwendet dasselbe reduzierte
+4×4-Format wie Diva und Henne: Idle, Laufen, Sprung und Treffer mit je vier
+Frames.
+
+**Grund:** Maskenkopf und Ringelschwanz liefern im kleinen Kameramaßstab eine
+besonders robuste, von den bestehenden Wesen klar abweichende Silhouette.
+
+**Konsequenz:** Die Einsatzplanung verwendet jetzt zwei Reihen mit vier bzw.
+drei Karten. Der Asset-Test führt Diva, Henne und RINGO vor; Simulation und
+Balancewerte bleiben unverändert.
+
+## 2026-07-23 – D-042: Moki wird zum reduzierten Pilz-Animationsstandard
+
+**Entscheidung:** Das bisherige Moki-Sheet wird durch eine direkte, deutlich
+einfachere Rekonstruktion des Pilzwesens aus `beispiele figuren/1.jpg`
+ersetzt: rote Punktkappe, heller kompakter Körper und Rucksack. Es verwendet
+nun dieselben vier stabilisierten Idle-, Lauf-, Sprung- und Trefferphasen wie
+die jüngeren Charaktertests.
+
+**Grund:** Die frühere Figur war in der Bewegung zu detailreich und jitterte
+sichtbar; die neue Form soll auf Distanz als Cartoon-Pilz lesbar bleiben.
+
+**Konsequenz:** Idle-Schleife und Fußlinie sind pixelbasiert regressionsgetestet.
+Waffenaktionen nutzen bis zu einer späteren Erweiterung die Idle-Pose; Simulation
+und Werte ändern sich nicht.
+
+## 2026-07-23 – D-043: Fall-Schaden aus der Sturzhöhe
+
+**Entscheidung:** Ein echter Sturz auf Boden (`resolveTerrainFall` → `state: "fall"`) verursacht jetzt Schaden proportional zur Sturzhöhe. Die reine Funktion `fallDamageForDrop` (`simulation/movement/TerrainFall.ts`) lässt kleine Stürze unter einer Schwelle (120 Weltpunkte) folgenlos, wächst darüber linear (0,22 HP je Weltpunkt) und ist bei 110 gedeckelt. Der Schaden wird in `resolveTurn` direkt verrechnet und über das erweiterte `fall-resolved`-Event (`damage`, `remainingHitPoints`) gemeldet – **nicht** als separates `damage-applied`, damit ein Sturz nicht fälschlich als Treffer gewertet wird. Ein Sturz, der die HP auf 0 bringt, gilt als besiegt. Sturz aus der Welt tötet weiterhin komplett ohne zusätzlichen Höhenschaden.
+
+**Grund:** Bisher waren Stürze folgenlos; nur der Fall aus der Welt tötete. Damit fehlte dem Kern das physische Risiko, das die Produktvision verspricht (Designpfeiler 1 „nachvollziehbares Chaos aus Physik" und 4 „Zerstörung verändert Entscheidungen"). Ein Gegner von einer Kante zu sprengen oder ein riskanter Sprung soll spürbare Konsequenzen haben – genau die Spannung, die klassische Artillery-Spiele lebendig macht.
+
+**Konsequenz:** Schwelle und Rate sind an echten Headless-Matches kalibriert (reale „fall"-Stürze: meist 7–60 Weltpunkte Stolperer, gelegentlich 300–560 echte Abstürze). Gemessene Wirkung: auf den flachen Sonneninseln fällt kaum jemand tief genug (0 Fall-Schaden-Events), auf dem vertikalen Space-Resort dagegen spürbar (3 Events, davon 2 tödlich) – Fall-Schaden ist bewusst kartenabhängig. Der Simulator-Snapshot wurde bewusst erneuert; der Golden Master (Erstzug-Planung) bleibt unverändert, weil Fall-Schaden nur die Auflösung betrifft, nicht die Planung. Die Chronik meldet eine „harte Landung" (`hard-landing`) als neuen Vorfallstyp; die Szene zeigt eine schwebende „−N"-Zahl am Landepunkt. Determinismus gewahrt (reine Höhenformel, kein Zufall).
+
+**Umsetzung:** ausgeführt von Claude Opus 4.8 (Anthropic) am 23. Juli 2026.

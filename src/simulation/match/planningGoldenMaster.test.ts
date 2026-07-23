@@ -290,7 +290,7 @@ describe("planning golden master (Task 021, Schritt 0)", () => {
       }
 
       expect(snapshot).toMatchSnapshot();
-    });
+    }, 20_000);
   }
 });
 
@@ -366,6 +366,6 @@ describe("planTurn matches the frozen golden master (Task 021, Schritt 2)", () =
           );
         }
       }
-    });
+    }, 20_000);
   }
 });

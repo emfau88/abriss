@@ -4,6 +4,10 @@ import {
   type MatchSimulationState,
 } from "./matchSimulationState";
 import type { TurnPlan } from "./planTurn";
+import {
+  describePlanFamily,
+  planFamilyKeyFor,
+} from "./planFamily";
 
 /**
  * Managerkommandos der Match-Engine – die fachlichen Anteile der früheren
@@ -22,6 +26,8 @@ export const PERSONALITY_CYCLE: readonly Personality[] = [
 export interface RejectPlanResult {
   readonly accepted: boolean;
   readonly rejectedCandidateId: string | null;
+  readonly rejectedPlanFamilyKey: string | null;
+  readonly rejectedPlanFamilyDescription: string | null;
 }
 
 /** Einmalige Intervention „Lass das!“: verwirft den angekündigten Plan. */
@@ -33,12 +39,24 @@ export function rejectActivePlan(
   const selected = turnPlan.action.selected;
 
   if (active.team !== "crew" || state.interventionUsed || !selected) {
-    return { accepted: false, rejectedCandidateId: null };
+    return {
+      accepted: false,
+      rejectedCandidateId: null,
+      rejectedPlanFamilyKey: null,
+      rejectedPlanFamilyDescription: null,
+    };
   }
 
+  const rejectedPlanFamilyKey = planFamilyKeyFor(turnPlan.movement, selected);
   state.rejectedCandidateIds = [selected.id];
+  state.rejectedPlanFamilyKeys = [rejectedPlanFamilyKey];
   state.interventionUsed = true;
-  return { accepted: true, rejectedCandidateId: selected.id };
+  return {
+    accepted: true,
+    rejectedCandidateId: selected.id,
+    rejectedPlanFamilyKey,
+    rejectedPlanFamilyDescription: describePlanFamily(selected),
+  };
 }
 
 export interface CommandWeaponResult {
@@ -59,6 +77,7 @@ export function commandWeapon(
   state.weaponCommandUsed = true;
   state.forcedWeaponId = weaponId;
   state.rejectedCandidateIds = [];
+  state.rejectedPlanFamilyKeys = [];
   return { accepted: true };
 }
 

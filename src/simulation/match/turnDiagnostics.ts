@@ -10,6 +10,7 @@ import {
   type MatchSimulationState,
 } from "./matchSimulationState";
 import type { TurnPlan, TurnPlanKind } from "./planTurn";
+import { planFamilyKeyFor } from "./planFamily";
 
 /**
  * Zugdiagnose der Match-Engine (Task 022, Review-Phase A): ein
@@ -54,6 +55,7 @@ export interface TurnDiagnostic {
   readonly usedPreferredWeaponId: WeaponId | null;
   readonly preferenceFellBack: boolean;
   readonly rejectedCandidateIds: readonly string[];
+  readonly rejectedPlanFamilyKeys: readonly string[];
   readonly movement: {
     readonly id: string;
     readonly kind: string;
@@ -61,6 +63,7 @@ export interface TurnDiagnostic {
     readonly destination: { readonly x: number; readonly y: number };
   };
   readonly selectedCandidateId: string | null;
+  readonly selectedPlanFamilyKey: string | null;
   readonly candidateCount: number;
   readonly invalidCandidateCount: number;
   /** Bestplatzierte Kandidaten, absteigend nach Rang. */
@@ -130,6 +133,7 @@ export function diagnoseTurn(
     usedPreferredWeaponId: turnPlan.usedPreferredWeaponId,
     preferenceFellBack: turnPlan.preferenceFellBack,
     rejectedCandidateIds: [...state.rejectedCandidateIds],
+    rejectedPlanFamilyKeys: [...state.rejectedPlanFamilyKeys],
     movement: {
       id: turnPlan.movement.id,
       kind: turnPlan.movement.kind,
@@ -140,6 +144,9 @@ export function diagnoseTurn(
       },
     },
     selectedCandidateId: turnPlan.action.selected?.id ?? null,
+    selectedPlanFamilyKey: turnPlan.action.selected
+      ? planFamilyKeyFor(turnPlan.movement, turnPlan.action.selected)
+      : null,
     candidateCount: turnPlan.action.candidates.length,
     invalidCandidateCount: turnPlan.action.candidates.filter(
       (candidate) => !candidate.valid,

@@ -274,3 +274,25 @@ existieren jetzt auf Basis der Engine aus Task 021:
 Damit sind die verbleibenden offenen Punkte dieses Reviews inhaltlicher
 Natur (Waffenbalance, spürbarere Persönlichkeiten) und besitzen jetzt eine
 reproduzierbare Vorher-Messung.
+
+## Fortschritt vom 5. August 2026: semantische Familien messbar (Tasks 031/032)
+
+„Lass das!“ sperrt jetzt eine ganze semantische Ziel-/Waffen-/Bewegungs-/
+Einschlagsfamilie. Der Massen-Simulator verwendet dieselbe Familienkennung für
+den zuvor fehlenden Wiederholungsindex und die Persönlichkeitsmessung.
+
+Aktueller Befund der kleinen Matrix:
+
+- Sonneninseln: 38 Familien bei 46 Angriffen, 17,4 % Wiederholungen;
+  häufigste Familie 6,5 %.
+- Space-Resort: 31 Familien bei 43 Angriffen, 27,9 % Wiederholungen;
+  häufigste Familie 7,0 %.
+- Persönlichkeiten wählen in allen sieben Eröffnungssonden unterschiedliche
+  Familien, aber auf beiden Karten exakt dieselbe Waffenverteilung:
+  viermal Panzerfaust, dreimal Granate, keinmal Geländebrecher.
+
+Damit ist der allgemeine Wiederholungsgrad derzeit kein akuter Engpass. Offen
+bleibt die sichtbare Persönlichkeit: Bewegung und konkreter Wirkungsbereich
+variieren, die Waffenrolle nicht. Vor einem Gewichtetuning sollten deshalb
+gezielte konfliktreiche Eröffnungen gebaut werden, in denen Eigenrisiko,
+Kameradenrisiko, Kettenwirkung und Terrainoptionen tatsächlich konkurrieren.

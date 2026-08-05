@@ -32,10 +32,121 @@ export interface LocalMovementPlannerInput {
   readonly maximumDrop?: number;
 }
 
+/**
+ * Frei gewähltes Bewegungsziel für direkte Spielersteuerung. Der Zeigerpunkt
+ * dient nur zur Auswahl der gewünschten Oberfläche; die tatsächliche
+ * Bodenhöhe und der vollständige Pfad werden aus der Terrainmaske bestimmt.
+ */
+export interface LocalMovementDestinationInput
+  extends LocalMovementPlannerInput {
+  readonly destination: LocalMovementSample;
+}
+
 const DEFAULT_MAXIMUM_HORIZONTAL_DISTANCE = 190;
 const DEFAULT_MAXIMUM_RISE = 138;
 const DEFAULT_MAXIMUM_DROP = 220;
 const UNIT_CLEARANCE = 72;
+
+/**
+ * Prüft einen frei gewählten Bodenpunkt mit denselben Grenzen und Pfadproben
+ * wie der KI-Planer. Begehbare Laufwege werden bevorzugt; nur wenn kein
+ * Laufweg existiert, wird ein kollisionsfreier Sprung verwendet.
+ */
+export function planLocalMovementTo(
+  input: LocalMovementDestinationInput,
+): LocalMovementPlan | null {
+  const active = input.units.find((unit) => unit.id === input.activeUnitId);
+
+  if (!active) {
+    throw new Error(`Unknown active unit: ${input.activeUnitId}`);
+  }
+
+  const maximumHorizontalDistance =
+    input.maximumHorizontalDistance ?? DEFAULT_MAXIMUM_HORIZONTAL_DISTANCE;
+  const maximumRise = input.maximumRise ?? DEFAULT_MAXIMUM_RISE;
+  const maximumDrop = input.maximumDrop ?? DEFAULT_MAXIMUM_DROP;
+  const destinationX = input.destination.x;
+
+  if (
+    !Number.isFinite(destinationX) ||
+    !Number.isFinite(input.destination.y) ||
+    destinationX < 28 ||
+    destinationX > input.terrain.worldWidth - 28 ||
+    Math.abs(destinationX - active.position.x) < 1 ||
+    Math.abs(destinationX - active.position.x) > maximumHorizontalDistance
+  ) {
+    return null;
+  }
+
+  const minimumY = Math.max(0, active.position.y - maximumRise - 20);
+  const maximumY = Math.min(
+    input.terrain.worldHeight - 1,
+    active.position.y + maximumDrop,
+  );
+  const destinationY = closestGroundY(
+    input.terrain,
+    destinationX,
+    input.destination.y,
+    minimumY,
+    maximumY,
+  );
+
+  if (
+    destinationY === null ||
+    active.position.y - destinationY > maximumRise ||
+    destinationY - active.position.y > maximumDrop ||
+    !hasStandingClearance(input.terrain, destinationX, destinationY) ||
+    !hasUnitClearance(input.units, active.id, destinationX, destinationY)
+  ) {
+    return null;
+  }
+
+  const target = input.units
+    .filter((unit) => unit.team !== active.team && unit.hitPoints > 0)
+    .sort(
+      (left, right) =>
+        distance(active.position, left.position) -
+        distance(active.position, right.position),
+    )[0];
+  const destination = { x: destinationX, y: destinationY };
+  const walkSamples = sampleWalkPath(input.terrain, active.position, destination);
+  const jumpSamples = sampleJumpPath(input.terrain, active.position, destination);
+  const kind = walkSamples ? "walk" : jumpSamples ? "jump" : null;
+  const samples = walkSamples ?? jumpSamples;
+
+  if (!kind || !samples) {
+    return null;
+  }
+
+  const travelled = Math.abs(destinationX - active.position.x);
+  return {
+    id: `manual-${kind}:${Math.round(destinationX)}:${Math.round(destinationY)}`,
+    kind,
+    start: { ...active.position },
+    destination,
+    samples,
+    distance: travelled,
+    durationSeconds:
+      kind === "walk"
+        ? clamp(travelled / 105, 0.85, 1.8)
+        : clamp(0.82 + travelled / 300, 1, 1.55),
+    score: scoreMovement(
+      kind,
+      active.position,
+      destination,
+      target?.position,
+      input.personality,
+      keyedSignedVariation(
+        input.seed,
+        `${active.id}:${kind}:${Math.round(destinationX)}`,
+      ),
+    ),
+    reason:
+      kind === "jump"
+        ? "springt zur frei gewählten Position"
+        : "läuft zur frei gewählten Position",
+  };
+}
 
 export function planLocalMovement(
   input: LocalMovementPlannerInput,
@@ -247,6 +358,47 @@ function sampleJumpPath(
   }
 
   return samples;
+}
+
+/** Findet die zum Zeiger vertikal nächstgelegene begehbare Oberfläche. */
+function closestGroundY(
+  terrain: TerrainMask,
+  worldX: number,
+  pointerY: number,
+  minimumY: number,
+  maximumY: number,
+): number | null {
+  const cell = terrain.worldToCell(worldX, clamp(minimumY, 0, terrain.worldHeight - 1));
+
+  if (!cell) {
+    return null;
+  }
+
+  const firstCellY = Math.max(0, Math.floor(minimumY / terrain.cellSize));
+  const lastCellY = Math.min(
+    terrain.cellHeight - 1,
+    Math.floor(maximumY / terrain.cellSize),
+  );
+  let closest: number | null = null;
+  let closestDistance = Number.POSITIVE_INFINITY;
+
+  for (let cellY = firstCellY; cellY <= lastCellY; cellY += 1) {
+    if (
+      !terrain.isSolidCell(cell.x, cellY) ||
+      (cellY > 0 && terrain.isSolidCell(cell.x, cellY - 1))
+    ) {
+      continue;
+    }
+
+    const groundY = cellY * terrain.cellSize;
+    const pointerDistance = Math.abs(groundY - pointerY);
+    if (pointerDistance < closestDistance) {
+      closest = groundY;
+      closestDistance = pointerDistance;
+    }
+  }
+
+  return closest;
 }
 
 function hasStandingClearance(

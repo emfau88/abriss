@@ -14,6 +14,7 @@ import {
   plannerUnitsFromSimulation,
   type MatchSimulationState,
 } from "./matchSimulationState";
+import { withoutRejectedPlanFamilies } from "./planFamily";
 
 /**
  * Zugplanung der Match-Engine – die frühere Logik aus MatchScene.replan(),
@@ -91,16 +92,26 @@ export function planTurn(state: MatchSimulationState): TurnPlan {
         ? { ...unit, position: { ...movement.destination } }
         : unit,
     );
-    const weaponPlan = planRocketAction({
-      terrain: state.terrain,
-      units: movedUnits,
-      activeUnitId: active.id,
-      personality,
-      seed: turnSeed,
-      rejectedCandidateIds: state.rejectedCandidateIds,
-      weaponIds: planningWeaponIds,
-      interactables: state.interactables,
-    });
+    const weaponPlan = withoutRejectedPlanFamilies(
+      planRocketAction({
+        terrain: state.terrain,
+        units: movedUnits,
+        activeUnitId: active.id,
+        personality,
+        seed: turnSeed,
+        // Legacy-/Diagnosefeld nur ohne Familienkennung anwenden. Kandidaten-
+        // IDs enthalten das Bewegungsziel nicht und würden dieselbe Bogen-ID
+        // sonst fälschlich auch aus sichtbar anderen Positionsfamilien löschen.
+        rejectedCandidateIds:
+          state.rejectedPlanFamilyKeys.length > 0
+            ? []
+            : state.rejectedCandidateIds,
+        weaponIds: planningWeaponIds,
+        interactables: state.interactables,
+      }),
+      movement,
+      state.rejectedPlanFamilyKeys,
+    );
     fallbackPlan ??= weaponPlan;
 
     if (!weaponPlan.selected) {

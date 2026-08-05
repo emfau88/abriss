@@ -6,8 +6,44 @@ exports[`mass simulator (Task 022, Teil B) > aggregates a deterministic report o
     {
       "firstTurnDivergence": {
         "divergentMovements": 7,
+        "divergentPlanFamilies": 7,
         "divergentSelections": 4,
         "divergentWeapons": 0,
+        "personalityChoices": [
+          {
+            "attacks": 7,
+            "personality": "cautious",
+            "probes": 7,
+            "uniquePlanFamilies": 2,
+            "weaponSelections": {
+              "breaker": 0,
+              "grenade": 3,
+              "rocket": 4,
+            },
+          },
+          {
+            "attacks": 7,
+            "personality": "explosive",
+            "probes": 7,
+            "uniquePlanFamilies": 3,
+            "weaponSelections": {
+              "breaker": 0,
+              "grenade": 3,
+              "rocket": 4,
+            },
+          },
+          {
+            "attacks": 7,
+            "personality": "showboat",
+            "probes": 7,
+            "uniquePlanFamilies": 2,
+            "weaponSelections": {
+              "breaker": 0,
+              "grenade": 3,
+              "rocket": 4,
+            },
+          },
+        ],
         "probes": 7,
       },
       "friendlyHits": 0,
@@ -18,6 +54,13 @@ exports[`mass simulator (Task 022, Teil B) > aggregates a deterministic report o
         "crew": 1,
         "draw": 0,
         "rivals": 2,
+      },
+      "planFamilyDiversity": {
+        "attackPlans": 46,
+        "dominantFamilyShare": 0.0652,
+        "repeatedPlans": 8,
+        "repetitionShare": 0.1739,
+        "uniqueFamilies": 38,
       },
       "planKinds": {
         "attack": 46,
@@ -87,8 +130,44 @@ exports[`mass simulator (Task 022, Teil B) > aggregates a deterministic report o
     {
       "firstTurnDivergence": {
         "divergentMovements": 7,
+        "divergentPlanFamilies": 7,
         "divergentSelections": 4,
         "divergentWeapons": 0,
+        "personalityChoices": [
+          {
+            "attacks": 7,
+            "personality": "cautious",
+            "probes": 7,
+            "uniquePlanFamilies": 2,
+            "weaponSelections": {
+              "breaker": 0,
+              "grenade": 3,
+              "rocket": 4,
+            },
+          },
+          {
+            "attacks": 7,
+            "personality": "explosive",
+            "probes": 7,
+            "uniquePlanFamilies": 4,
+            "weaponSelections": {
+              "breaker": 0,
+              "grenade": 3,
+              "rocket": 4,
+            },
+          },
+          {
+            "attacks": 7,
+            "personality": "showboat",
+            "probes": 7,
+            "uniquePlanFamilies": 2,
+            "weaponSelections": {
+              "breaker": 0,
+              "grenade": 3,
+              "rocket": 4,
+            },
+          },
+        ],
         "probes": 7,
       },
       "friendlyHits": 0,
@@ -99,6 +178,13 @@ exports[`mass simulator (Task 022, Teil B) > aggregates a deterministic report o
         "crew": 3,
         "draw": 0,
         "rivals": 0,
+      },
+      "planFamilyDiversity": {
+        "attackPlans": 43,
+        "dominantFamilyShare": 0.0698,
+        "repeatedPlans": 12,
+        "repetitionShare": 0.2791,
+        "uniqueFamilies": 31,
       },
       "planKinds": {
         "attack": 43,

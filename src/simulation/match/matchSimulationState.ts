@@ -50,6 +50,8 @@ export interface MatchSimulationState {
   matchState: MatchState;
   /** Vom Manager per „Lass das!“ verworfene Kandidaten des laufenden Zugs. */
   rejectedCandidateIds: readonly string[];
+  /** Sichtbar gleiche Planfamilien, die „Lass das!“ für diesen Zug sperrt. */
+  rejectedPlanFamilyKeys: readonly string[];
   /** Einmalige Manager-Intervention „Lass das!“ bereits verbraucht? */
   interventionUsed: boolean;
   /** Einmaliger Manager-Waffenbefehl bereits verbraucht? */
@@ -141,6 +143,7 @@ export function createMatchSimulation(
       })),
     }),
     rejectedCandidateIds: [],
+    rejectedPlanFamilyKeys: [],
     interventionUsed: false,
     weaponCommandUsed: false,
     forcedWeaponId: null,
@@ -184,6 +187,7 @@ export function serializeMatchSimulation(state: MatchSimulationState): object {
     terrainVersion: state.terrain.version,
     matchState: state.matchState,
     rejectedCandidateIds: [...state.rejectedCandidateIds],
+    rejectedPlanFamilyKeys: [...state.rejectedPlanFamilyKeys],
     interventionUsed: state.interventionUsed,
     weaponCommandUsed: state.weaponCommandUsed,
     forcedWeaponId: state.forcedWeaponId,

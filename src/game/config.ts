@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 
+import { ActionMapScene } from "./scenes/ActionMapScene";
 import { BootScene } from "./scenes/BootScene";
 import { DebriefScene } from "./scenes/DebriefScene";
 import { MainMenuScene } from "./scenes/MainMenuScene";
@@ -33,6 +34,13 @@ export function createGameConfig(): Phaser.Types.Core.GameConfig {
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
-    scene: [BootScene, MainMenuScene, ManagerScene, MatchScene, DebriefScene],
+    scene: [
+      BootScene,
+      MainMenuScene,
+      ManagerScene,
+      MatchScene,
+      DebriefScene,
+      ActionMapScene,
+    ],
   };
 }

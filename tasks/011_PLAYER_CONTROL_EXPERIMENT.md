@@ -143,3 +143,17 @@ Browserprüfung auf Desktop und Touch durch den Nutzer; danach die
 Kern-Bewertung Autobattle vs. Selbststeuern. Bewusst noch nicht dabei:
 optionaler KI-Vorschlag im manuellen Modus, freies Feinlaufen jenseits der
 vorbereiteten Bewegungsziele.
+
+## Ergänzung vom 5. August 2026: freie Positionswahl
+
+Task 030 schließt die letzte künstliche Einschränkung der Bewegungsphase:
+Statt ungefähr drei KI-Kandidaten kann der Spieler nun jeden gültigen
+Bodenpunkt innerhalb von 190 horizontalen Weltpunkten direkt auswählen. Die
+Livevorschau und die spätere Animation verwenden denselben geprüften Lauf-
+oder Sprungpfad aus der Simulation. Damit ist der Direct-Modus fair genug für
+den geplanten Vergleich, ohne eine zweite Echtzeit-Plattformerphysik neben der
+rundenbasierten Match-Engine einzuführen.
+
+Weiterhin offen ist nicht die technische Bedienbarkeit, sondern die
+Produktentscheidung nach echten Vergleichsmatches: Macht die direkte Variante
+mehr Spaß als autonome Figuren plus begrenzte Managerkommandos?

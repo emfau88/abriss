@@ -35,6 +35,10 @@ andere Priorität bestätigt. Es darf höchstens ein Task als `in Arbeit` gelten
 | `026_SPREAD_AWARE_TARGETING.md` | umgesetzt (Claude Fable 5, 22.07.2026) | KI plant streuungsbewusst, Streukegel verkleinert; Waffendominanz als Verfügbarkeitsproblem erkannt (Kartenthema) |
 | `027_LIVING_CREW_AND_MATCH_CHRONICLE.md` | umgesetzt (Claude Opus 4.8, 22.07.2026) – Browserprüfung ausstehend | Match-Chronik als reine Deutungsschicht; Einsatzbericht erzählt benannte Momente; +8 Tests, Golden Master unberührt |
 | `028_INTERACTIVE_OBJECTS_SLICE.md` | umgesetzt (Claude Opus 4.8, 22.07.2026) – Mechanik vollständig, Kartenwirkung als Restpunkt | explosives Fass mit deterministischer Reaktionskette + KI-Kettenbewertung; +13 Tests; ehrlicher Befund: Hebel hängt an Comedy-Pocket-Kartendesign, nicht am Score |
+| `029_ACTIONMAP_LAB.md` | umgesetzt – Browserprüfung erfolgreich | isolierte Schild-Wagen-Triebwerk-Kette mit RINGO-Plan, GLIB-Alternative und bestehender Figuren-Rückstoßphysik |
+| `030_FREE_MANUAL_MOVEMENT.md` | abgeschlossen | freie, terraingeprüfte Maus-/Touch-Positionswahl mit Livepfad für den fairen Direct-Vergleich |
+| `031_SEMANTIC_PLAN_FAMILIES.md` | abgeschlossen | „Lass das!“ verwirft die sichtbare Ziel-/Waffen-/Bewegungs-/Einschlagsfamilie statt nur einer Kandidaten-ID |
+| `032_PLAN_FAMILY_DIVERSITY_REPORT.md` | abgeschlossen | Bericht misst Familienwiederholung und belegt weiterhin identische Waffenrollen der Persönlichkeiten |
 
 Ein Status wird erst nach überprüfter Abnahme geändert. Scope-Erweiterungen
 gehören in einen neuen Task, nicht stillschweigend in einen bestehenden.

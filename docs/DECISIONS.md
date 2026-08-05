@@ -365,6 +365,99 @@ bewusst aus dem Testumfang und verwenden vorerst die Idle-Pose.
 
 **Umsetzung:** ausgeführt von Claude Opus 4.8 (Anthropic) am 23. Juli 2026.
 
+## 2026-08-05 – D-046: Direkte Bewegung wählt freie, geprüfte Bodenpunkte
+
+**Entscheidung:** Der manuelle Steuerungsmodus verwendet keine kleine Liste
+vorbereiteter KI-Bewegungsmarker mehr. Maus oder Touch wählen einen beliebigen
+erreichbaren Bodenpunkt innerhalb des bestehenden Budgets von 190 horizontalen
+Weltpunkten. Die reine Simulation bestimmt die zum Zeiger passende
+Terrainoberfläche und validiert Reichweite, Kopffreiheit, Figurenabstand sowie
+den vollständigen Lauf- oder Sprungpfad. Die Phaser-Szene stellt nur den
+entstandenen Pfad dar und reicht die Auswahl zurück an die Match-Engine.
+
+**Grund:** Drei vorgegebene Positionen fühlten sich nicht wie echte
+Selbststeuerung an und hätten den Vergleich Autobattle gegen Direct künstlich
+zugunsten der autonomen Variante verzerrt.
+
+**Konsequenz:** Die direkte Variante bietet jetzt echte taktische
+Positionswahl, bleibt aber bewusst rundenbasiert. Eine A/D-Echtzeitsteuerung
+mit eigener Plattformerphysik ist nicht Teil dieses Experiments: Sie würde
+Bediengeschick und ein zweites Bewegungssystem testen statt die eigentliche
+Produktfrage „autonome Crew oder direkte Entscheidungen?“. Lauf- und
+Sprungvorschau sowie Ausführung lesen dieselben deterministischen Pfadsamples.
+
+**Umsetzung:** Task 030, abgeschlossen am 5. August 2026.
+
+## 2026-08-05 – D-047: „Lass das!“ sperrt eine semantische Planfamilie
+
+**Entscheidung:** Ein angekündigter Angriffsplan gehört zu einer
+deterministischen Familie aus Ziel-ID, Waffen-ID, Bewegungsart und
+Bewegungsziel-Raster sowie Einschlagspunkt-Raster. Beide räumlichen Raster
+verwenden 120 Weltpunkte. Der einmalige Managerbefehl „Lass das!“ sperrt für
+den laufenden Zug diese gesamte Familie, nicht nur die konkrete Bogen-ID. Der
+Filter sitzt in `planTurn` auf der kombinierten Bewegungs-/Aktionsstufe; der
+Ballistikplaner bleibt unverändert.
+
+**Grund:** Eine neue Flugzeit oder ein minimal anderer Winkel derselben Waffe
+gegen dasselbe Ziel war intern ein anderer Kandidat, spielerisch aber keine
+erkennbare Alternative. Das schwächte den wichtigsten Managerbefehl und
+verletzte das Abnahmekriterium aus dem Kernloop-Review.
+
+**Konsequenz:** Der Folgeplan muss sich in mindestens einer sichtbaren
+Dimension unterscheiden: Ziel, Waffe, Bewegungsart/-bereich oder
+Einschlagsbereich. Gibt es keine andere Angriffsfamilie, bleibt nur eine
+nachvollziehbare Positionierung oder ein ausgesetzter Zug. Die Kennung ist
+serialisierbar, erscheint in der rendererfreien Zugdiagnose und wird nach
+Waffenbefehl oder Zugende gelöscht. Es entsteht bewusst keine allgemeine
+Clustering-Engine und noch keine Mehrfachauswahl aus Vorschlagskarten.
+
+**Umsetzung:** Task 031, abgeschlossen am 5. August 2026.
+
+## 2026-08-05 – D-048: Planfamilienvielfalt wird vor Persönlichkeits-Tuning gemessen
+
+**Entscheidung:** Der deterministische Massen-Simulator aggregiert die
+semantischen Familienkennungen aus Task 031. Pro Karte meldet er Angriffspläne,
+unterschiedliche Familien, weitere Vorkommen bereits gezählter Familien,
+Wiederholungsanteil und Anteil der häufigsten Familie. Die identischen
+Eröffnungssonden weisen zusätzlich pro Persönlichkeit Familienanzahl und
+Waffenverteilung aus.
+
+**Grund:** Kandidaten-IDs überschätzen Unterschiede durch kleine Bogenvarianten.
+Gleichzeitig lässt eine reine Waffenstatistik unterschiedliche Bewegung oder
+Einschlagsidee unsichtbar. Beide Ebenen werden benötigt, bevor KI-Gewichte
+verändert oder ein Hybridmodus beurteilt wird.
+
+**Konsequenz und Befund:** Die vollständigen Testmatches besitzen bereits
+breite Familienvielfalt (Sonneninseln 38/46, Space-Resort 31/43; häufigste
+Familie jeweils höchstens 7 %). Persönlichkeiten unterscheiden sich in allen
+Eröffnungssonden in der Familie, wählen aber exakt dieselben Waffenrollen
+(je vier Panzerfaust, drei Granaten, kein Geländebrecher). Daher erfolgt in
+diesem Task bewusst kein Balanceeingriff. Als nächstes werden konfliktreiche
+Eröffnungsszenarien benötigt, die Risiko-, Ketten- und Terrainpräferenzen
+tatsächlich aktivieren; erst danach ist Gewichtetuning sinnvoll.
+
+**Umsetzung:** Task 032, abgeschlossen am 5. August 2026.
+
+## 2026-07-23 – D-045: Actionmap-Labor nutzt Objektzustände statt Starrkörperphysik
+
+**Entscheidung:** Die erste Schild-Wagen-Triebwerk-Situation wird als
+isolierter `ACTIONMAP-TEST` umgesetzt. Schild, Wagen und Triebwerk besitzen
+wenige serialisierbare Zustände und eine feste, deterministische
+Ereignisreihenfolge. Nur der abschließende Figurenimpuls verwendet die
+vorhandene Terrain- und Rückstoßphysik. RINGOs riskante Kette und GLIBs
+kontrollierte Alternative sind bewusst kuratierte Vergleichspläne.
+
+**Grund:** Der Test soll mit minimalem Inhalt prüfen, ob lesbare Umweltketten
+und eine semantisch andere Alternative bereits eine interessante
+Managerentscheidung erzeugen. Allgemeine Objektrotation, dynamische
+Objektkollision und frei rollende Körper würden den Aufwand stark erhöhen,
+ohne diese Produkthypothese besser zu beantworten.
+
+**Konsequenz:** Der reguläre Match- und Balancestand bleibt unverändert. Eine
+spätere Übernahme in echte Karten setzt voraus, dass der Labortest spielerisch
+überzeugt; erst dann werden Objektziele und Managerkommandos in die reguläre
+Planung integriert.
+
 ## 2026-07-23 – D-044: Ghost und GLIB folgen dem reduzierten Animationsstandard
 
 **Entscheidung:** Ghost und GLIB ersetzen ihre komplexen 32-Frame-Sheets durch

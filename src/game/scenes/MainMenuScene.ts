@@ -97,9 +97,9 @@ export class MainMenuScene extends Phaser.Scene {
       onClick: () => this.scene.start("ManagerScene"),
     });
     createMenuButton(this, {
-      x: RENDER_WIDTH / 2,
+      x: 570,
       y: 751,
-      width: 520,
+      width: 420,
       height: 60,
       label: "ASSET-TEST · DIVA + HENNE + RINGO",
       accent: 0x55d7c2,
@@ -110,6 +110,15 @@ export class MainMenuScene extends Phaser.Scene {
             this.controlMode,
           ),
         }),
+    });
+    createMenuButton(this, {
+      x: 1_030,
+      y: 751,
+      width: 420,
+      height: 60,
+      label: "ACTIONMAP-TEST",
+      accent: 0xffcd5d,
+      onClick: () => this.scene.start("ActionMapScene"),
     });
 
     this.createControlModeToggle();

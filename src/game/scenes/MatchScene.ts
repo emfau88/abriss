@@ -52,7 +52,8 @@ import { planTurn, type TurnPlan } from "../../simulation/match/planTurn";
 import { planManualShot } from "../../simulation/match/planManualShot";
 import {
   applyManualMovement,
-  manualMovementOptions,
+  MANUAL_MOVEMENT_RANGE,
+  manualMovementTo,
 } from "../../simulation/match/manualMovement";
 import {
   concludeTurn,
@@ -257,8 +258,7 @@ export class MatchScene extends Phaser.Scene {
   private manualAimGraphics: Phaser.GameObjects.Graphics | null = null;
   private manualDragging = false;
   private manualDragCurrent: Vector2 | null = null;
-  private manualMoveMarkers: Phaser.GameObjects.Container[] = [];
-  private manualMoveOptions: LocalMovementPlan[] = [];
+  private manualMovementPreview: LocalMovementPlan | null = null;
 
   public constructor() {
     super("MatchScene");
@@ -318,8 +318,7 @@ export class MatchScene extends Phaser.Scene {
     this.manualDragCurrent = null;
     this.manualWeaponId = "rocket";
     this.manualAimGraphics = null;
-    this.manualMoveMarkers = [];
-    this.manualMoveOptions = [];
+    this.manualMovementPreview = null;
     this.touchPointers = new Map();
     this.touchGestureMidpoint = null;
     this.touchGestureDistance = 0;
@@ -1095,7 +1094,8 @@ export class MatchScene extends Phaser.Scene {
           "P            Persönlichkeit im Prototyp wechseln",
           "",
           "SELBST STEUERN (im Hauptmenü wählbar)",
-          "Marker antippen  laufen (→) oder springen (⤴)",
+          "Gelände frei anklicken/antippen  laufen oder springen",
+          "Türkis = Laufweg, Gelb = Sprungweg, 190 Punkte pro Zug",
           "von Figur wegziehen  Winkel + Kraft, loslassen schießt",
           "1 / 2 / 3 oder HUD-Waffe  Waffe im Zielmodus",
           "",
@@ -1252,7 +1252,9 @@ export class MatchScene extends Phaser.Scene {
     this.manualDragCurrent = null;
     this.manualWeaponId = "rocket";
     if (!this.manualAimGraphics) {
-      this.manualAimGraphics = this.add.graphics().setDepth(28);
+      this.manualAimGraphics = this.registerWorldObject(
+        this.add.graphics().setDepth(28),
+      );
     }
     this.manualAimGraphics.clear();
     this.pathGraphics.clear();
@@ -1262,60 +1264,91 @@ export class MatchScene extends Phaser.Scene {
 
   private beginManualMovement(): void {
     this.manualPhase = "movement";
-    this.manualMoveOptions = [...manualMovementOptions(this.simulation)];
-    this.drawManualMoveMarkers();
+    this.manualMovementPreview = null;
+    this.drawManualMovementPreview();
     this.updateButtons();
     this.updateManualMovementStatus();
   }
 
-  private clearManualMoveMarkers(): void {
-    for (const marker of this.manualMoveMarkers) {
-      marker.destroy();
+  private drawManualMovementPreview(invalidPoint?: Vector2): void {
+    const graphics = this.manualAimGraphics;
+    if (!graphics || this.manualPhase !== "movement") {
+      return;
     }
-    this.manualMoveMarkers = [];
+
+    graphics.clear();
+    const active = this.activeUnit().unit;
+    const rangeY = active.position.y - 14;
+    graphics.lineStyle(3, COLORS.tealBright, 0.32);
+    graphics.lineBetween(
+      active.position.x - MANUAL_MOVEMENT_RANGE,
+      rangeY,
+      active.position.x + MANUAL_MOVEMENT_RANGE,
+      rangeY,
+    );
+    graphics.lineBetween(
+      active.position.x - MANUAL_MOVEMENT_RANGE,
+      rangeY - 14,
+      active.position.x - MANUAL_MOVEMENT_RANGE,
+      rangeY + 14,
+    );
+    graphics.lineBetween(
+      active.position.x + MANUAL_MOVEMENT_RANGE,
+      rangeY - 14,
+      active.position.x + MANUAL_MOVEMENT_RANGE,
+      rangeY + 14,
+    );
+
+    const movement = this.manualMovementPreview;
+    if (movement) {
+      const color =
+        movement.kind === "jump" ? COLORS.yellow : COLORS.tealBright;
+      graphics.lineStyle(5, color, 0.92);
+      graphics.beginPath();
+      graphics.moveTo(movement.samples[0]!.x, movement.samples[0]!.y - 6);
+      for (const sample of movement.samples.slice(1)) {
+        graphics.lineTo(sample.x, sample.y - 6);
+      }
+      graphics.strokePath();
+      graphics.fillStyle(color, 0.2);
+      graphics.fillCircle(
+        movement.destination.x,
+        movement.destination.y - 8,
+        24,
+      );
+      graphics.lineStyle(4, color, 1);
+      graphics.strokeCircle(
+        movement.destination.x,
+        movement.destination.y - 8,
+        24,
+      );
+      return;
+    }
+
+    if (invalidPoint) {
+      graphics.lineStyle(4, COLORS.coral, 0.9);
+      graphics.strokeCircle(invalidPoint.x, invalidPoint.y, 16);
+      graphics.lineBetween(
+        invalidPoint.x - 10,
+        invalidPoint.y - 10,
+        invalidPoint.x + 10,
+        invalidPoint.y + 10,
+      );
+      graphics.lineBetween(
+        invalidPoint.x + 10,
+        invalidPoint.y - 10,
+        invalidPoint.x - 10,
+        invalidPoint.y + 10,
+      );
+    }
   }
 
-  private drawManualMoveMarkers(): void {
-    this.clearManualMoveMarkers();
-
-    for (const option of this.manualMoveOptions) {
-      if (option.kind === "hold") {
-        continue;
-      }
-
-      const isJump = option.kind === "jump";
-      const dot = this.add
-        .circle(0, 0, 15, isJump ? COLORS.yellow : COLORS.tealBright, 0.85)
-        .setStrokeStyle(3, 0x0c2429, 0.9);
-      const glyph = this.add
-        .text(0, 0, isJump ? "⤴" : "→", {
-          fontFamily: "Segoe UI, Arial, sans-serif",
-          fontSize: "18px",
-          fontStyle: "bold",
-          color: "#0c2429",
-        })
-        .setOrigin(0.5);
-      const container = this.registerWorldObject(
-        this.add
-          .container(option.destination.x, option.destination.y - 24, [dot, glyph])
-          .setDepth(29)
-          .setSize(46, 46)
-          .setInteractive({ useHandCursor: true }),
-      );
-      container.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
-        pointer.event?.stopPropagation?.();
-        this.chooseManualMovement(option);
-      });
-      this.tweens.add({
-        targets: container,
-        y: container.y - 6,
-        duration: 620,
-        yoyo: true,
-        repeat: -1,
-        ease: "Sine.easeInOut",
-      });
-      this.manualMoveMarkers.push(container);
-    }
+  private previewManualMovement(point: Vector2): LocalMovementPlan | null {
+    this.manualMovementPreview = manualMovementTo(this.simulation, point);
+    this.drawManualMovementPreview(
+      this.manualMovementPreview ? undefined : point,
+    );
+    return this.manualMovementPreview;
   }
 
   private chooseManualMovement(movement: LocalMovementPlan): void {
@@ -1323,8 +1356,8 @@ export class MatchScene extends Phaser.Scene {
       return;
     }
 
-    this.clearManualMoveMarkers();
-    this.manualMoveOptions = [];
+    this.manualMovementPreview = null;
+    this.manualAimGraphics?.clear();
 
     if (movement.kind === "hold") {
       this.beginManualAiming();
@@ -1390,19 +1423,17 @@ export class MatchScene extends Phaser.Scene {
 
   private updateManualMovementStatus(): void {
     const active = this.activeUnit();
-    const moves = this.manualMoveOptions.filter(
-      (option) => option.kind !== "hold",
-    ).length;
     this.intentHeaderText.setText(`BEWEGEN: ${active.unit.displayName}`);
     this.intentText.setText(
       `DU STEUERST SELBST\n\n` +
-        `Tippe einen Marker an, um zu laufen (→)\n` +
-        `oder zu springen (⤴). ${moves} Optionen.\n\n` +
+        `Wähle einen beliebigen erreichbaren\n` +
+        `Bodenpunkt im 190-Punkte-Bereich.\n` +
+        `Türkis = laufen, Gelb = springen.\n\n` +
         `Oder unten „HIER BLEIBEN“ zum direkten\n` +
         `Zielen ohne Bewegung.`,
     );
     this.updateStatus(
-      `${active.unit.displayName}: Bewegungsziel wählen (Marker antippen) oder „HIER BLEIBEN“.`,
+      `${active.unit.displayName}: Gelände frei anklicken/antippen oder „HIER BLEIBEN“.`,
     );
   }
 
@@ -1410,8 +1441,8 @@ export class MatchScene extends Phaser.Scene {
     this.manualPhase = "off";
     this.manualDragging = false;
     this.manualDragCurrent = null;
+    this.manualMovementPreview = null;
     this.manualAimGraphics?.clear();
-    this.clearManualMoveMarkers();
   }
 
   private updateManualAimStatus(): void {
@@ -1545,7 +1576,25 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private handleManualPointerDown(pointer: Phaser.Input.Pointer): void {
-    if (!this.manualAiming || this.helpVisible || this.isTouchHudRegion(pointer)) {
+    if (this.helpVisible || this.isTouchHudRegion(pointer)) {
+      return;
+    }
+
+    if (this.manualPhase === "movement") {
+      const movement = this.previewManualMovement(
+        this.manualPointerWorld(pointer),
+      );
+      if (movement) {
+        this.chooseManualMovement(movement);
+      } else {
+        this.updateStatus(
+          "Dieses Ziel ist nicht erreichbar: Reichweite, Freiraum oder Terrainpfad prüfen.",
+        );
+      }
+      return;
+    }
+
+    if (!this.manualAiming) {
       return;
     }
 
@@ -1555,6 +1604,15 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private handleManualPointerMove(pointer: Phaser.Input.Pointer): void {
+    if (
+      this.manualPhase === "movement" &&
+      !this.helpVisible &&
+      !this.isTouchHudRegion(pointer)
+    ) {
+      this.previewManualMovement(this.manualPointerWorld(pointer));
+      return;
+    }
+
     if (!this.manualAiming || !this.manualDragging) {
       return;
     }
@@ -1808,11 +1866,8 @@ export class MatchScene extends Phaser.Scene {
   private executeSelected(): void {
     // Task 011: „HIER BLEIBEN“ in der manuellen Bewegungsphase → direkt zielen.
     if (this.manualPhase === "movement") {
-      const holdOption = this.manualMoveOptions.find(
-        (option) => option.kind === "hold",
-      );
       this.chooseManualMovement(
-        holdOption ?? {
+        {
           id: "manual-hold",
           kind: "hold",
           start: { ...this.activeUnit().unit.position },
@@ -2501,7 +2556,7 @@ export class MatchScene extends Phaser.Scene {
     }
 
     this.replan(
-      `„Lass das!“: ${result.rejectedCandidateId} verworfen. ${active.unit.displayName} erklärt jetzt den nächstbesten gültigen Plan.`,
+      `„Lass das!“: ${result.rejectedPlanFamilyDescription ?? result.rejectedCandidateId} verworfen. ${active.unit.displayName} erklärt jetzt einen sichtbar anderen gültigen Plan.`,
     );
   }
 
@@ -3092,17 +3147,17 @@ export class MatchScene extends Phaser.Scene {
     pointer: Phaser.Input.Pointer,
     currentlyOver: Phaser.GameObjects.GameObject[],
   ): void {
-    // Task 011: In der manuellen Zielphase steuert Ein-Finger-Touch das
-    // Zielen, nicht die Kamera. Zwei Finger (Zoom) bleiben erlaubt.
-    const manualAimingSingleFinger =
-      this.manualPhase === "aiming" && this.input.pointer2?.isDown !== true;
+    // In den manuellen Phasen wählt Ein-Finger-Touch Bewegung bzw. Ziel,
+    // nicht die Kamera. Zwei Finger bleiben für Zoom reserviert.
+    const manualControlSingleFinger =
+      this.manualPhase !== "off" && this.input.pointer2?.isDown !== true;
     if (
       !pointer.wasTouch ||
       this.actionState !== "planning" ||
       this.helpVisible ||
       currentlyOver.length > 0 ||
       this.isTouchHudRegion(pointer) ||
-      manualAimingSingleFinger
+      manualControlSingleFinger
     ) {
       return;
     }

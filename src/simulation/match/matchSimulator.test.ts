@@ -159,6 +159,28 @@ describe("mass simulator (Task 022, Teil B)", () => {
       );
       expect(Math.abs(shareSum - 1)).toBeLessThan(0.001);
       expect(map.firstTurnDivergence?.probes).toBe(FIGHTER_IDS.length);
+      expect(map.planFamilyDiversity.attackPlans).toBe(map.planKinds.attack);
+      expect(map.planFamilyDiversity.uniqueFamilies).toBeLessThanOrEqual(
+        map.planFamilyDiversity.attackPlans,
+      );
+      expect(map.planFamilyDiversity.repeatedPlans).toBe(
+        map.planFamilyDiversity.attackPlans -
+          map.planFamilyDiversity.uniqueFamilies,
+      );
+      expect(map.firstTurnDivergence?.personalityChoices).toHaveLength(3);
+
+      for (const choices of
+        map.firstTurnDivergence?.personalityChoices ?? []) {
+        expect(choices.probes).toBe(FIGHTER_IDS.length);
+        expect(
+          choices.weaponSelections.rocket +
+            choices.weaponSelections.grenade +
+            choices.weaponSelections.breaker,
+        ).toBe(choices.attacks);
+        expect(choices.uniquePlanFamilies).toBeLessThanOrEqual(
+          choices.attacks,
+        );
+      }
     }
 
     // Determinismus und bewusste Balance-Sichtbarkeit: Metrikänderungen
@@ -180,6 +202,8 @@ describe("mass simulator (Task 022, Teil B)", () => {
     );
     expect(rendered).toContain("## Karte `good-mood`");
     expect(rendered).toContain("## Karte `space-resort`");
+    expect(rendered).toContain("Planfamilien-Vielfalt");
+    expect(rendered).toContain("unterschiedliche Planfamilien");
     expect(rendered).toContain("## Persönlichkeits-Matchups");
   });
 

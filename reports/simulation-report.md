@@ -10,6 +10,7 @@ Gleiche Szenarien ergeben byte-identische Berichte.
 - Zuglängen: Minimum 11 · Median 17 · Maximum 18
 - Plan-Arten: 46 Angriffe · 0 Positionszüge · 0 Aussetzer
 - Trefferbild: 0 Eigentreffer · 0 Kameradentreffer · 3 Out-of-world-Ausschaltungen
+- Planfamilien-Vielfalt: 38 Familien in 46 Angriffsplänen · 8 Wiederholungen (17.4 %) · häufigste Familie 6.5 %
 
 | Waffe | Angriffe | Anteil | Gesamtschaden |
 | --- | ---: | ---: | ---: |
@@ -24,7 +25,13 @@ Gleiche Szenarien ergeben byte-identische Berichte.
 | Geländebrecher | 37 | 37 | Ziel liegt außerhalb wirksamer Reichweite (83) |
 
 Erstzug-Divergenz über 7 Eröffnungssonden × 3 Persönlichkeiten:
-4 Sonden wählen unterschiedliche Kandidaten, 0 unterschiedliche Waffen, 7 unterschiedliche Bewegungen.
+4 Sonden wählen unterschiedliche Kandidaten, 7 unterschiedliche Planfamilien, 0 unterschiedliche Waffen, 7 unterschiedliche Bewegungen.
+
+| Persönlichkeit | Angriffe | unterschiedliche Planfamilien | Panzerfaust | Wurfgranate | Geländebrecher |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Vorsichtig | 7 von 7 | 2 | 4 | 3 | 0 |
+| Sprengfreudig | 7 von 7 | 3 | 4 | 3 | 0 |
+| Angeberisch | 7 von 7 | 2 | 4 | 3 | 0 |
 
 ## Karte `space-resort`
 
@@ -33,6 +40,7 @@ Erstzug-Divergenz über 7 Eröffnungssonden × 3 Persönlichkeiten:
 - Zuglängen: Minimum 13 · Median 14 · Maximum 17
 - Plan-Arten: 43 Angriffe · 1 Positionszüge · 0 Aussetzer
 - Trefferbild: 0 Eigentreffer · 0 Kameradentreffer · 7 Out-of-world-Ausschaltungen
+- Planfamilien-Vielfalt: 31 Familien in 43 Angriffsplänen · 12 Wiederholungen (27.9 %) · häufigste Familie 7.0 %
 
 | Waffe | Angriffe | Anteil | Gesamtschaden |
 | --- | ---: | ---: | ---: |
@@ -47,7 +55,13 @@ Erstzug-Divergenz über 7 Eröffnungssonden × 3 Persönlichkeiten:
 | Geländebrecher | 35 | 33 | Ziel liegt außerhalb wirksamer Reichweite (114) |
 
 Erstzug-Divergenz über 7 Eröffnungssonden × 3 Persönlichkeiten:
-4 Sonden wählen unterschiedliche Kandidaten, 0 unterschiedliche Waffen, 7 unterschiedliche Bewegungen.
+4 Sonden wählen unterschiedliche Kandidaten, 7 unterschiedliche Planfamilien, 0 unterschiedliche Waffen, 7 unterschiedliche Bewegungen.
+
+| Persönlichkeit | Angriffe | unterschiedliche Planfamilien | Panzerfaust | Wurfgranate | Geländebrecher |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Vorsichtig | 7 von 7 | 2 | 4 | 3 | 0 |
+| Sprengfreudig | 7 von 7 | 4 | 4 | 3 | 0 |
+| Angeberisch | 7 von 7 | 2 | 4 | 3 | 0 |
 
 ## Persönlichkeits-Matchups
 

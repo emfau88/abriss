@@ -1,4 +1,4 @@
-import type { WeaponId } from "../ai/RocketActionPlanner";
+import type { Personality, WeaponId } from "../ai/RocketActionPlanner";
 import type { TeamId } from "../state/matchState";
 import { PERSONALITY_CYCLE } from "./commands";
 import {
@@ -6,6 +6,7 @@ import {
   type MatchSimulationState,
 } from "./matchSimulationState";
 import { planTurn, type TurnPlanKind } from "./planTurn";
+import { planFamilyKeyFor } from "./planFamily";
 import { runMatch } from "./runMatch";
 
 /**
@@ -55,8 +56,28 @@ export interface FirstTurnDivergenceSummary {
   readonly probes: number;
   /** Sonden, bei denen Persönlichkeiten unterschiedliche Kandidaten wählen. */
   readonly divergentSelections: number;
+  /** Sonden mit mindestens zwei unterschiedlichen semantischen Planfamilien. */
+  readonly divergentPlanFamilies: number;
   readonly divergentWeapons: number;
   readonly divergentMovements: number;
+  readonly personalityChoices: readonly PersonalityOpeningSummary[];
+}
+
+export interface PersonalityOpeningSummary {
+  readonly personality: Personality;
+  readonly probes: number;
+  readonly attacks: number;
+  readonly uniquePlanFamilies: number;
+  readonly weaponSelections: Readonly<Record<WeaponId, number>>;
+}
+
+export interface PlanFamilyDiversitySummary {
+  readonly attackPlans: number;
+  readonly uniqueFamilies: number;
+  /** Weitere Vorkommen einer bereits gezählten Familie. */
+  readonly repeatedPlans: number;
+  readonly repetitionShare: number;
+  readonly dominantFamilyShare: number;
 }
 
 export interface MapSimulationSummary {
@@ -79,6 +100,7 @@ export interface MapSimulationSummary {
   readonly selfHits: number;
   readonly friendlyHits: number;
   readonly outOfWorldKnockouts: number;
+  readonly planFamilyDiversity: PlanFamilyDiversitySummary;
   readonly firstTurnDivergence: FirstTurnDivergenceSummary | null;
 }
 
@@ -137,6 +159,7 @@ export function simulateMatches(
     let selfHits = 0;
     let friendlyHits = 0;
     let outOfWorldKnockouts = 0;
+    const planFamilyCounts = new Map<string, number>();
 
     for (const scenario of mapScenarios) {
       const state = scenario.createState();
@@ -151,6 +174,13 @@ export function simulateMatches(
       turnCounts.push(result.turnCount);
 
       for (const diagnostic of result.diagnostics ?? []) {
+        if (diagnostic.selectedPlanFamilyKey) {
+          planFamilyCounts.set(
+            diagnostic.selectedPlanFamilyKey,
+            (planFamilyCounts.get(diagnostic.selectedPlanFamilyKey) ?? 0) + 1,
+          );
+        }
+
         for (const availability of diagnostic.weaponAvailability) {
           const entry = weaponDiagnosis.get(availability.weaponId);
 
@@ -253,6 +283,7 @@ export function simulateMatches(
       selfHits,
       friendlyHits,
       outOfWorldKnockouts,
+      planFamilyDiversity: summarizePlanFamilyDiversity(planFamilyCounts),
       firstTurnDivergence:
         probes.length > 0 ? measureFirstTurnDivergence(probes) : null,
     };
@@ -265,11 +296,30 @@ function measureFirstTurnDivergence(
   probes: readonly DivergenceProbe[],
 ): FirstTurnDivergenceSummary {
   let divergentSelections = 0;
+  let divergentPlanFamilies = 0;
   let divergentWeapons = 0;
   let divergentMovements = 0;
+  const personalityChoices = new Map<
+    Personality,
+    {
+      attacks: number;
+      families: Set<string>;
+      weaponSelections: Record<WeaponId, number>;
+    }
+  >(
+    PERSONALITY_CYCLE.map((personality) => [
+      personality,
+      {
+        attacks: 0,
+        families: new Set<string>(),
+        weaponSelections: { rocket: 0, grenade: 0, breaker: 0 },
+      },
+    ]),
+  );
 
   for (const probe of probes) {
     const selections = new Set<string>();
+    const planFamilies = new Set<string>();
     const weapons = new Set<string>();
     const movements = new Set<string>();
 
@@ -277,13 +327,28 @@ function measureFirstTurnDivergence(
       const state = probe.createState();
       activeSimulationUnit(state).personality = personality;
       const plan = planTurn(state);
-      selections.add(plan.action.selected?.id ?? "none");
-      weapons.add(plan.action.selected?.weaponId ?? "none");
+      const selected = plan.action.selected;
+      const familyKey = selected
+        ? planFamilyKeyFor(plan.movement, selected)
+        : "none";
+      selections.add(selected?.id ?? "none");
+      planFamilies.add(familyKey);
+      weapons.add(selected?.weaponId ?? "none");
       movements.add(plan.movement.id);
+
+      if (selected) {
+        const summary = personalityChoices.get(personality)!;
+        summary.attacks += 1;
+        summary.families.add(familyKey);
+        summary.weaponSelections[selected.weaponId] += 1;
+      }
     }
 
     if (selections.size > 1) {
       divergentSelections += 1;
+    }
+    if (planFamilies.size > 1) {
+      divergentPlanFamilies += 1;
     }
     if (weapons.size > 1) {
       divergentWeapons += 1;
@@ -296,8 +361,42 @@ function measureFirstTurnDivergence(
   return {
     probes: probes.length,
     divergentSelections,
+    divergentPlanFamilies,
     divergentWeapons,
     divergentMovements,
+    personalityChoices: PERSONALITY_CYCLE.map((personality) => {
+      const choices = personalityChoices.get(personality)!;
+
+      return {
+        personality,
+        probes: probes.length,
+        attacks: choices.attacks,
+        uniquePlanFamilies: choices.families.size,
+        weaponSelections: choices.weaponSelections,
+      };
+    }),
+  };
+}
+
+function summarizePlanFamilyDiversity(
+  familyCounts: ReadonlyMap<string, number>,
+): PlanFamilyDiversitySummary {
+  const attackPlans = [...familyCounts.values()].reduce(
+    (sum, count) => sum + count,
+    0,
+  );
+  const uniqueFamilies = familyCounts.size;
+  const repeatedPlans = Math.max(0, attackPlans - uniqueFamilies);
+  const dominantCount = Math.max(0, ...familyCounts.values());
+
+  return {
+    attackPlans,
+    uniqueFamilies,
+    repeatedPlans,
+    repetitionShare:
+      attackPlans > 0 ? roundShare(repeatedPlans / attackPlans) : 0,
+    dominantFamilyShare:
+      attackPlans > 0 ? roundShare(dominantCount / attackPlans) : 0,
   };
 }
 
@@ -305,6 +404,12 @@ const WEAPON_LABELS: Record<WeaponId, string> = {
   rocket: "Panzerfaust",
   grenade: "Wurfgranate",
   breaker: "Geländebrecher",
+};
+
+const PERSONALITY_LABELS: Record<Personality, string> = {
+  cautious: "Vorsichtig",
+  explosive: "Sprengfreudig",
+  showboat: "Angeberisch",
 };
 
 /** Persönlichkeits-Matchup (Task 024): ein deterministisches Match je Paarung. */
@@ -387,6 +492,7 @@ export function renderSimulationReport(report: SimulationReport): string {
       `- Zuglängen: Minimum ${map.turnStats.minimum} · Median ${map.turnStats.median} · Maximum ${map.turnStats.maximum}`,
       `- Plan-Arten: ${map.planKinds.attack} Angriffe · ${map.planKinds.reposition} Positionszüge · ${map.planKinds.skip} Aussetzer`,
       `- Trefferbild: ${map.selfHits} Eigentreffer · ${map.friendlyHits} Kameradentreffer · ${map.outOfWorldKnockouts} Out-of-world-Ausschaltungen`,
+      `- Planfamilien-Vielfalt: ${map.planFamilyDiversity.uniqueFamilies} Familien in ${map.planFamilyDiversity.attackPlans} Angriffsplänen · ${map.planFamilyDiversity.repeatedPlans} Wiederholungen (${(map.planFamilyDiversity.repetitionShare * 100).toFixed(1)} %) · häufigste Familie ${(map.planFamilyDiversity.dominantFamilyShare * 100).toFixed(1)} %`,
       "",
       "| Waffe | Angriffe | Anteil | Gesamtschaden |",
       "| --- | ---: | ---: | ---: |",
@@ -420,8 +526,17 @@ export function renderSimulationReport(report: SimulationReport): string {
       lines.push(
         "",
         `Erstzug-Divergenz über ${divergence.probes} Eröffnungssonden × ${PERSONALITY_CYCLE.length} Persönlichkeiten:`,
-        `${divergence.divergentSelections} Sonden wählen unterschiedliche Kandidaten, ${divergence.divergentWeapons} unterschiedliche Waffen, ${divergence.divergentMovements} unterschiedliche Bewegungen.`,
+        `${divergence.divergentSelections} Sonden wählen unterschiedliche Kandidaten, ${divergence.divergentPlanFamilies} unterschiedliche Planfamilien, ${divergence.divergentWeapons} unterschiedliche Waffen, ${divergence.divergentMovements} unterschiedliche Bewegungen.`,
+        "",
+        "| Persönlichkeit | Angriffe | unterschiedliche Planfamilien | Panzerfaust | Wurfgranate | Geländebrecher |",
+        "| --- | ---: | ---: | ---: | ---: | ---: |",
       );
+
+      for (const choices of divergence.personalityChoices) {
+        lines.push(
+          `| ${PERSONALITY_LABELS[choices.personality]} | ${choices.attacks} von ${choices.probes} | ${choices.uniquePlanFamilies} | ${choices.weaponSelections.rocket} | ${choices.weaponSelections.grenade} | ${choices.weaponSelections.breaker} |`,
+        );
+      }
     }
   }
 

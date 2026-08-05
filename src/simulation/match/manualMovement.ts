@@ -1,5 +1,6 @@
 import {
   planLocalMovement,
+  planLocalMovementTo,
   type LocalMovementPlan,
 } from "../movement/LocalMovementPlanner";
 import {
@@ -8,6 +9,8 @@ import {
   type MatchSimulationState,
 } from "./matchSimulationState";
 import { turnSeedFor } from "./planTurn";
+
+export const MANUAL_MOVEMENT_RANGE = 190;
 
 /**
  * Manuelle Bewegungsoptionen (Task 011, Ausbau): Der Spieler wählt selbst ein
@@ -42,6 +45,26 @@ export function manualMovementOptions(
   const moves = plans.filter((plan) => plan.kind !== "hold");
 
   return [holdPlan, ...moves];
+}
+
+/**
+ * Freie manuelle Positionswahl (Task 030). Anders als die KI-Kandidatenliste
+ * prüft diese Funktion genau den vom Spieler gezeigten Weltpunkt.
+ */
+export function manualMovementTo(
+  state: MatchSimulationState,
+  destination: { readonly x: number; readonly y: number },
+): LocalMovementPlan | null {
+  const active = activeSimulationUnit(state);
+  return planLocalMovementTo({
+    terrain: state.terrain,
+    units: plannerUnitsFromSimulation(state),
+    activeUnitId: active.id,
+    personality: active.personality,
+    seed: turnSeedFor(state),
+    maximumHorizontalDistance: MANUAL_MOVEMENT_RANGE,
+    destination,
+  });
 }
 
 /** Wendet ein gewähltes Bewegungsziel auf den Simulationszustand an. */

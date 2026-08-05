@@ -433,6 +433,7 @@ export function concludeTurn(state: MatchSimulationState): TurnConclusion {
 
   state.matchState = advanceTurn(state.matchState);
   state.rejectedCandidateIds = [];
+  state.rejectedPlanFamilyKeys = [];
   state.forcedWeaponId = null;
 
   return {

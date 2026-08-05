@@ -134,3 +134,18 @@ byte-identisch.
 ### Neue Einträge in `docs/DECISIONS.md`
 
 - **D-030**: Messwerkzeuge vor Balanceänderungen.
+
+## Ergänzung vom 5. August 2026: semantische Vielfalt (Task 032)
+
+Der Bericht misst nicht mehr nur konkrete Kandidaten-IDs. Auf Grundlage der
+in Task 031 eingeführten Familienkennung enthält er jetzt pro Karte den
+Wiederholungsanteil semantischer Planfamilien und für jede Persönlichkeit die
+Familienanzahl sowie Waffenverteilung in denselben Eröffnungssonden.
+
+Der neue Befund trennt zwei Fragen sauber: Die vollständigen Matches besitzen
+mit 38/46 beziehungsweise 31/43 unterschiedlichen Familien bereits eine
+breite taktische Verteilung. Die Persönlichkeiten wählen in den Sonden zwar
+andere Familien, aber exakt dieselbe Waffenverteilung (je vier Panzerfaust,
+drei Granaten, kein Geländebrecher). Der nächste Schritt ist daher kein
+pauschales Gewichtetuning, sondern konfliktreiche Testsituationen, in denen
+Risiko-, Ketten- und Terrainwerte tatsächlich ungleich null werden.

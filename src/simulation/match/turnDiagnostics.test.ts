@@ -6,6 +6,7 @@ import {
   type MatchSimulationState,
 } from "./matchSimulationState";
 import { planTurn } from "./planTurn";
+import { planFamilyKeyFor } from "./planFamily";
 import { runMatch } from "./runMatch";
 import { diagnoseTurn } from "./turnDiagnostics";
 
@@ -50,6 +51,9 @@ describe("turn diagnostics (Task 022, Teil A)", () => {
     expect(diagnostic.kind).toBe("attack");
     expect(diagnostic.usedPreferredWeaponId).toBe("rocket");
     expect(diagnostic.selectedCandidateId).toBe(plan.action.selected?.id);
+    expect(diagnostic.selectedPlanFamilyKey).toBe(
+      planFamilyKeyFor(plan.movement, plan.action.selected!),
+    );
     expect(diagnostic.candidateCount).toBeGreaterThan(0);
     expect(diagnostic.rankedCandidates.length).toBeGreaterThan(0);
     expect(diagnostic.rankedCandidates[0]?.rank).toBe(1);

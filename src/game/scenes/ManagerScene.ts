@@ -28,7 +28,10 @@ import {
   type WeaponId,
 } from "../../simulation/ai/RocketActionPlanner";
 import { RENDER_HEIGHT, RENDER_WIDTH } from "../config";
-import { createManagerMatchConfig } from "../session/matchSession";
+import {
+  createManagerMatchConfig,
+  type ControlMode,
+} from "../session/matchSession";
 import { WEAPON_FLAVOR } from "../ui/menuFlavor";
 import { createMenuButton, drawMenuBackdrop, type MenuButton } from "../ui/menuUi";
 
@@ -62,6 +65,7 @@ export class ManagerScene extends Phaser.Scene {
   private statusText!: Phaser.GameObjects.Text;
   private selectionCountText!: Phaser.GameObjects.Text;
   private deployButton!: MenuButton;
+  private controlMode: ControlMode = "auto";
 
   public constructor() {
     super("ManagerScene");
@@ -69,11 +73,14 @@ export class ManagerScene extends Phaser.Scene {
 
   public create(): void {
     this.managerState = loadManagerState();
+    this.controlMode =
+      (this.registry.get("controlMode") as ControlMode | undefined) ?? "auto";
     drawMenuBackdrop(
       this,
       RENDER_WIDTH,
       RENDER_HEIGHT,
-      MAP_DEFINITIONS[this.managerState.selectedMapId].backgroundTextureKey,
+      MAP_DEFINITIONS[this.managerState.selectedMapId]
+        .previewBackgroundTextureKey,
     );
     registerCreatureAnimations(this);
     this.cards = [];
@@ -89,12 +96,17 @@ export class ManagerScene extends Phaser.Scene {
       })
       .setOrigin(0, 0.5);
     this.add
-      .text(62, 91, "WÄHLE 3 WESEN UND IHRE WAFFENPRÄFERENZ", {
+      .text(
+        62,
+        91,
+        `WÄHLE 3 WESEN UND IHRE WAFFENPRÄFERENZ  ·  MODUS ${controlModeLabel(this.controlMode)}`,
+        {
         fontFamily: "Consolas, ui-monospace, monospace",
         fontSize: "16px",
         fontStyle: "bold",
         color: "#ffcd5d",
-      })
+        },
+      )
       .setOrigin(0, 0.5);
 
     this.selectionCountText = this.add
@@ -418,7 +430,21 @@ export class ManagerScene extends Phaser.Scene {
 
     saveManagerState(this.managerState);
     this.scene.start("MatchScene", {
-      launchConfig: createManagerMatchConfig(this.managerState),
+      launchConfig: createManagerMatchConfig(
+        this.managerState,
+        this.controlMode,
+      ),
     });
+  }
+}
+
+function controlModeLabel(mode: ControlMode): string {
+  switch (mode) {
+    case "hybrid":
+      return "ZIELAUFTRAG";
+    case "manual":
+      return "DIREKT";
+    default:
+      return "AUTO";
   }
 }

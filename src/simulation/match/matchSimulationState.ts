@@ -58,6 +58,8 @@ export interface MatchSimulationState {
   weaponCommandUsed: boolean;
   /** Für den laufenden Zug erzwungene Waffe (Waffenbefehl). */
   forcedWeaponId: WeaponId | null;
+  /** Wiederholbarer Hybridauftrag für den aktuellen Crewzug. */
+  directedTargetId: string | null;
   readonly preferredWeaponByUnitId: ReadonlyMap<string, WeaponId>;
   readonly preferenceConsumedByUnitId: Set<string>;
 }
@@ -147,6 +149,7 @@ export function createMatchSimulation(
     interventionUsed: false,
     weaponCommandUsed: false,
     forcedWeaponId: null,
+    directedTargetId: null,
     preferredWeaponByUnitId,
     preferenceConsumedByUnitId: new Set(),
   };
@@ -191,6 +194,7 @@ export function serializeMatchSimulation(state: MatchSimulationState): object {
     interventionUsed: state.interventionUsed,
     weaponCommandUsed: state.weaponCommandUsed,
     forcedWeaponId: state.forcedWeaponId,
+    directedTargetId: state.directedTargetId,
     preferenceConsumedUnitIds: [...state.preferenceConsumedByUnitId].sort(),
     interactables: state.interactables.map((object) => ({
       id: object.id,

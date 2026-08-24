@@ -19,6 +19,11 @@ export interface MapDefinition {
   readonly backgroundPath: string;
   readonly terrainTextureKey: string;
   readonly terrainPath: string;
+  /** Kleine Menüvorschau; die 3200×1800-Quellen werden erst im Match geladen. */
+  readonly previewBackgroundTextureKey: string;
+  readonly previewBackgroundPath: string;
+  readonly previewTerrainTextureKey: string;
+  readonly previewTerrainPath: string;
   readonly terrainCellSize: number;
   readonly crewSpawnXs: readonly [number, number, number];
   readonly rivalSpawnXs: readonly [number, number, number];
@@ -41,6 +46,12 @@ export const MAP_DEFINITIONS: Readonly<Record<MapId, MapDefinition>> = {
     backgroundPath: GOOD_MOOD_BACKGROUND_PATH,
     terrainTextureKey: GOOD_MOOD_TERRAIN_SOURCE_TEXTURE_KEY,
     terrainPath: GOOD_MOOD_TERRAIN_PATH,
+    previewBackgroundTextureKey: "good-mood-background-preview",
+    previewBackgroundPath: publicAssetPath("assets/maps/sunny-sky-preview.webp"),
+    previewTerrainTextureKey: "good-mood-terrain-preview",
+    previewTerrainPath: publicAssetPath(
+      "assets/maps/good-mood-terrain-preview.webp",
+    ),
     terrainCellSize: GOOD_MOOD_TERRAIN_CELL_SIZE,
     crewSpawnXs: [420, 930, 2700],
     rivalSpawnXs: [1480, 2100, 700],
@@ -63,6 +74,12 @@ export const MAP_DEFINITIONS: Readonly<Record<MapId, MapDefinition>> = {
     backgroundPath: publicAssetPath("assets/maps/space-resort-background-hd.png"),
     terrainTextureKey: "space-resort-terrain-source",
     terrainPath: publicAssetPath("assets/maps/space-resort-terrain-hd.png"),
+    previewBackgroundTextureKey: "space-resort-background-preview",
+    previewBackgroundPath: publicAssetPath("assets/maps/space-resort-preview.webp"),
+    previewTerrainTextureKey: "space-resort-terrain-preview",
+    previewTerrainPath: publicAssetPath(
+      "assets/maps/space-resort-terrain-preview.webp",
+    ),
     terrainCellSize: 2,
     crewSpawnXs: [520, 1650, 2620],
     rivalSpawnXs: [250, 1100, 2420],

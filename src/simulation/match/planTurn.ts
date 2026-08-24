@@ -107,6 +107,9 @@ export function planTurn(state: MatchSimulationState): TurnPlan {
             ? []
             : state.rejectedCandidateIds,
         weaponIds: planningWeaponIds,
+        ...(state.directedTargetId
+          ? { targetUnitIds: [state.directedTargetId] }
+          : {}),
         interactables: state.interactables,
       }),
       movement,

@@ -47,6 +47,12 @@ Abhängigkeiten zeigen nach innen: `game` und `ui` dürfen `simulation` verwende
 
 Der dünne Managerzustand unter `src/manager/` ist eine eigene serialisierbare TypeScript-Grenze ohne Phaser-Abhängigkeit. Browser-Speicherung ist ein fehlertoleranter Adapter; vor einem Match wird daraus eine explizite `MatchLaunchConfig` mit Crew, Waffenpräferenzen, Karten-ID und Seed erzeugt. Die Matchszene liest keine verdeckten Menü- oder DOM-Zustände. Karten werden über einen typisierten Katalog mit Assetpfaden, Maskenauflösung und Spawnpunkten beschrieben. Die Szenen unter `src/game/scenes/` bilden Hauptmenü, Einsatzplanung, Match und Einsatzbericht; `src/game/session/` enthält ausschließlich die Übergabedaten dieses Loops.
 
+Der Kartenkatalog trennt kleine Vorschautexturen von den HD-Matchquellen.
+`BootScene` lädt nur gemeinsame Figuren- und UI-Assets sowie die Vorschauen;
+`MatchScene.preload()` lädt anschließend ausschließlich die gewählte HD-Karte
+und matchspezifische VFX. Beide Ladephasen besitzen sichtbaren Fortschritt.
+Diese Grenze verändert weder Kartenmaske noch Simulation.
+
 ## Simulationsmodell
 
 Der fachliche Zustand besteht aus serialisierbaren Daten:
@@ -132,6 +138,14 @@ Ein Aktionsplan enthält nicht nur einen Gesamtwert, sondern aufgeschlüsselte `
 Die Kandidatenzahl wird begrenzt. Optimierungen dürfen die sichtbare Entscheidungslogik nicht durch ein zweites, abweichendes Modell ersetzen.
 
 Task 012 kombiniert die Waffenplanung mit einem getrennt testbaren `LocalMovementPlanner`. Er erzeugt nur lokale Halten-, Lauf- und Sprungkandidaten innerhalb von 190 horizontalen Weltpunkten, prüft Boden, Kopffreiheit, andere Figuren und Sprung-Samples gegen die Terrainmaske und bewertet die Kandidaten mit derselben gesetzten Zufallsquelle. Für jede mögliche Endposition wird die echte Waffenplanung ausgeführt; ausgewählt wird der gemeinsame Nutzen aus Position und Waffe. Wenn kein Angriff möglich ist, bleibt ein reiner Positionierungszug zulässig. Der Geländebrecher darf einen Kontakt mit ausreichend Terrainwirkung auch ohne unmittelbaren Zielschaden als gültigen Öffnungsplan bewerten.
+
+Der experimentelle Zielauftrag ist ebenfalls Simulationszustand und kein
+Szenentrick. `directActiveTarget()` akzeptiert nur einen lebenden Gegner der
+aktiven Crewfigur. Der Planner filtert danach seine Zielmenge, benutzt aber
+unverändert dieselbe Bewegungs-, Waffen-, Ballistik- und Risikobewertung. Beim
+Zugabschluss wird der Auftrag gelöscht. Die Szenariofabriken unter
+`src/simulation/match/conflictScenarios.ts` verwenden dieselben öffentlichen
+Matchfunktionen und vergleichen freie mit zielgebundener Planung ohne Phaser.
 
 ## Darstellung und UI
 

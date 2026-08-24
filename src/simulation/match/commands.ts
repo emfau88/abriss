@@ -63,6 +63,37 @@ export interface CommandWeaponResult {
   readonly accepted: boolean;
 }
 
+export interface DirectTargetResult {
+  readonly accepted: boolean;
+  readonly targetId: string | null;
+}
+
+/**
+ * Hybridmodus: delegiert nur das gegnerische Ziel. Bewegung, Waffenwahl,
+ * Flugbahn und Ausführung bleiben vollständig beim Planner.
+ */
+export function directActiveTarget(
+  state: MatchSimulationState,
+  targetId: string,
+): DirectTargetResult {
+  const active = activeSimulationUnit(state);
+  const target = state.units.find((unit) => unit.id === targetId);
+
+  if (
+    active.team !== "crew" ||
+    !target ||
+    target.team === active.team ||
+    target.hitPoints <= 0
+  ) {
+    return { accepted: false, targetId: null };
+  }
+
+  state.directedTargetId = target.id;
+  state.rejectedCandidateIds = [];
+  state.rejectedPlanFamilyKeys = [];
+  return { accepted: true, targetId: target.id };
+}
+
 /** Einmaliger Waffenbefehl: erzwingt die Waffe für die nächste Planung. */
 export function commandWeapon(
   state: MatchSimulationState,

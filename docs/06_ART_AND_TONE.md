@@ -47,7 +47,16 @@ Die Crew soll langfristig aus verschiedenen Wesen bestehen. Spezies teilen eine 
 
 Das aktuelle blaue Hornwesen ist nur ein technischer Platzhalter und als Stilziel zu niedlich und kitschig. Künftige Wesen bleiben freundlich und comicartig, sollen aber weniger wie polierte Maskottchen wirken: etwas eigenwilligere Proportionen, trockenere oder verschmitztere Mimik, mehr asymmetrische Merkmale, weniger glatte Rundungen und eine etwas gedämpftere Farbigkeit. Diese Korrektur bedeutet ausdrücklich nicht grimdark, realistisch oder aggressiv.
 
-Moki bleibt der frühe bewegte Stiltest mit asymmetrischer rostorangefarbener Kappe, moosigem Umhang und trockener Mimik. GLIB und Ghost sind die aktuellen Animationsreferenzen: Beide rekonstruieren konkrete Designs aus `beispiele figuren/2.jpg` in transparenten 8×4-Sheets. Ghost übernimmt die einfache mintweiße Tuchsilhouette, schmale verschmitzte Augen und weiche Unterkanten der Vorlage. Achtphasige Zyklen, stabile Anker und zurückhaltende kosmetische Deformation sind wichtiger als übertriebene Einzelposen. Das frühere Vela-Sheet bleibt nur historische Entstehungsgeschichte.
+Pop Diva, Henne, RINGO, Moki, GLIB, Ghost und Hornling verwenden denselben
+reduzierten 4×4-Animationsstandard: je vier Frames für Idle, Laufen, Sprung
+und Treffer. Maßgeblich sind referenznahe Silhouette, große Farbflächen,
+kräftige Außenkontur, stabile Fußlinie und geringe Volumenschwankung zwischen
+Frames. Zusätzliche Dauertweens oder mehr Einzelphasen gelten nicht automatisch
+als hochwertiger; sie werden nur ergänzt, wenn sie bei Matchzoom nachweislich
+ruhiger und besser lesbar bleiben. Moki liest sich als kompakter roter
+Cartoon-Pilz, GLIB als grüner Schleim und Ghost als heller Tuchgeist. Das
+frühere Vela-Sheet und die komplexen 32-Frame-Versuche bleiben nur historische
+Entstehungsgeschichte.
 
 Karten dürfen stark unterschiedliche Settings und Helligkeiten verwenden. Die sonnigen Inseln und der dunklere Space-Resort teilen dicke organische Terrainmassen, mehrere Stockwerke, fliegende Inseln und offene Projektilkorridore; Silhouette, Materialpalette, Dekoration und Höhenrhythmus müssen sich je Karte klar unterscheiden.
 

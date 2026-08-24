@@ -21,7 +21,7 @@ Große Aktionen finden nacheinander statt. Kleine Reaktionen wie Fallen, Zurück
 
 ### Vor dem Match
 
-Der dünne Manager-Slice lässt den Spieler genau drei aus vier Wesen wählen und pro Crewmitglied eine Waffenpräferenz festlegen. Diese Präferenz bestimmt den ersten gültigen Plan der Figur, sperrt ihr Arsenal in späteren Zügen aber nicht. Rollen, Doktrinen und tiefe Ausrüstungsbäume bleiben spätere Entscheidungen.
+Der dünne Manager-Slice lässt den Spieler genau drei aus sieben Wesen wählen und pro Crewmitglied eine Waffenpräferenz festlegen. Diese Präferenz bestimmt den ersten gültigen Plan der Figur, sperrt ihr Arsenal in späteren Zügen aber nicht. Rollen, Doktrinen und tiefe Ausrüstungsbäume bleiben spätere Entscheidungen.
 
 ### Während des Matches
 
@@ -44,9 +44,19 @@ Dieses Kommando prüft, ob begrenzte negative Kontrolle – das Verhindern einer
 
 ### Status der Autonomie-Hypothese
 
-Der erste spielbare Ablauf zeigt ein wesentliches Risiko: Wenn die Figur selbst den optimalen Winkel berechnet und der Spieler nur bestätigt oder einmal widerspricht, fehlen Positionierungs-, Ziel- und Ausführungsfertigkeit. Bei vollständig blockierten Gegnern besitzt der aktuelle Slice zudem weder Laufen noch Springen und kann deshalb nur einen anderen gültigen Bogen wählen oder den Zug überspringen.
+Der heutige Build vergleicht drei bewusst reversible Varianten. **Auto** lässt
+die Crew Ziel, lokale Bewegung, Waffe und Bogen selbst planen. **Zielauftrag**
+delegiert pro Crewzug nur den lebenden Rivalen; alle übrigen Entscheidungen
+bleiben bei der Figur. **Direkt** übergibt erreichbare Position, Waffe, Winkel
+und Kraft vollständig an den Spieler, während die Rivalen autonom bleiben.
 
-Diese Form vollständiger Autonomie gilt deshalb nicht mehr als bestätigte Zielrichtung, sondern als getestete Hypothese mit negativem Signal. Auf ausdrücklichen Wunsch wird sie vor dem direkten Vergleich einmal fair erweitert: Task 012 ergänzt lokale Bewegung, Sprünge, drei Waffenprofile und zwei animierte Wesen. Erst einige vollständige Matches mit dieser Fassung zeigen, ob Positionierungsentscheidungen, Eigenheiten und beobachtbare Aktionen bereits genug Spannung erzeugen. Task 011 bleibt anschließend als reversibler Vergleich bereit: eigene Figuren begrenzt bewegen und springen sowie Winkel und Kraft selbst einstellen; Gegner verwenden weiterhin den Planer. Eine endgültige Produktentscheidung fällt erst nach diesem A/B-Vergleich.
+Damit ist der frühere technische Einwand behoben, Auto könne weder laufen noch
+springen, und Direkt ist nicht mehr auf wenige vorgegebene Plätze beschränkt.
+Interne Simulation beantwortet aber nicht, welche Variante Agency,
+Figurenbindung und verständliches Chaos am besten verbindet. Bis zum externen
+A/B/C-Test nach `08_PLAYTEST_PROTOCOL.md` bleibt die Produktvision unverändert:
+Zielrichtung ist Management mit autonomen Figuren; Direkt ist ein fairer
+Vergleich und noch kein stiller Produktwechsel.
 
 ### Nach dem Match
 

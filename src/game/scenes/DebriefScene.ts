@@ -38,7 +38,7 @@ export class DebriefScene extends Phaser.Scene {
       this,
       RENDER_WIDTH,
       RENDER_HEIGHT,
-      MAP_DEFINITIONS[report.mapId].backgroundTextureKey,
+      MAP_DEFINITIONS[report.mapId].previewBackgroundTextureKey,
     );
 
     const completion = completeMission(loadManagerState());
@@ -94,7 +94,7 @@ export class DebriefScene extends Phaser.Scene {
       .text(
         RENDER_WIDTH / 2,
         470,
-        `ZÜGE ${report.turnNumber}   ·   CREW ÜBRIG ${report.survivingCrew}   ·   RIVALEN ÜBRIG ${report.survivingRivals}\nSEED ${report.seed}   ·   EINSATZ ${completion.state.completedMissions}`,
+        `ZÜGE ${report.turnNumber}   ·   CREW ÜBRIG ${report.survivingCrew}   ·   RIVALEN ÜBRIG ${report.survivingRivals}\nMODUS ${controlModeLabel(report.controlMode)}${report.validationScenarioId ? "   ·   KONFLIKTZONE" : ""}   ·   SEED ${report.seed}`,
         {
           fontFamily: "Consolas, ui-monospace, monospace",
           fontSize: "17px",
@@ -187,5 +187,16 @@ export class DebriefScene extends Phaser.Scene {
         )
         .setOrigin(0.5);
     });
+  }
+}
+
+function controlModeLabel(mode: MatchReport["controlMode"]): string {
+  switch (mode) {
+    case "hybrid":
+      return "ZIELAUFTRAG";
+    case "manual":
+      return "DIREKT";
+    default:
+      return "AUTO";
   }
 }

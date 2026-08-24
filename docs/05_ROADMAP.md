@@ -66,7 +66,7 @@ Tor: Der Spieler versteht die räumliche Lage in der Übersicht und verliert bei
 
 ## M4 – Spielbares 3-gegen-3-Match
 
-**Status:** intern spielbar; Spielspaß- und Verständlichkeitstest offen.
+**Status:** technisch abgeschlossen; externes Produktsignal folgt in M5.
 
 Ergebnis:
 
@@ -75,14 +75,18 @@ Ergebnis:
 - lokale Bewegung,
 - begrenzter Explosionsrückstoß gegen zerstörtes Terrain,
 - einmaliges Managerkommando zur Waffenwahl,
-- zwei animierte Testwesen zusätzlich zum technischen Platzhalter,
+- sieben reduzierte animierte Testwesen,
 - Schaden, Fallen und Eliminierung,
 - Sieg/Niederlage,
 - Neustart und Seedanzeige.
 
-Tor: Mehrere vollständige Matches laufen ohne manuelle Reparatur oder Zustandsfehler.
+Tor: Mehrere vollständige Matches laufen ohne manuelle Reparatur oder
+Zustandsfehler. **Erfüllt:** Headless-Suite, deterministische Massenläufe,
+Browserprüfung und Produktionsbuild bestehen.
 
 ## M5 – Lesbarkeit und Spielgefühl
+
+**Status:** in Arbeit; Technik und A/B/C-Protokoll stehen, externe Durchführung offen.
 
 Ergebnis:
 
@@ -92,6 +96,11 @@ Ergebnis:
 - grundlegendes Audio,
 - Performance- und Barrierefreiheitsoptionen,
 - externe Spieltests.
+
+Nächster konkreter Schritt: Auto, Zielauftrag und Direkt nach
+`08_PLAYTEST_PROTOCOL.md` mit Zielgröße zehn externen Personen vergleichen.
+Bis dahin erfolgen keine neue Vollkarte, kein umfangreiches Gewichtetuning und
+keine Vertiefung der Manager-Meta.
 
 Tor: Die Produkthypothesen aus `01_PRODUCT_VISION.md` sind ausreichend bestätigt oder konkret widerlegt.
 

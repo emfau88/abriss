@@ -296,3 +296,35 @@ bleibt die sichtbare Persönlichkeit: Bewegung und konkreter Wirkungsbereich
 variieren, die Waffenrolle nicht. Vor einem Gewichtetuning sollten deshalb
 gezielte konfliktreiche Eröffnungen gebaut werden, in denen Eigenrisiko,
 Kameradenrisiko, Kettenwirkung und Terrainoptionen tatsächlich konkurrieren.
+
+## Fortschritt vom 24. August 2026: Kernloop-Vergleich testbereit (Tasks 033–035)
+
+Der öffentliche Einstieg lädt die großen Karten jetzt progressiv: Das
+Kartenvolumen vor dem Hauptmenü sank von 16,61 MiB auf 138,3 KiB. Damit ist der
+mehrsekündige dunkle Kaltstart als unnötige Hürde für externe Tests beseitigt.
+
+Neben Auto und Direkt existiert der **Zielauftrag** als mittlere Variante. Der
+Spieler benennt nur einen Rivalen; die Figur plant Position, Waffe, Bogen und
+Streuung weiterhin selbst. Alle drei Modi verwenden dieselbe Matchsimulation
+und bleiben bis zum Test reversible Vergleichsvarianten.
+
+Vier deterministische Konfliktsonden liefern 24 Kombinationen aus Situation,
+Persönlichkeit und freier beziehungsweise zielgebundener Planung:
+
+- Freies Auto umgeht in der Teamrisiko-Sonde den gefährlichen Gegner und
+  verursacht keinen Freundschaden.
+- Der Auftrag auf genau dieses Ziel aktiviert erwartetes Teamrisiko und je
+  nach Persönlichkeit 19 bis 41 tatsächliche Schadenspunkte am Verbündeten.
+- In der Fasssonde wählen die drei Persönlichkeiten beim Zielauftrag die
+  Kettenoption; zwei Fässer und deutliche Terrainzerstörung werden tatsächlich
+  aufgelöst.
+- Die Geländetor-Sonde bevorzugt weiterhin die Rakete statt des Brechers. Die
+  Waffenidentität der Persönlichkeiten bleibt daher ein ehrlicher Restpunkt.
+- An der Ring-out-Kante führt der Zielauftrag reproduzierbar zu echten
+  Abstürzen, wobei die gesetzte Streuung den Ausgang sichtbar beeinflussen darf.
+
+Der Befund spricht gegen blindes Gewichtetuning: Relevante Konfliktlogik ist
+vorhanden, wurde von den Standarderöffnungen aber häufig nicht aufgerufen. Das
+isolierte `KERNLOOP-TEST · KONFLIKTZONE` macht dieselbe Frage jetzt in Auto,
+Zielauftrag und Direkt spielbar. Nächster Schritt ist der externe A/B/C-Test
+nach `08_PLAYTEST_PROTOCOL.md`, nicht eine weitere interne Inhaltsrunde.

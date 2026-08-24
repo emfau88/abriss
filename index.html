@@ -21,6 +21,18 @@
       <p class="sr-only" id="game-description">
         Technischer Projektstart des browserbasierten Spiels Projekt Abriss.
       </p>
+      <div id="boot-loading" class="boot-loading" role="status" aria-live="polite">
+        <strong>PROJEKT ABRISS</strong>
+        <span id="boot-loading-label">SPIEL WIRD VORBEREITET</span>
+        <span
+          id="boot-loading-progress"
+          class="boot-loading-progress"
+          role="progressbar"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="0"
+        ></span>
+      </div>
       <div id="game" aria-describedby="game-description"></div>
       <button id="fullscreen-toggle" class="fullscreen-toggle" type="button" hidden>
         <span aria-hidden="true">⛶</span>

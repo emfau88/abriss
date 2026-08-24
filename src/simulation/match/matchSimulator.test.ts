@@ -32,6 +32,10 @@ import {
   createMatchSimulation,
   type MatchSimulationState,
 } from "./matchSimulationState";
+import {
+  evaluateConflictScenarios,
+  renderConflictScenarioResults,
+} from "./conflictScenarios";
 
 /**
  * Kleine Standard-Matrix: 2 Karten × 3 Seeds (Manager-Progression). Mit
@@ -193,8 +197,11 @@ describe("mass simulator (Task 022, Teil B)", () => {
     expect(matchups).toHaveLength(MAP_IDS.length * MATCHUP_PAIRINGS.length);
     expect(matchups).toMatchSnapshot();
 
+    const conflictResults = evaluateConflictScenarios();
     const rendered =
-      renderSimulationReport(report) + renderMatchupResults(matchups);
+      renderSimulationReport(report) +
+      renderMatchupResults(matchups) +
+      renderConflictScenarioResults(conflictResults);
     mkdirSync(join(process.cwd(), "reports"), { recursive: true });
     writeFileSync(
       join(process.cwd(), "reports", "simulation-report.md"),
@@ -205,6 +212,7 @@ describe("mass simulator (Task 022, Teil B)", () => {
     expect(rendered).toContain("Planfamilien-Vielfalt");
     expect(rendered).toContain("unterschiedliche Planfamilien");
     expect(rendered).toContain("## Persönlichkeits-Matchups");
+    expect(rendered).toContain("## Gezielte Konfliktsonden");
   });
 
   it.skipIf(!process.env["SIM_FULL"])(

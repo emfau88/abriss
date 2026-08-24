@@ -145,6 +145,8 @@ export interface RocketPlannerInput {
   readonly maximumDurationSeconds?: number;
   readonly explosionRadius?: number;
   readonly weaponIds?: readonly WeaponId[];
+  /** Optionaler semantischer Zielauftrag; alle Details bleiben KI-Entscheidung. */
+  readonly targetUnitIds?: readonly string[];
   /**
    * Task 028: Interaktive Objekte (Fässer). Wenn gesetzt, erzeugt der Planner
    * zusätzlich Kandidaten, die auf Fässer in Gegnernähe zielen, und bewertet
@@ -252,8 +254,14 @@ export function planRocketAction(input: RocketPlannerInput): RocketActionPlan {
     throw new Error(`Unknown active unit: ${input.activeUnitId}`);
   }
 
+  const allowedTargets = input.targetUnitIds
+    ? new Set(input.targetUnitIds)
+    : null;
   const targets = input.units.filter(
-    (unit) => unit.team !== activeUnit.team && unit.hitPoints > 0,
+    (unit) =>
+      unit.team !== activeUnit.team &&
+      unit.hitPoints > 0 &&
+      (!allowedTargets || allowedTargets.has(unit.id)),
   );
   const gravity = input.gravity ?? DEFAULT_GRAVITY;
   const weaponIds = input.weaponIds ?? ["rocket"];

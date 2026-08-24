@@ -4,6 +4,7 @@ import { BinaryTerrainMask } from "../terrain/TerrainMask";
 import {
   commandWeapon,
   cycleActivePersonality,
+  directActiveTarget,
   rejectActivePlan,
 } from "./commands";
 import {
@@ -38,6 +39,13 @@ function createTestSimulation(): MatchSimulationState {
         team: "rivals",
         spawnX: 700,
         personality: "cautious",
+      },
+      {
+        id: "rival-2",
+        displayName: "RIVALE B",
+        team: "rivals",
+        spawnX: 940,
+        personality: "showboat",
       },
     ],
   });
@@ -91,6 +99,25 @@ describe("match engine commands (Task 021, Schritt 4)", () => {
     expect(state.forcedWeaponId).toBe("breaker");
   });
 
+  it("delegates only a living rival target and keeps planning autonomous", () => {
+    const state = createTestSimulation();
+
+    expect(directActiveTarget(state, "crew-slime")).toEqual({
+      accepted: false,
+      targetId: null,
+    });
+    expect(directActiveTarget(state, "missing").accepted).toBe(false);
+    expect(directActiveTarget(state, "rival-2")).toEqual({
+      accepted: true,
+      targetId: "rival-2",
+    });
+
+    const plan = planTurn(state);
+    expect(plan.action.selected?.targetId).toBe("rival-2");
+    expect(plan.action.selected?.weaponId).toBeDefined();
+    expect(plan.movement).toBeDefined();
+  });
+
   it("clears a rejected family after the current turn", () => {
     const state = createTestSimulation();
     const turnPlan = planTurn(state);
@@ -100,6 +127,7 @@ describe("match engine commands (Task 021, Schritt 4)", () => {
     concludeTurn(state);
     expect(state.rejectedCandidateIds).toEqual([]);
     expect(state.rejectedPlanFamilyKeys).toEqual([]);
+    expect(state.directedTargetId).toBeNull();
   });
 
   it("cycles the personality of the active crew figure", () => {
@@ -129,6 +157,7 @@ describe("match engine commands (Task 021, Schritt 4)", () => {
 
     expect(rejectActivePlan(state, crewPlan).accepted).toBe(false);
     expect(commandWeapon(state, "rocket").accepted).toBe(false);
+    expect(directActiveTarget(state, "rival-1").accepted).toBe(false);
     expect(cycleActivePersonality(state).accepted).toBe(false);
     expect(state.interventionUsed).toBe(false);
     expect(state.weaponCommandUsed).toBe(false);

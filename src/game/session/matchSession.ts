@@ -13,7 +13,8 @@ export type MatchMode = "manager" | "quick";
  * die Crew-Züge selbst per Maus. Der Rivalen-Zug bleibt in beiden Modi
  * autonom.
  */
-export type ControlMode = "auto" | "manual";
+export type ControlMode = "auto" | "hybrid" | "manual";
+export type ValidationScenarioId = "comedy-pocket";
 
 export interface FighterLoadout {
   readonly fighterId: FighterId;
@@ -25,6 +26,7 @@ export interface MatchLaunchConfig {
   readonly mapId: MapId;
   readonly crew: readonly FighterLoadout[];
   readonly controlMode: ControlMode;
+  readonly validationScenarioId?: ValidationScenarioId;
 }
 
 export interface MatchReport {
@@ -32,6 +34,8 @@ export interface MatchReport {
   readonly outcome: TeamId | "draw";
   readonly seed: number;
   readonly mapId: MapId;
+  readonly controlMode: ControlMode;
+  readonly validationScenarioId?: ValidationScenarioId;
   readonly turnNumber: number;
   readonly survivingCrew: number;
   readonly survivingRivals: number;
@@ -108,6 +112,27 @@ export function createCharacterAssetTestConfig(
       { fighterId: "pop-diva", preferredWeaponId: "rocket" },
       { fighterId: "chicken", preferredWeaponId: "grenade" },
       { fighterId: "raccoon-bandit", preferredWeaponId: "rocket" },
+    ],
+  };
+}
+
+/**
+ * Kurzes, absichtlich konfliktreiches Vergleichsmatch für Auto, Zielauftrag
+ * und Direkt. Verwendet dieselbe Karte und Engine wie Standardmatches.
+ */
+export function createConflictValidationConfig(
+  controlMode: ControlMode = "auto",
+): MatchLaunchConfig {
+  return {
+    mode: "quick",
+    seed: DEFAULT_SEED + 35,
+    mapId: "good-mood",
+    controlMode,
+    validationScenarioId: "comedy-pocket",
+    crew: [
+      { fighterId: "pop-diva", preferredWeaponId: "rocket" },
+      { fighterId: "chicken", preferredWeaponId: "grenade" },
+      { fighterId: "raccoon-bandit", preferredWeaponId: "breaker" },
     ],
   };
 }

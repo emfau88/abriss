@@ -514,3 +514,87 @@ und Werte ändern sich nicht.
 **Konsequenz:** Schwelle und Rate sind an echten Headless-Matches kalibriert (reale „fall"-Stürze: meist 7–60 Weltpunkte Stolperer, gelegentlich 300–560 echte Abstürze). Gemessene Wirkung: auf den flachen Sonneninseln fällt kaum jemand tief genug (0 Fall-Schaden-Events), auf dem vertikalen Space-Resort dagegen spürbar (3 Events, davon 2 tödlich) – Fall-Schaden ist bewusst kartenabhängig. Der Simulator-Snapshot wurde bewusst erneuert; der Golden Master (Erstzug-Planung) bleibt unverändert, weil Fall-Schaden nur die Auflösung betrifft, nicht die Planung. Die Chronik meldet eine „harte Landung" (`hard-landing`) als neuen Vorfallstyp; die Szene zeigt eine schwebende „−N"-Zahl am Landepunkt. Determinismus gewahrt (reine Höhenformel, kein Zufall).
 
 **Umsetzung:** ausgeführt von Claude Opus 4.8 (Anthropic) am 23. Juli 2026.
+
+## 2026-08-24 – D-049: Kartenassets werden progressiv statt vollständig vor dem Menü geladen
+
+**Entscheidung:** Der Start lädt für beide Karten nur eigene 800×450-WebP-
+Vorschauen. Die unveränderten 3200×1800-HD-Quellen für Hintergrund und
+zerstörbares Terrain werden erst in `MatchScene.preload()` und nur für die
+tatsächlich gestartete Karte geladen. Vor Phaser und während des Kartenwechsels
+zeigt die Oberfläche jeweils einen sichtbaren Fortschrittsstatus.
+
+**Grund:** Der öffentliche Build zeigte beim Kaltstart mehrere Sekunden nur
+eine dunkle Fläche. Die vier HD-Kartenbilder verursachten 16,61 MiB des
+anfänglichen Transfers, obwohl das Hauptmenü keine volle Matchauflösung
+benötigt.
+
+**Konsequenz:** Die Kartenbilder des Menüstarts benötigen zusammen nur noch
+138,3 KiB (−99,2 %). Kollisionsmaske, Matchdarstellung, Simulation und relative
+Pages-Pfade bleiben unverändert. Nach dem ersten Match darf dessen HD-Karte im
+Phaser-Texturcache verbleiben; allgemeines Laufzeit-Streaming ist weiterhin
+nicht Teil des Vertical Slice.
+
+**Umsetzung:** Task 033, abgeschlossen am 24. August 2026.
+
+## 2026-08-24 – D-050: Hybridvergleich delegiert das Ziel, nicht die Ausführung
+
+**Entscheidung:** Neben `auto` und `manual` existiert der reversible
+Steuerungsmodus `hybrid`. Vor jedem Crewzug bestimmt der Spieler genau einen
+lebenden Rivalen als Zielauftrag. Der vorhandene Utility-Planner entscheidet
+innerhalb dieses Auftrags weiterhin selbst über lokale Positionierung, Waffe,
+Flugbahn und die bereits sichtbare Streuung. Rivalenzüge bleiben vollständig
+autonom.
+
+**Grund:** Der direkte Modus bietet faire Eigensteuerung, entfernt sich aber
+von der Managerfantasie. Vollständige Autonomie kann dagegen zu passiv wirken.
+Der Zielauftrag prüft mit einer einzigen verständlichen Entscheidung, ob sich
+Agency und Figurenautonomie verbinden lassen, ohne bereits Kandidatenkarten,
+Kommandopunkte oder ein neues Ausführungssystem zu bauen.
+
+**Konsequenz:** Der Zielauftrag ist ein rendererunabhängiges, serialisierbares
+Feld im Matchzustand, wird fachlich validiert und nach dem Zug gelöscht. Ein
+unverbindlicher Vorschauplan vor der Wahl verbraucht die Loadout-Präferenz
+nicht. Auto, Zielauftrag und Direkt bleiben im selben Build vergleichbar; die
+Produktvision ist damit ausdrücklich noch nicht geändert.
+
+**Umsetzung:** Task 034, abgeschlossen am 24. August 2026.
+
+## 2026-08-24 – D-051: Konflikte werden vor weiterem Gewichtetuning gezielt isoliert
+
+**Entscheidung:** Teamrisiko, Fasskette, Geländeöffnung und Ring-out werden in
+vier kleinen rendererfreien Erstzugsonden gemessen. Zusätzlich steht dieselbe
+enge Konfliktlage als isoliertes `KERNLOOP-TEST`-Match zur Verfügung. Die
+Sonden vergleichen freie Autonomie mit einem vorgegebenen Ziel für alle drei
+Persönlichkeiten; sie ändern keine Standardkarte und keine Balancewerte.
+
+**Grund:** Die bisherige Massenmatrix zeigte vielfältige Planfamilien, aber
+kaum aktivierte Risiko- oder Kettenmetriken. Ohne konfliktstarke Ausgangslagen
+war nicht unterscheidbar, ob Bewertungslogik fehlt oder die Karten sie nur
+nicht abfragen.
+
+**Konsequenz:** Teamrisiko, Kettenreaktionen und Ring-outs sind nun messbar
+aktiv. Freies Auto wählt in riskanten Lagen häufig ein sichereres Ziel, während
+der Zielauftrag dieselbe Konfliktwirkung erzwingt. Die weiterhin schwache
+Geländebrecher- und Waffenrollentrennung bleibt dokumentiert; Tuning folgt erst
+auf externe Beobachtung statt auf eine einzelne synthetische Sonde.
+
+**Umsetzung:** Task 035, abgeschlossen am 24. August 2026.
+
+## 2026-08-24 – D-052: Externer A/B/C-Test ist das nächste Produktentscheidungstor
+
+**Entscheidung:** Auto, Zielauftrag und Direkt werden im selben Build mit dem
+gegenbalancierten Ablauf aus `08_PLAYTEST_PROTOCOL.md` extern verglichen. Bis
+zu diesem Test beginnt keine neue Vollkarte, keine umfangreiche
+Manager-Metaebene und kein größeres Balance- oder Assetpaket.
+
+**Grund:** Alle drei Varianten sind technisch fair spielbar. Simulation und
+interne Browserprüfung können jedoch weder erlebte Agency noch Figurenbindung,
+Frust oder freiwillige Wiederholungsmotivation zuverlässig beantworten.
+
+**Konsequenz:** Die Produktvision bleibt bis zum Ergebnis Management mit
+autonomen Figuren. Gewinnt Direkt deutlich, braucht der Richtungswechsel eine
+neue ausdrückliche Produktentscheidung; gewinnt Zielauftrag oder Auto, wird
+der jeweilige Managerkern gezielt vertieft. Uneindeutige Ergebnisse führen zu
+einem kleineren Folgetest, nicht automatisch zu mehr Content.
+
+**Umsetzung:** Task 036, abgeschlossen am 24. August 2026.

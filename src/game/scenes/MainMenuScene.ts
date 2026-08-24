@@ -23,7 +23,7 @@ import {
 } from "../../manager/managerState";
 import { RENDER_HEIGHT, RENDER_WIDTH } from "../config";
 import {
-  createCharacterAssetTestConfig,
+  createConflictValidationConfig,
   type ControlMode,
 } from "../session/matchSession";
 import { FIGHTER_QUIPS, randomTagline } from "../ui/menuFlavor";
@@ -33,6 +33,18 @@ const MAP_CARD_CENTERS = [465, 1135] as const;
 /** Bühne der anwesenden Crew im toten Raum zwischen Karten und Buttons. */
 const CREW_STAGE_Y = 556;
 const CREW_SPRITE_SIZE = 100;
+const CONTROL_MODE_ORDER: readonly ControlMode[] = [
+  "auto",
+  "hybrid",
+  "manual",
+];
+const CONTROL_MODE_UI: Readonly<
+  Record<ControlMode, { readonly label: string; readonly color: number }>
+> = {
+  auto: { label: "⚙ AUTO", color: 0x176f6b },
+  hybrid: { label: "◎ ZIELAUFTRAG", color: 0x8a6a21 },
+  manual: { label: "🎯 DIREKT", color: 0xd9843a },
+};
 
 export class MainMenuScene extends Phaser.Scene {
   private managerState!: ManagerState;
@@ -56,7 +68,7 @@ export class MainMenuScene extends Phaser.Scene {
       this,
       RENDER_WIDTH,
       RENDER_HEIGHT,
-      selectedMap.backgroundTextureKey,
+      selectedMap.previewBackgroundTextureKey,
     );
 
     this.add
@@ -101,14 +113,11 @@ export class MainMenuScene extends Phaser.Scene {
       y: 751,
       width: 420,
       height: 60,
-      label: "ASSET-TEST · DIVA + HENNE + RINGO",
+      label: "KERNLOOP-TEST · KONFLIKTZONE",
       accent: 0x55d7c2,
       onClick: () =>
         this.scene.start("MatchScene", {
-          launchConfig: createCharacterAssetTestConfig(
-            this.managerState.selectedMapId,
-            this.controlMode,
-          ),
+          launchConfig: createConflictValidationConfig(this.controlMode),
         }),
     });
     createMenuButton(this, {
@@ -265,7 +274,7 @@ export class MainMenuScene extends Phaser.Scene {
 
   private createControlModeToggle(): void {
     const y = 820;
-    const auto = this.controlMode === "auto";
+    const modeUi = CONTROL_MODE_UI[this.controlMode];
     const label = this.add
       .text(RENDER_WIDTH / 2 - 168, y, "CREW-STEUERUNG:", {
         fontFamily: "Consolas, ui-monospace, monospace",
@@ -281,7 +290,7 @@ export class MainMenuScene extends Phaser.Scene {
         y,
         280,
         40,
-        auto ? 0x176f6b : 0xd9843a,
+        modeUi.color,
         1,
       )
       .setStrokeStyle(2, 0xfff5d6, 0.5)
@@ -290,7 +299,7 @@ export class MainMenuScene extends Phaser.Scene {
       .text(
         button.x,
         y,
-        auto ? "⚙ AUTOBATTLE  (klicken)" : "🎯 SELBST ZIELEN  (klicken)",
+        `${modeUi.label}  (klicken)`,
         {
           fontFamily: "Consolas, ui-monospace, monospace",
           fontSize: "14px",
@@ -303,7 +312,9 @@ export class MainMenuScene extends Phaser.Scene {
     void label;
     void buttonText;
     button.on("pointerdown", () => {
-      const next: ControlMode = this.controlMode === "auto" ? "manual" : "auto";
+      const index = CONTROL_MODE_ORDER.indexOf(this.controlMode);
+      const next =
+        CONTROL_MODE_ORDER[(index + 1) % CONTROL_MODE_ORDER.length] ?? "auto";
       this.registry.set("controlMode", next);
       this.scene.restart();
     });
@@ -321,10 +332,10 @@ export class MainMenuScene extends Phaser.Scene {
       .rectangle(x, y, width, height, selected ? 0x163f45 : 0x102a36, 0.96)
       .setStrokeStyle(5, selected ? 0xffcd5d : 0xfff5d6, selected ? 1 : 0.48);
     this.add
-      .image(x, y - 40, map.backgroundTextureKey)
+      .image(x, y - 40, map.previewBackgroundTextureKey)
       .setDisplaySize(previewWidth, previewHeight);
     this.add
-      .image(x, y - 40, map.terrainTextureKey)
+      .image(x, y - 40, map.previewTerrainTextureKey)
       .setDisplaySize(previewWidth, previewHeight);
     this.add.rectangle(x, y + 118, previewWidth, 66, 0x102a36, 0.93);
     this.add

@@ -10,7 +10,15 @@ Der Spieler führt eine Crew eigenwilliger Spezialisten. Er stellt Team, Ausrüs
 
 Die Produktvision und der erste Vertical Slice sind festgelegt. Das interne 3-gegen-3-Match ist spielbar: Figuren laufen oder springen lokal, wählen zwischen Panzerfaust, zeitgezündeter Wurfgranate und Geländebrecher, verändern Terrain und werden von Explosionen zurückgeschleudert. Zwei Fullscreen-HD-Karten – Sonneninseln und ein humorvoller Space-Resort – sind im Hauptmenü wählbar. Sieben klar unterscheidbare Cartoon-Figuren stehen im normalen Match zur Auswahl; ihre reduzierten 4×4-Sheets priorisieren große Farbflächen, starke Konturen und stabile Animationen. Ein dünner Manager-Loop führt vom Hauptmenü über Auswahl von drei Wesen und deren Waffenpräferenzen ins Match und danach in einen humorvollen Einsatzbericht mit einer kleinen Freischaltung. „Lass das!“ verwirft eine ganze sichtbare Planfamilie statt nur eines minimal anderen Bogens; der einmalige Waffenbefehl bleibt die zweite direkte Managerintervention.
 
-Für den Kernloop-Vergleich kann das Hauptmenü zwischen Autobattle und direkter Steuerung umschalten. Im direkten Modus wird innerhalb des 190-Punkte-Budgets ein beliebiger erreichbarer Bodenpunkt samt Lauf-/Sprungvorschau gewählt; anschließend bestimmt der Spieler Winkel, Kraft und Waffe. Ein isolierter `ACTIONMAP-TEST` erprobt außerdem eine kleine Schild–Wagen–Triebwerk-Kettenreaktion, ohne den regulären Matchstand zu verändern.
+Für den Kernloop-Vergleich schaltet das Hauptmenü zwischen **Auto**,
+**Zielauftrag** und **Direkt** um. Beim Zielauftrag wählt der Spieler pro
+Crewzug nur den Rivalen; Figur und KI bestimmen weiterhin Position, Waffe,
+Flugbahn und Streuung. Im direkten Modus wird innerhalb des 190-Punkte-Budgets
+ein beliebiger erreichbarer Bodenpunkt samt Lauf-/Sprungvorschau gewählt;
+anschließend bestimmt der Spieler Winkel, Kraft und Waffe. Das kurze
+`KERNLOOP-TEST · KONFLIKTZONE` stellt riskante Ziele und ein Fasscluster für
+den A/B/C-Vergleich bereit. Der isolierte `ACTIONMAP-TEST` erprobt daneben eine
+Schild–Wagen–Triebwerk-Kettenreaktion, ohne den regulären Matchstand zu verändern.
 
 ## Figuren im Spiel
 
@@ -20,10 +28,10 @@ Für den Kernloop-Vergleich kann das Hauptmenü zwischen Autobattle und direkter
   <img src="public/assets/characters/ghost-fluid-sheet.png" alt="Ghost – reduziertes Geist-Spritesheet" width="31%">
 </p>
 
-Die Sheets zeigen jeweils vier kontrollierte Frames für Idle, Laufen, Sprung und
-Treffer. Dadurch bleiben Moki, GLIB und Ghost auch bei der kleinen Matchkamera
-klar lesbar und ohne zusätzliche Render-Tweens ruhig. Weitere Kaderfiguren:
-Pop Diva, Henne, RINGO und Hornling.
+Alle sieben Kaderfiguren verwenden denselben reduzierten 4×4-Standard: jeweils
+vier kontrollierte Frames für Idle, Laufen, Sprung und Treffer. Große
+Farbflächen, klare Konturen, eine stabile Fußlinie und der Verzicht auf
+kosmetische Dauertweens halten sie auch bei kleiner Matchkamera lesbar.
 
 ## Lokal starten
 
@@ -55,7 +63,10 @@ Aktueller spielbarer Ablauf:
 
 - `Einsatz planen`: drei aus sieben Wesen wählen, Waffenpräferenzen setzen und nach dem Match den Bericht öffnen,
 - `Schnelles Testmatch`: Manager-Ebene für die Entwicklung überspringen,
-- `AUTOBATTLE / SELBST ZIELEN`: autonomen und direkten Kernloop vergleichen,
+- `AUTO / ZIELAUFTRAG / DIREKT`: Autonomie, delegiertes Ziel und vollständige
+  Eigensteuerung im selben Build vergleichen,
+- `KERNLOOP-TEST · KONFLIKTZONE`: kurzes Validierungsmatch mit engem
+  Teamrisiko und Fasscluster starten,
 - `ACTIONMAP-TEST`: kuratierte Schild–Wagen–Triebwerk-Kette ausprobieren,
 - im direkten Bewegungsabschnitt: erreichbares Gelände frei anklicken/antippen; Türkis zeigt Laufen, Gelb Springen,
 - im direkten Zielabschnitt: von der Figur wegziehen und zum Schuss loslassen; Waffe über `1` / `2` / `3` oder HUD wählen,
@@ -72,6 +83,9 @@ Aktueller spielbarer Ablauf:
 - `O`: Weltübersicht,
 - `C`: sanfte Kamerafahrten oder direkte Schnitte.
 - `H`: kompakte Hilfe ein-/ausblenden.
+
+Der nächste Produktentscheid erfolgt nicht aus Bauchgefühl oder einem weiteren
+internen Tuning, sondern über das [externe A/B/C-Playtest-Protokoll](docs/08_PLAYTEST_PROTOCOL.md).
 
 ## Einstieg
 

@@ -18,7 +18,8 @@ Der Vertical Slice beweist nicht die Menge späterer Inhalte. Er beantwortet ein
 
 ### Figuren
 
-- ein technischer Hornwesen-Platzhalter, Moki sowie GLIB und Ghost als flüssige 32-Frame-Wesen aus den konkreten Projektvorlagen; noch keine finale Produktionspalette,
+- sieben wählbare Cartoon-Wesen im gemeinsamen reduzierten 4×4-Standard mit
+  Idle, Laufen, Sprung und Treffer; noch keine finale Produktionspalette,
 - die Merkmale Vorsichtig, Sprengfreudig und Angeberisch,
 - Lebenspunkte, Team, Position und begrenzte lokale Bewegung,
 - klarer aktiver Zustand und erkennbare Teamzugehörigkeit.
@@ -40,6 +41,8 @@ Der Vertical Slice beweist nicht die Menge späterer Inhalte. Er beantwortet ein
 - genau ein „Lass das!“-Kommando pro Match,
 - genau ein davon unabhängiger Waffenbefehl pro Match,
 - Neuplanung auf den nächstbesten gültigen Kandidaten.
+- drei reversible Kontrollvarianten für die Produktprüfung: Auto,
+  delegierter Zielauftrag und Direktsteuerung.
 
 ### Präsentation
 
@@ -54,10 +57,11 @@ Der Vertical Slice beweist nicht die Menge späterer Inhalte. Er beantwortet ein
 ### Dünner Manager-Loop
 
 - Hauptmenü mit Einsatzplanung und direktem Testmatch,
-- Auswahl von genau drei aus vier Wesen,
+- Auswahl von genau drei aus sieben Wesen,
 - eine Waffenpräferenz je Crewmitglied als Einfluss auf den ersten gültigen Plan,
 - versionierter lokaler Managerzustand und explizite Matchkonfiguration,
 - kompakter Einsatzbericht und einmalige Freischaltung des Geländebrechers als Loop-Beweis.
+- kurzes, isoliertes Konfliktmatch zum Vergleich der drei Kontrollvarianten.
 
 ## Explizit ausgeschlossen
 
@@ -107,5 +111,9 @@ Mit mindestens einigen externen Testspielern wird geprüft:
 - Verstehen sie den Wert und die Begrenzung von „Lass das!“?
 - Bemerken sie mindestens eine taktische Folge der Terrainzerstörung?
 - Möchten sie freiwillig eine weitere Runde mit veränderter Entscheidung spielen?
+
+Der konkrete gegenbalancierte Ablauf und die gemeinsame Erfassung stehen in
+`08_PLAYTEST_PROTOCOL.md`. Auto, Zielauftrag und Direkt werden am selben Build
+und an denselben Konflikten verglichen.
 
 Wenn diese Fragen überwiegend negativ beantwortet werden, wird nicht mit Kampagne oder finaler Assetproduktion begonnen. Zuerst werden Lesbarkeit, Agency oder Kernloop überarbeitet.

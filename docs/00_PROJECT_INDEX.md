@@ -1,12 +1,22 @@
 # Projektindex
 
-Stand: 22. Juli 2026
+Stand: 24. August 2026
 
 Dieses Dokument ist der Einstiegspunkt und die Karte der verbindlichen Projektdokumentation. Die Dokumente sollen kompakt bleiben. Inhalte werden nicht in mehreren Dateien parallel gepflegt.
 
 ## Aktuelle Phase
 
-Technischer Vertical Slice. M1 bis M3.5 sind abgeschlossen; M4 ist als interner 3-gegen-3-Test spielbar und über GitHub Pages extern erreichbar. Der Build enthält zwei wählbare zerstörbare HD-Karten, gemeinsame Ballistik, fortlaufende Initiative, lokale Lauf-/Sprungpositionierung, drei Waffenprofile, zeitgezündete Abprallgranaten, begrenzten Explosionsrückstoß, Moki sowie die flüssigen 32-Frame-Wesen GLIB und Ghost. Kamera und Gegneraktionen laufen automatisch; außerhalb gesperrter Momente kann die große Welt auf Desktop und per Touch geschwenkt und gezoomt werden. Ein einmaliges Managerkommando kann die nächste Waffenplanung festlegen. Als Nächstes werden vollständige Matches auf Spielspaß und Verständlichkeit geprüft. Task 011 bleibt danach als direkter Steuerungsvergleich bereit; eine umfassende Manager-Metaebene beginnt erst nach diesem Produkttest.
+Technischer Vertical Slice am Produkttor. Das vollständige 3-gegen-3-Match ist
+mit zwei zerstörbaren HD-Karten, sieben reduzierten Cartoon-Figuren, drei
+Waffen, lokaler Bewegung, Rückstoß, chronologischem Einsatzbericht und dünner
+Managerhülle spielbar. Der Start lädt kleine Kartenvorschauen; nur die gewählte
+HD-Karte wird beim Matchstart nachgeladen. Auto, der delegierte Zielauftrag und
+freie Direktsteuerung stehen als reversible A/B/C-Varianten im selben Build.
+Vier deterministische Konfliktsonden und das kurze `KERNLOOP-TEST`-Match machen
+Teamrisiko, Fassketten, Geländeöffnung und Ring-out gezielt prüfbar. M4 ist
+technisch abgeschlossen; M5 wartet jetzt auf den dokumentierten externen
+Spieltest. Weitere Meta- oder Contentproduktion beginnt erst nach dessen
+Produktsignal.
 
 ## Verbindliche Dokumente
 
@@ -18,6 +28,7 @@ Technischer Vertical Slice. M1 bis M3.5 sind abgeschlossen; M4 ist als interner 
 | `04_VERTICAL_SLICE.md` | exakt erlaubter Umfang und Abnahmekriterien des ersten spielbaren Beweises |
 | `05_ROADMAP.md` | Reihenfolge der Meilensteine und Entscheidungstore |
 | `06_ART_AND_TONE.md` | Welt, Humor, visuelle Regeln und Abgrenzung von Vorbildern |
+| `08_PLAYTEST_PROTOCOL.md` | Ablauf, Beobachtungsbogen und Entscheidungstor des externen A/B/C-Tests |
 | `ASSET_GENERATION.md` | Herkunft, Prompts und technische Aufbereitung generierter Styleframe-Assets |
 | `DECISIONS.md` | chronologisches Protokoll verbindlicher Entscheidungen und Änderungen |
 | `GLOSSARY.md` | einheitliche Begriffe für Produkt, Code und Kommunikation |

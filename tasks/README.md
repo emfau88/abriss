@@ -39,6 +39,10 @@ andere Priorität bestätigt. Es darf höchstens ein Task als `in Arbeit` gelten
 | `030_FREE_MANUAL_MOVEMENT.md` | abgeschlossen | freie, terraingeprüfte Maus-/Touch-Positionswahl mit Livepfad für den fairen Direct-Vergleich |
 | `031_SEMANTIC_PLAN_FAMILIES.md` | abgeschlossen | „Lass das!“ verwirft die sichtbare Ziel-/Waffen-/Bewegungs-/Einschlagsfamilie statt nur einer Kandidaten-ID |
 | `032_PLAN_FAMILY_DIVERSITY_REPORT.md` | abgeschlossen | Bericht misst Familienwiederholung und belegt weiterhin identische Waffenrollen der Persönlichkeiten |
+| `033_PROGRESSIVE_ASSET_LOADING.md` | abgeschlossen | sofortiges Ladefeedback und HD-Karten erst beim tatsächlichen Matchstart |
+| `034_DELEGATED_TARGET_HYBRID.md` | abgeschlossen | Zielauftrag als dritter, weiterhin autonom ausgeführter Kontrollmodus |
+| `035_CONFLICT_PROBES_AND_VALIDATION_MATCH.md` | abgeschlossen | 24 Konfliktsonden und spielbares Kurzmatch für den Kernloop-Vergleich |
+| `036_DOCUMENTATION_AND_PLAYTEST_PROTOCOL.md` | abgeschlossen | aktueller Dokumentationsstand und externes A/B/C-Testprotokoll |
 
 Ein Status wird erst nach überprüfter Abnahme geändert. Scope-Erweiterungen
 gehören in einen neuen Task, nicht stillschweigend in einen bestehenden.

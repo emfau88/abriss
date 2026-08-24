@@ -22,6 +22,14 @@ export function buildMatchUnitDefinitions(
   config: MatchLaunchConfig,
 ): readonly MatchSetupUnit[] {
   const map = MAP_DEFINITIONS[config.mapId];
+  const crewSpawnXs =
+    config.validationScenarioId === "comedy-pocket"
+      ? ([1_180, 1_420, 2_600] as const)
+      : map.crewSpawnXs;
+  const rivalSpawnXs =
+    config.validationScenarioId === "comedy-pocket"
+      ? ([1_480, 2_100, 700] as const)
+      : map.rivalSpawnXs;
   const definitions: MatchSetupUnit[] = [];
 
   config.crew.forEach((loadout, index) => {
@@ -32,7 +40,7 @@ export function buildMatchUnitDefinitions(
       id: `crew-${fighter.id}`,
       displayName: fighter.displayName,
       team: "crew",
-      spawnX: map.crewSpawnXs[index] ?? map.crewSpawnXs[0],
+      spawnX: crewSpawnXs[index] ?? crewSpawnXs[0],
       personality: fighter.personality,
       visualId: fighter.visualId,
       preferredWeaponId: loadout.preferredWeaponId,
@@ -41,7 +49,7 @@ export function buildMatchUnitDefinitions(
       id: `rival-${index + 1}`,
       displayName: `RIVALE ${String.fromCharCode(65 + index)}`,
       team: "rivals",
-      spawnX: map.rivalSpawnXs[index] ?? map.rivalSpawnXs[0],
+      spawnX: rivalSpawnXs[index] ?? rivalSpawnXs[0],
       personality: rival.personality,
       visualId: rival.visualId,
     });
@@ -58,5 +66,12 @@ export function buildMatchUnitDefinitions(
 export function buildMatchInteractableDefinitions(
   config: MatchLaunchConfig,
 ): readonly InteractableDefinition[] {
+  if (config.validationScenarioId === "comedy-pocket") {
+    return [
+      { id: "validation-barrel-1", type: "explosive-barrel", spawnX: 1_525 },
+      { id: "validation-barrel-2", type: "explosive-barrel", spawnX: 1_570 },
+      { id: "validation-barrel-3", type: "explosive-barrel", spawnX: 1_615 },
+    ];
+  }
   return MAP_DEFINITIONS[config.mapId].interactables ?? [];
 }

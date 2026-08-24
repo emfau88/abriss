@@ -11,6 +11,9 @@ import {
 import { MAP_DEFINITIONS } from "../../content/maps/mapCatalog";
 import { createTerrainMaskFromImage } from "../../content/maps/terrainMaskFromImage";
 import {
+  COMIC_PROJECTILE_FRAME_HEIGHT,
+  COMIC_PROJECTILE_FRAME_WIDTH,
+  COMIC_PROJECTILE_SHEET_PATH,
   COMIC_PROJECTILE_TEXTURE_KEY,
   comicProjectileDisplaySize,
   comicProjectileFrame,
@@ -20,10 +23,16 @@ import {
   feedbackIconFrame,
 } from "../../content/ui/feedbackIconKit";
 import {
+  COMIC_VFX_FRAME_HEIGHT,
+  COMIC_VFX_FRAME_WIDTH,
+  COMIC_VFX_SHEET_PATH,
   COMIC_VFX_TEXTURE_KEY,
   comicVfxFrame,
 } from "../../content/vfx/comicVfxKit";
 import {
+  SECONDARY_VFX_FRAME_HEIGHT,
+  SECONDARY_VFX_FRAME_WIDTH,
+  SECONDARY_VFX_SHEET_PATH,
   SECONDARY_VFX_TEXTURE_KEY,
   secondaryVfxFrames,
   type SecondaryVfx,
@@ -46,6 +55,7 @@ import type { InteractableObject } from "../../simulation/interactables/interact
 import {
   commandWeapon,
   cycleActivePersonality,
+  directActiveTarget,
   rejectActivePlan,
 } from "../../simulation/match/commands";
 import { planTurn, type TurnPlan } from "../../simulation/match/planTurn";
@@ -259,6 +269,9 @@ export class MatchScene extends Phaser.Scene {
   private manualDragging = false;
   private manualDragCurrent: Vector2 | null = null;
   private manualMovementPreview: LocalMovementPlan | null = null;
+  private matchLoadingObjects: Phaser.GameObjects.GameObject[] = [];
+  private hybridAwaitingTarget = false;
+  private hybridTargetObjects: Phaser.GameObjects.GameObject[] = [];
 
   public constructor() {
     super("MatchScene");
@@ -273,7 +286,82 @@ export class MatchScene extends Phaser.Scene {
     this.launchConfig = data.launchConfig ?? createQuickMatchConfig();
   }
 
+  public preload(): void {
+    const map = MAP_DEFINITIONS[this.launchConfig.mapId];
+    this.cameras.main.setBackgroundColor("#102a36");
+    const title = this.add
+      .text(RENDER_WIDTH / 2, RENDER_HEIGHT / 2 - 52, map.displayName, {
+        fontFamily: "Segoe UI, Arial, sans-serif",
+        fontSize: "40px",
+        fontStyle: "bold",
+        color: COLORS.cream,
+      })
+      .setOrigin(0.5);
+    const status = this.add
+      .text(RENDER_WIDTH / 2, RENDER_HEIGHT / 2 + 8, "HD-KARTE WIRD GELADEN · 0%", {
+        fontFamily: "Consolas, ui-monospace, monospace",
+        fontSize: "17px",
+        fontStyle: "bold",
+        color: "#ffcd5d",
+      })
+      .setOrigin(0.5);
+    const track = this.add
+      .rectangle(RENDER_WIDTH / 2, RENDER_HEIGHT / 2 + 58, 520, 18, 0x071820, 0.9)
+      .setStrokeStyle(2, COLORS.paper, 0.6);
+    const fill = this.add
+      .rectangle(RENDER_WIDTH / 2 - 256, RENDER_HEIGHT / 2 + 58, 0, 12, COLORS.tealBright, 1)
+      .setOrigin(0, 0.5);
+    this.matchLoadingObjects = [title, status, track, fill];
+
+    this.load.on(Phaser.Loader.Events.PROGRESS, (progress: number) => {
+      const percentage = Math.round(progress * 100);
+      status.setText(`HD-KARTE WIRD GELADEN · ${percentage}%`);
+      fill.width = 512 * progress;
+    });
+    this.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, () => {
+      status.setText("EIN MATCH-ASSET KONNTE NICHT GELADEN WERDEN");
+      status.setColor("#ff9a83");
+    });
+
+    if (!this.textures.exists(map.backgroundTextureKey)) {
+      this.load.image(map.backgroundTextureKey, map.backgroundPath);
+    }
+    if (!this.textures.exists(map.terrainTextureKey)) {
+      this.load.image(map.terrainTextureKey, map.terrainPath);
+    }
+    if (!this.textures.exists(COMIC_VFX_TEXTURE_KEY)) {
+      this.load.spritesheet(COMIC_VFX_TEXTURE_KEY, COMIC_VFX_SHEET_PATH, {
+        frameWidth: COMIC_VFX_FRAME_WIDTH,
+        frameHeight: COMIC_VFX_FRAME_HEIGHT,
+      });
+    }
+    if (!this.textures.exists(COMIC_PROJECTILE_TEXTURE_KEY)) {
+      this.load.spritesheet(
+        COMIC_PROJECTILE_TEXTURE_KEY,
+        COMIC_PROJECTILE_SHEET_PATH,
+        {
+          frameWidth: COMIC_PROJECTILE_FRAME_WIDTH,
+          frameHeight: COMIC_PROJECTILE_FRAME_HEIGHT,
+        },
+      );
+    }
+    if (!this.textures.exists(SECONDARY_VFX_TEXTURE_KEY)) {
+      this.load.spritesheet(
+        SECONDARY_VFX_TEXTURE_KEY,
+        SECONDARY_VFX_SHEET_PATH,
+        {
+          frameWidth: SECONDARY_VFX_FRAME_WIDTH,
+          frameHeight: SECONDARY_VFX_FRAME_HEIGHT,
+        },
+      );
+    }
+  }
+
   public create(): void {
+    for (const object of this.matchLoadingObjects) {
+      object.destroy();
+    }
+    this.matchLoadingObjects = [];
     const map = MAP_DEFINITIONS[this.launchConfig.mapId];
     const terrainSource = this.textures
       .get(map.terrainTextureKey)
@@ -319,6 +407,8 @@ export class MatchScene extends Phaser.Scene {
     this.manualWeaponId = "rocket";
     this.manualAimGraphics = null;
     this.manualMovementPreview = null;
+    this.hybridAwaitingTarget = false;
+    this.hybridTargetObjects = [];
     this.touchPointers = new Map();
     this.touchGestureMidpoint = null;
     this.touchGestureDistance = 0;
@@ -927,15 +1017,15 @@ export class MatchScene extends Phaser.Scene {
     this.intentText = this.add
       .text(992, 157, "", {
         fontFamily: "Segoe UI, Arial, sans-serif",
-        fontSize: "11px",
+        fontSize: "10px",
         color: COLORS.cream,
-        lineSpacing: 2,
+        lineSpacing: 1,
         wordWrap: { width: 252 },
       })
       .setDepth(82);
 
     this.interventionText = this.add
-      .text(992, 367, "", {
+      .text(992, 380, "", {
         fontFamily: "Consolas, ui-monospace, monospace",
         fontSize: "8px",
         fontStyle: "bold",
@@ -1071,11 +1161,11 @@ export class MatchScene extends Phaser.Scene {
 
     const background = this.add.graphics().setDepth(118);
     background.fillStyle(0x0c2429, 0.98);
-    background.fillRoundedRect(352, 154, 576, 352, 20);
+    background.fillRoundedRect(292, 74, 696, 566, 20);
     background.lineStyle(3, COLORS.yellow, 0.9);
-    background.strokeRoundedRect(352, 154, 576, 352, 20);
+    background.strokeRoundedRect(292, 74, 696, 566, 20);
     const title = this.add
-      .text(384, 181, "STEUERUNG", {
+      .text(326, 104, "STEUERUNG", {
         fontFamily: "Segoe UI, Arial, sans-serif",
         fontSize: "24px",
         fontStyle: "bold",
@@ -1084,14 +1174,18 @@ export class MatchScene extends Phaser.Scene {
       .setDepth(120);
     const controls = this.add
       .text(
-        384,
-        231,
+        326,
+        151,
         [
           "AKTION (AUTOBATTLE)",
           "Leertaste   angekündigten Plan ausführen",
           "X            einmalig: ‚Lass das!‘",
           "1 / 2 / 3    einmalig Waffe vorgeben",
           "P            Persönlichkeit im Prototyp wechseln",
+          "",
+          "ZIELAUFTRAG (Hybrid im Hauptmenü)",
+          "Rivalenring anklicken oder 4 / 5 / 6  Ziel delegieren",
+          "Figur entscheidet Position, Waffe und Bogen weiterhin selbst",
           "",
           "SELBST STEUERN (im Hauptmenü wählbar)",
           "Gelände frei anklicken/antippen  laufen oder springen",
@@ -1110,14 +1204,14 @@ export class MatchScene extends Phaser.Scene {
         ].join("\n"),
         {
           fontFamily: "Consolas, ui-monospace, monospace",
-          fontSize: "13px",
+          fontSize: "12px",
           color: COLORS.cream,
-          lineSpacing: 6,
+          lineSpacing: 4,
         },
       )
       .setDepth(120);
     const closeHint = this.add
-      .text(896, 476, "H  SCHLIESSEN", {
+      .text(956, 606, "H  SCHLIESSEN", {
         fontFamily: "Consolas, ui-monospace, monospace",
         fontSize: "11px",
         fontStyle: "bold",
@@ -1152,6 +1246,9 @@ export class MatchScene extends Phaser.Scene {
       keyboard.on("keydown-ONE", this.chooseRocketWeapon, this);
       keyboard.on("keydown-TWO", this.chooseGrenadeWeapon, this);
       keyboard.on("keydown-THREE", this.chooseBreakerWeapon, this);
+      keyboard.on("keydown-FOUR", this.chooseFirstHybridTarget, this);
+      keyboard.on("keydown-FIVE", this.chooseSecondHybridTarget, this);
+      keyboard.on("keydown-SIX", this.chooseThirdHybridTarget, this);
       keyboard.on("keydown-P", this.cyclePersonality, this);
       keyboard.on("keydown-D", this.toggleDebug, this);
       keyboard.on("keydown-R", this.resetScene, this);
@@ -1177,6 +1274,9 @@ export class MatchScene extends Phaser.Scene {
       keyboard?.off("keydown-ONE", this.chooseRocketWeapon, this);
       keyboard?.off("keydown-TWO", this.chooseGrenadeWeapon, this);
       keyboard?.off("keydown-THREE", this.chooseBreakerWeapon, this);
+      keyboard?.off("keydown-FOUR", this.chooseFirstHybridTarget, this);
+      keyboard?.off("keydown-FIVE", this.chooseSecondHybridTarget, this);
+      keyboard?.off("keydown-SIX", this.chooseThirdHybridTarget, this);
       keyboard?.off("keydown-P", this.cyclePersonality, this);
       keyboard?.off("keydown-D", this.toggleDebug, this);
       keyboard?.off("keydown-R", this.resetScene, this);
@@ -1203,7 +1303,21 @@ export class MatchScene extends Phaser.Scene {
   private replan(status: string): void {
     const active = this.activeUnit();
     this.opponentAutoReady = false;
-    const turnPlan = planTurn(this.simulation);
+    this.clearHybridTargetMarkers();
+    this.hybridAwaitingTarget =
+      this.isHybridCrewTurn() && !this.simulation.directedTargetId;
+    // Die unverbindliche Vorschau vor der Zielwahl darf die einmalige
+    // Loadout-Präferenz noch nicht verbrauchen. Erst der delegierte Plan wird
+    // in den echten Matchzustand geschrieben.
+    const planningState = this.hybridAwaitingTarget
+      ? {
+          ...this.simulation,
+          preferenceConsumedByUnitId: new Set(
+            this.simulation.preferenceConsumedByUnitId,
+          ),
+        }
+      : this.simulation;
+    const turnPlan = planTurn(planningState);
     this.personality = turnPlan.personality;
 
     if (turnPlan.preferenceFellBack && turnPlan.usedPreferredWeaponId) {
@@ -1229,6 +1343,11 @@ export class MatchScene extends Phaser.Scene {
       return;
     }
 
+    if (this.hybridAwaitingTarget) {
+      this.beginHybridTargetSelection();
+      return;
+    }
+
     if (active.unit.team === "rivals") {
       this.scheduleOpponentAction();
     } else if (!this.plan.selected && this.movementPlan.kind === "hold") {
@@ -1241,6 +1360,117 @@ export class MatchScene extends Phaser.Scene {
       this.launchConfig.controlMode === "manual" &&
       this.activeUnit().unit.team === "crew"
     );
+  }
+
+  private isHybridCrewTurn(): boolean {
+    return (
+      this.launchConfig.controlMode === "hybrid" &&
+      this.activeUnit().unit.team === "crew"
+    );
+  }
+
+  private beginHybridTargetSelection(): void {
+    const rivals = this.livingRivalViews();
+    rivals.forEach((view, index) => {
+      const ring = this.registerWorldObject(
+        this.add
+          .circle(
+            view.unit.position.x,
+            view.unit.position.y - 58,
+            72,
+            COLORS.yellow,
+            0.12,
+          )
+          .setStrokeStyle(6, COLORS.yellow, 1)
+          .setDepth(40)
+          .setInteractive({ useHandCursor: true }),
+      );
+      const label = this.registerWorldObject(
+        this.add
+          .text(
+            view.unit.position.x,
+            view.unit.position.y < 230
+              ? view.unit.position.y + 42
+              : view.unit.position.y - 164,
+            `[${index + 4}]  ZIEL: ${view.unit.displayName}`,
+            {
+              fontFamily: "Consolas, ui-monospace, monospace",
+              fontSize: "15px",
+              fontStyle: "bold",
+              color: COLORS.ink,
+              backgroundColor: "#ffcd5d",
+              padding: { x: 10, y: 6 },
+            },
+          )
+          .setOrigin(0.5)
+          .setDepth(41),
+      );
+      ring.on("pointerover", () => ring.setFillStyle(COLORS.yellow, 0.3));
+      ring.on("pointerout", () => ring.setFillStyle(COLORS.yellow, 0.12));
+      ring.on("pointerdown", () => this.selectHybridTarget(view.unit.id));
+      this.hybridTargetObjects.push(ring, label);
+    });
+    this.showOverview(false);
+    this.updateButtons();
+    this.updateIntentText();
+    this.updateStatus(
+      "Zielauftrag: Wähle einen gelb markierten Rivalen. Deine Figur entscheidet danach Position, Waffe und Bogen.",
+    );
+  }
+
+  private livingRivalViews(): UnitView[] {
+    return this.units.filter(
+      (view) => view.unit.team === "rivals" && view.unit.hitPoints > 0,
+    );
+  }
+
+  private selectHybridTarget(targetId: string): void {
+    if (
+      this.actionState !== "planning" ||
+      !this.isHybridCrewTurn() ||
+      !this.hybridAwaitingTarget
+    ) {
+      return;
+    }
+
+    const target = this.units.find((view) => view.unit.id === targetId);
+    const result = directActiveTarget(this.simulation, targetId);
+    if (!result.accepted || !target) {
+      this.updateStatus("Dieser Zielauftrag ist nicht mehr gültig.");
+      return;
+    }
+
+    this.hybridAwaitingTarget = false;
+    this.clearHybridTargetMarkers();
+    this.replan(
+      `Zielauftrag: ${target.unit.displayName}. ${this.activeUnit().unit.displayName} entscheidet selbst über Position, Waffe und Flugbahn.`,
+    );
+  }
+
+  private chooseHybridTarget(index: number): void {
+    const target = this.livingRivalViews()[index];
+    if (target) {
+      this.selectHybridTarget(target.unit.id);
+    }
+  }
+
+  private chooseFirstHybridTarget(): void {
+    this.chooseHybridTarget(0);
+  }
+
+  private chooseSecondHybridTarget(): void {
+    this.chooseHybridTarget(1);
+  }
+
+  private chooseThirdHybridTarget(): void {
+    this.chooseHybridTarget(2);
+  }
+
+  private clearHybridTargetMarkers(): void {
+    for (const object of this.hybridTargetObjects) {
+      object.destroy();
+    }
+    this.hybridTargetObjects = [];
   }
 
   private get manualAiming(): boolean {
@@ -1822,6 +2052,15 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private managerStatusText(): string {
+    if (this.hybridAwaitingTarget) {
+      return "ZIELAUFTRAG AUSSTEHEND\nRING WÄHLEN ODER 4 / 5 / 6 DRÜCKEN";
+    }
+    if (this.isHybridCrewTurn() && this.simulation.directedTargetId) {
+      const target = this.units.find(
+        (view) => view.unit.id === this.simulation.directedTargetId,
+      );
+      return `ZIELAUFTRAG  ${target?.unit.displayName ?? "AKTIV"}\nFIGUR ENTSCHEIDET POSITION · WAFFE · BOGEN`;
+    }
     const rejectStatus = this.simulation.interventionUsed
       ? "LASS DAS VERBRAUCHT"
       : "LASS DAS BEREIT";
@@ -1884,6 +2123,7 @@ export class MatchScene extends Phaser.Scene {
 
     if (
       this.actionState !== "planning" ||
+      this.hybridAwaitingTarget ||
       (!this.plan.selected && this.movementPlan.kind === "hold")
     ) {
       return;
@@ -2364,7 +2604,11 @@ export class MatchScene extends Phaser.Scene {
     }
 
     const active = this.activeUnit();
-    this.intentHeaderText.setText(`PLAN VON ${active.unit.displayName}`);
+    this.intentHeaderText.setText(
+      this.isHybridCrewTurn()
+        ? `ZIELAUFTRAG AN ${active.unit.displayName}`
+        : `PLAN VON ${active.unit.displayName}`,
+    );
     this.updateTurnHud();
     this.updateTeamHud();
   }
@@ -2530,6 +2774,13 @@ export class MatchScene extends Phaser.Scene {
         outcome,
         seed: this.launchConfig.seed,
         mapId: this.launchConfig.mapId,
+        controlMode: this.launchConfig.controlMode,
+        ...(this.launchConfig.validationScenarioId
+          ? {
+              validationScenarioId:
+                this.launchConfig.validationScenarioId,
+            }
+          : {}),
         turnNumber: this.matchState.turnNumber,
         survivingCrew: this.units.filter(
           (view) => view.unit.team === "crew" && view.unit.hitPoints > 0,
@@ -2544,7 +2795,7 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private rejectCurrentPlan(): void {
-    if (this.actionState !== "planning") {
+    if (this.actionState !== "planning" || this.hybridAwaitingTarget) {
       return;
     }
 
@@ -2679,6 +2930,7 @@ export class MatchScene extends Phaser.Scene {
       playerTurn && !this.simulation.interventionUsed && Boolean(this.plan.selected);
     const canExecute =
       playerTurn &&
+      !this.hybridAwaitingTarget &&
       (Boolean(this.plan.selected) || this.movementPlan.kind !== "hold");
     this.executeButton.setFillStyle(canExecute ? COLORS.teal : 0x4d6465, 1);
     this.executeButtonText.setAlpha(canExecute ? 1 : 0.55);
@@ -2714,7 +2966,9 @@ export class MatchScene extends Phaser.Scene {
     } else if (!playerTurn) {
       this.executeButtonText.setText("AUTO IN KÜRZE");
     } else {
-      this.executeButtonText.setText("▶ AUSFÜHREN");
+      this.executeButtonText.setText(
+        this.hybridAwaitingTarget ? "ZIEL WÄHLEN" : "▶ AUSFÜHREN",
+      );
     }
   }
 

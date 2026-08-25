@@ -36,6 +36,19 @@ describe("BurrowMotion", () => {
     }
   });
 
+  it("stops underground immediately when the steering direction is released", () => {
+    const terrain = filledTerrain();
+    const motion = new BurrowMotion(terrain, { x: 180, y: 220 });
+    motion.step({ direction: { x: 1, y: 0 }, burstPressed: false }, FIXED_STEP);
+    const releasedPosition = motion.state.position;
+
+    motion.step({ direction: null, burstPressed: false }, FIXED_STEP);
+
+    expect(motion.state.position).toEqual(releasedPosition);
+    expect(motion.state.speed).toBe(0);
+    expect(motion.state.velocity).toEqual({ x: 0, y: 0 });
+  });
+
   it("switches to flight above the surface and can re-enter terrain", () => {
     const terrain = new BurrowTerrain({
       worldWidth: 700,

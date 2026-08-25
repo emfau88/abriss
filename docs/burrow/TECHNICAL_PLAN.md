@@ -40,8 +40,19 @@ Die Darstellung besteht aus kleinen Canvas-Kacheln. Nur von einer Mutation
 berührte Kacheln werden neu gezeichnet und zu Phaser hochgeladen. Der bestehende
 Abriss-`TerrainMaskRenderer` bleibt unverändert.
 
-Dies ist noch kein Streaming-System. Entfernte Kacheln werden in der kleinen
-Arena nicht entladen. Eine Chunkwelt ist erst nach Gate 5 zulässig.
+Dies ist noch kein Streaming-System. Auch die für Gate 3 moderat auf
+2.560×1.280 Weltpixel verbreiterte Testarena bleibt vollständig geladen;
+entfernte Kacheln werden nicht entladen. Eine Chunkwelt ist erst nach Gate 5
+zulässig.
+
+## Strukturen
+
+Gate 3 modelliert genau eine kleine Stützenhütte als rendererfreie Daten:
+Stützen besitzen je einen Terrainanker und einen aktiven/inaktiven Zustand.
+Nach jeder festen Bewegungsauflösung prüft die Struktur dieselbe Burrow-Maske
+wie das Graben. Zwei verlorene von drei Stützen erzeugen einmalig das
+Kollapsereignis. Phaser zeichnet diese Daten als Warnung, kippende Hütte und
+Staub; es simuliert keine Gebäudeteile oder Starrkörper.
 
 ## Eingabe
 

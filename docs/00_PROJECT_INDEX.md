@@ -62,7 +62,10 @@ Diese Entscheidungen blockieren den technischen Vertical Slice nicht.
 
 Burrow ist seit dem 25. August 2026 als separater Multi-Page-Einstieg im selben
 Repository vorhanden. Es ist kein bestätigter Pivot und verändert keine
-Abriss-Produktentscheidung. Verbindlich für diesen abgegrenzten Bereich sind:
+Abriss-Produktentscheidung. Gate 1 wurde persönlich positiv bewertet; Gate 2
+erhielt eine technische Feedback-Iteration und Gate 3 testet aktuell eine
+einzelne Untergraben-zu-Kollaps-Folge. Verbindlich für diesen abgegrenzten
+Bereich sind:
 
 - `burrow/VISION.md`,
 - `burrow/VERTICAL_SLICE.md`,

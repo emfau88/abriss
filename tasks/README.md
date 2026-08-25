@@ -44,6 +44,8 @@ andere Priorität bestätigt. Es darf höchstens ein Task als `in Arbeit` gelten
 | `035_CONFLICT_PROBES_AND_VALIDATION_MATCH.md` | abgeschlossen | 24 Konfliktsonden und spielbares Kurzmatch für den Kernloop-Vergleich |
 | `036_DOCUMENTATION_AND_PLAYTEST_PROTOCOL.md` | abgeschlossen | aktueller Dokumentationsstand und externes A/B/C-Testprotokoll |
 | `037_BURROW_GATE_0_AND_1.md` | abgeschlossen | isoliertes Burrow-Produktlabor und erster Bewegungsbeweis |
+| `038_BURROW_GATE_2_HUNT.md` | abgeschlossen (technisch) | einzelner Jagd-, Bite- und Biomasse-Test mit Feedback-Iteration |
+| `039_BURROW_GATE_3_STRUCTURE.md` | abgeschlossen (technisch) | einzelne Stützenhütte, Untergraben und Kollaps |
 
 Ein Status wird erst nach überprüfter Abnahme geändert. Scope-Erweiterungen
 gehören in einen neuen Task, nicht stillschweigend in einen bestehenden.

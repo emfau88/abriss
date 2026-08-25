@@ -1,9 +1,17 @@
 import { BurrowTerrain } from "../simulation/BurrowTerrain";
 
-export const BURROW_WORLD_WIDTH = 2048;
+export const BURROW_WORLD_WIDTH = 2560;
 export const BURROW_WORLD_HEIGHT = 1280;
 export const BURROW_START = { x: 450, y: 825 } as const;
-export const BURROW_TARGET_X = 1580;
+export const BURROW_VEHICLE_ROUTE = {
+  minimumX: 80,
+  maximumX: 1100,
+  startX: 600,
+} as const;
+export const BURROW_HUT = {
+  centerX: 1400,
+  supportOffsets: [-62, 0, 62],
+} as const;
 
 export function surfaceYAt(worldX: number): number {
   return (
@@ -11,6 +19,16 @@ export function surfaceYAt(worldX: number): number {
     Math.sin(worldX * 0.0064) * 28 +
     Math.sin(worldX * 0.015 + 1.4) * 11
   );
+}
+
+export function createHutSupportPoints(): readonly { readonly id: string; readonly position: { readonly x: number; readonly y: number } }[] {
+  return BURROW_HUT.supportOffsets.map((offset, index) => {
+    const x = BURROW_HUT.centerX + offset;
+    return {
+      id: ["links", "mitte", "rechts"][index]!,
+      position: { x, y: surfaceYAt(x) + 38 },
+    };
+  });
 }
 
 export function createBurrowArena(): BurrowTerrain {

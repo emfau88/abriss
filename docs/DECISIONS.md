@@ -636,3 +636,66 @@ Die Körpersegmente folgen zurückgelegter Distanz statt Renderframes. Gate 2
 beginnt erst nach echter Bewertung dieses Spielgefühls.
 
 **Umsetzung:** Gate 1 von Task 037, abgeschlossen am 25. August 2026.
+
+## 2026-08-25 – D-055: Positiver Gate-1-Spieltest erlaubt einen einzelnen Jagd-Loop
+
+**Entscheidung:** Nach positivem persönlichem Spieltest beginnt Burrow Gate 2
+mit genau einem patrouillierenden Oberflächenfahrzeug, automatischem Bite bei
+Kopfkontakt, HP, Devour und Biomasse. Der Bite erhält keinen zusätzlichen
+Button: Richtung und Burst bleiben die vollständige Zwei-Daumen-Steuerung.
+
+**Grund:** Der Spieler bestätigt, dass Graben, Tunnelgleiten, Burst und
+Oberflächendurchbruch bereits Spaß machen. Die kleinste noch offene
+Produkthypothese ist deshalb nicht mehr die Bewegung, sondern ob dieses
+Bewegungsgefühl eine verständliche Jagd und direkte Belohnung trägt.
+
+**Konsequenz:** Das Fahrzeug folgt einer festen Route und verwendet keine
+Starrkörper- oder Fahrzeugphysik. Schaden und Biomasse bleiben fachliche,
+testbare Burrow-Daten; Phaser zeigt nur Route, HP und Feedback. Gebäude,
+Gegner, Response, Meta und weitere Beutetypen bleiben bis zum nächsten
+Spieltest ausgeschlossen.
+
+**Umsetzung:** Gate 2 von Task 038, technisch bereit zur persönlichen Abnahme
+am 25. August 2026.
+
+## 2026-08-25 – D-056: Gate-2-Feedback priorisiert direkte Steuerungsreaktion und verteilte Jagdfläche
+
+**Entscheidung:** Burst-Eingaben werden bis zu ihrem nächsten festen
+Simulationsschritt gepuffert. Unterirdisch stoppt der Burrower ohne
+Richtungseingabe unmittelbar; ein losgelassener Touch-Stick wird zentriert. Die
+Kutsche fährt langsamer über eine 1.020 Weltpixel breite Oberflächenroute und
+beginnt näher am Startbereich.
+
+**Grund:** Der persönliche Gate-2-Test zeigte, dass einzelne Burst-Klicks
+gelegentlich wirkungslos wirkten und wiederholte Fehlversuche in der engen
+Kutschenzone zu wenig neues, grabbares Terrain übrig ließen. Das sind
+Kontroll- und Testarena-Probleme, keine neue Content-Anforderung.
+
+**Konsequenz:** Die direkte Steuerung verbraucht bei losgelassenem Stick kein
+Terrain mehr. Ein bereits gestarteter Burst und die Flugbahn laufen weiterhin
+sichtbar aus. Die Kutsche bleibt deterministische, physikfreie Beute; nur ihre
+Strecke und ihr Tempo ändern sich. Gate 3 bleibt ausgeschlossen.
+
+**Umsetzung:** Feedback-Iteration von Task 038, technisch abgeschlossen am
+25. August 2026; erneute persönliche Produktwertung steht offen.
+
+## 2026-08-25 – D-057: Nutzer gibt Gate 3 trotz offener Gate-2-Produktwertung frei
+
+**Entscheidung:** Auf ausdrückliche Nutzerfreigabe folgt nach der Gate-2-
+Feedback-Korrektur Gate 3. Es umfasst eine einzige Stützenhütte mit drei
+Terrainankern, einem Kollaps nach zwei verlorenen Stützen und eine moderat von
+2.048 auf 2.560 Weltpixel verbreiterte, weiterhin vollständig geladene Arena.
+
+**Grund:** Das bestätigte Bewegungsgefühl und die laufende Gate-2-Iteration
+reichen aus, um die nächste klar abgegrenzte Hypothese zu prüfen: ob
+Untergraben eine sofort verständliche, sichtbare Konsequenz besitzt. Die
+verbreiterte Arena verteilt wiederholte Durchbrüche, ohne bereits Chunkstreaming
+zu rechtfertigen.
+
+**Konsequenz:** Das ist keine Bestätigung eines späteren Open-World- oder
+Physiksystems. Die Struktur leitet sich ausschließlich aus der vorhandenen
+Terrainmaske ab; der Kollaps bleibt ein einzelnes Fachereignis mit
+Darstellungsfeedback. Gate 4 und alle Meta-Systeme bleiben ausgeschlossen.
+
+**Umsetzung:** Task 039, technisch abgeschlossen am 25. August 2026;
+öffentliche persönliche Abnahme steht offen.

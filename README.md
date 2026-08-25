@@ -1,10 +1,18 @@
-# Projekt Abriss
+# Zwei getrennte Spielprototypen
 
-[Projekt Abriss spielen](https://emfau88.github.io/abriss/) ·
-[Isoliertes Burrow-Bewegungslabor](https://emfau88.github.io/abriss/burrow.html)
+Dieses Repository teilt TypeScript-, Phaser-, Test- und Pages-Infrastruktur,
+enthält aber **zwei vollständig getrennte Spielprodukte**. Sie teilen weder
+Gameplaycode noch Produktentscheidung und sind über getrennte URLs spielbar.
 
-> **Burrow ist ein separates Produktlabor.** Der direkte Mobile-First-Test
-> verändert weder Abriss noch dessen Produktentscheidung.
+| Produkt | Worum es geht | Spielen |
+| --- | --- | --- |
+| **Projekt Abriss** | rundenartiger Auto-Artillery-Teammanager mit autonomen Fantasy-Figuren | [Abriss starten](https://emfau88.github.io/abriss/) |
+| **Burrow-Labor** | direkt gesteuerter Mobile-First-Grab- und Untergraben-Prototyp | [Burrow starten](https://emfau88.github.io/abriss/burrow.html) |
+
+> **Wichtig:** Burrow ist kein Ersatz oder Umbau von Abriss. Ein automatisierter
+> Isolationstest verhindert versehentliche Abriss-Gameplayimporte in Burrow.
+
+## Projekt Abriss
 
 Arbeitstitel für ein browserbasiertes, rundenartig inszeniertes Auto-Artillery-Spiel über eine chaotische Crew unterschiedlicher Fantasy-Wesen.
 
@@ -91,24 +99,36 @@ Aktueller spielbarer Ablauf:
 Der nächste Produktentscheid erfolgt nicht aus Bauchgefühl oder einem weiteren
 internen Tuning, sondern über das [externe A/B/C-Playtest-Protokoll](docs/08_PLAYTEST_PROTOCOL.md).
 
-## Separates Burrow-Produktlabor
+## Burrow-Labor – separat von Projekt Abriss
 
-[Burrow Gate 1 direkt starten](https://emfau88.github.io/abriss/burrow.html)
+[Burrow Gate 3 direkt starten](https://emfau88.github.io/abriss/burrow.html)
 
 Burrow ist ein technisch und inhaltlich isolierter Mobile-First-Test innerhalb
-desselben Repositories. Er prüft zunächst ausschließlich, ob sich ein schweres
-Wesen beim Graben, im eigenen Tunnel, mit Burst, beim Oberflächendurchbruch und
-in der Flugphase gut steuern lässt. Der Test verwendet eigene Simulation,
-Darstellung, Styles und URL; er importiert keine Abriss-Szene, -KI oder
-Managerlogik.
+desselben Repositories. Er verwendet ausschließlich `burrow.html`,
+`src/burrow/`, `public/burrow/` und `docs/burrow/`; Abriss verwendet weiterhin
+`index.html` und seine eigenen Module. Gemeinsam sind nur Build, Tests und
+Hosting.
+
+Aktueller Teststand:
+
+- Gate 1: direktes Graben, Tunnelgleiten, Burst, Oberflächendurchbruch und
+  Wiedereintauchen – persönlich positiv bewertet,
+- Gate 2: Kutsche, automatische Bites, HP, Devour und Biomasse; Burst-Puffer,
+  Stopp bei losgelassener Richtung sowie breitere Jagdroute technisch geprüft,
+- Gate 3: einzelne Stützenhütte; zwei untergrabene Terrainanker führen zu
+  einem sichtbaren Kollaps in einer moderat größeren 2.560×1.280-Arena.
 
 Steuerung:
 
-- Desktop: `WASD` oder Pfeiltasten für den Kurs, `Shift` oder `Leertaste` für Burst,
-- Touch: links den gewünschten Kurs ziehen, rechts `BURST` antippen,
+- Desktop: `WASD` oder Pfeiltasten gedrückt halten für den Kurs; beim Loslassen
+  hält der Wurm unter Erde an. `Shift` oder `Leertaste` löst Burst aus,
+- Touch: links den gewünschten Kurs halten; beim Loslassen zentriert sich der
+  Stick und der Wurm stoppt. Rechts `BURST` antippen,
 - `R`: Testarena zurücksetzen.
 
-Produktregeln und Entscheidungstore stehen unter [docs/burrow/](docs/burrow/).
+Produktregeln, Entscheidungstore und technische Grenzen stehen unter
+[docs/burrow/](docs/burrow/). Der Burrow-Test ist bewusst noch keine
+Open-World- oder Produktionsasset-Version.
 
 ## Einstieg
 

@@ -91,6 +91,25 @@ export class BurrowMotion {
         )
       : this.mutableState.angle;
 
+    // Unter Erde ist der Stick eine direkte Kursvorgabe, keine dauerhafte
+    // Beschleunigung. Ohne Richtung bleibt der Wurm stehen und gräbt nicht
+    // unbeabsichtigt weiter. Ein aktiver Burst läuft als bereits ausgelöste
+    // Aktion weiter; in der Luft gelten weiterhin Flugbahn und Schwerkraft.
+    if (!normalizedInput && burstRemaining === 0 && this.mutableState.mode !== "airborne") {
+      this.mutableState = {
+        ...this.mutableState,
+        velocity: { x: 0, y: 0 },
+        speed: 0,
+        burstRemaining,
+        burstCooldown,
+      };
+      return {
+        terrainMutation: null,
+        burstStarted,
+        modeChanged: false,
+      };
+    }
+
     if (this.mutableState.mode === "airborne") {
       return this.stepAirborne(
         normalizedInput,

@@ -1,19 +1,24 @@
 import Phaser from "phaser";
 
 import {
+  BURROW_HUT,
   BURROW_START,
-  BURROW_TARGET_X,
+  BURROW_VEHICLE_ROUTE,
   BURROW_WORLD_HEIGHT,
   BURROW_WORLD_WIDTH,
   createBurrowArena,
+  createHutSupportPoints,
   surfaceYAt,
 } from "../content/arena";
+import { OneShotInputBuffer } from "../input/OneShotInputBuffer";
 import { TiledTerrainRenderer } from "../rendering/TiledTerrainRenderer";
+import { BurrowHunt, type BiteResult } from "../simulation/BurrowHunt";
 import {
   BURROW_MOTION_CONSTANTS,
   BurrowMotion,
   type BurrowMovementMode,
 } from "../simulation/BurrowMotion";
+import { BurrowStructure } from "../simulation/BurrowStructure";
 import type {
   CellRegion,
   Point,
@@ -37,6 +42,8 @@ interface DustParticle {
 export class BurrowGameScene extends Phaser.Scene {
   private motion!: BurrowMotion;
   private terrainRenderer!: TiledTerrainRenderer;
+  private hunt!: BurrowHunt;
+  private structure!: BurrowStructure;
   private wormGraphics!: Phaser.GameObjects.Graphics;
   private dustGraphics!: Phaser.GameObjects.Graphics;
   private hudText!: Phaser.GameObjects.Text;
@@ -46,12 +53,15 @@ export class BurrowGameScene extends Phaser.Scene {
   private joystickNub!: Phaser.GameObjects.Arc;
   private burstButton!: Phaser.GameObjects.Arc;
   private burstLabel!: Phaser.GameObjects.Text;
-  private targetContainer!: Phaser.GameObjects.Container;
-  private targetBroken = false;
+  private vehicleGraphics!: Phaser.GameObjects.Graphics;
+  private vehicleLabel!: Phaser.GameObjects.Text;
+  private structureGraphics!: Phaser.GameObjects.Graphics;
+  private structureLabel!: Phaser.GameObjects.Text;
+  private vehicleHitFlash = 0;
   private started = false;
   private steeringPointerId: number | null = null;
   private touchDirection: Point | null = null;
-  private burstQueued = false;
+  private readonly burstInput = new OneShotInputBuffer();
   private accumulator = 0;
   private dustParticles: DustParticle[] = [];
   private keyW?: Phaser.Input.Keyboard.Key;
@@ -77,12 +87,17 @@ export class BurrowGameScene extends Phaser.Scene {
     this.terrainRenderer = new TiledTerrainRenderer(this, terrain, "burrow-terrain");
     this.createSurfaceDetails();
     this.motion = new BurrowMotion(terrain, BURROW_START, -0.16);
+    this.hunt = new BurrowHunt({ ...BURROW_VEHICLE_ROUTE, surfaceYAt });
+    this.structure = new BurrowStructure(terrain, createHutSupportPoints());
     this.wormGraphics = this.add.graphics().setDepth(12);
     this.dustGraphics = this.add.graphics().setDepth(11);
-    this.createTarget();
+    this.createVehicle();
+    this.createStructure();
     this.createHud();
+    this.resetTouchDirection();
     this.configureInput();
     this.configureCamera();
+    this.burstInput.clear();
     this.liveStatus = document.querySelector<HTMLOutputElement>("#burrow-live-status");
     this.game.canvas.tabIndex = 0;
     this.game.canvas.setAttribute("aria-label", "Burrow Bewegungslabor");
@@ -99,9 +114,9 @@ export class BurrowGameScene extends Phaser.Scene {
 
   public override update(_time: number, deltaMilliseconds: number): void {
     const direction = this.readDirection();
-    let burstPressed = this.consumeBurstInput();
+    this.captureBurstInput();
     if (!this.started) {
-      if (!direction && !burstPressed) {
+      if (!direction && !this.burstInput.hasPending) {
         this.renderWorm();
         this.updateCamera();
         this.updateHud();
@@ -118,11 +133,18 @@ export class BurrowGameScene extends Phaser.Scene {
 
     while (this.accumulator >= FIXED_STEP) {
       const previousMode = this.motion.state.mode;
+      const burstPressed = this.burstInput.consume();
       const result = this.motion.step(
         { direction, burstPressed },
         FIXED_STEP,
       );
-      burstPressed = false;
+      const huntResult = this.hunt.step(FIXED_STEP);
+      const bite = this.hunt.tryBite({
+        headPosition: this.motion.state.position,
+        speed: this.motion.state.speed,
+        burstActive: this.motion.state.burstRemaining > 0,
+      });
+      const structureResult = this.structure.step();
       combinedMutation = mergeMutations(combinedMutation, result.terrainMutation);
       if (result.terrainMutation?.removedCells) {
         this.spawnDigDust(this.motion.state.position, this.motion.state.angle, 2);
@@ -134,11 +156,24 @@ export class BurrowGameScene extends Phaser.Scene {
         this.spawnDigDust(this.motion.state.position, this.motion.state.angle, 14);
         this.cameras.main.shake(100, 0.0028);
       }
+      if (bite) {
+        this.announceBite(bite);
+      }
+      if (huntResult.respawned) {
+        this.showEvent("NEUE KUTSCHE!", "#c7f279");
+      }
+      if (structureResult.collapsedNow) {
+        this.announceStructureCollapse();
+      } else if (structureResult.lostSupportIds.length > 0) {
+        this.announceSupportLoss(structureResult.lostSupportIds.length);
+      }
       this.accumulator -= FIXED_STEP;
     }
 
     this.terrainRenderer.applyMutation(combinedMutation);
-    this.updateTarget();
+    this.vehicleHitFlash = Math.max(0, this.vehicleHitFlash - deltaMilliseconds / 1000);
+    this.renderVehicle();
+    this.renderStructure();
     this.updateDust(deltaMilliseconds / 1000);
     this.renderWorm();
     this.updateCamera();
@@ -160,15 +195,25 @@ export class BurrowGameScene extends Phaser.Scene {
     graphics.fillStyle(0x211b23).fillCircle(1090, 940, 190);
     graphics.fillStyle(0x28202a).fillCircle(1210, 900, 150);
 
-    const beacon = this.add.graphics().setDepth(1);
-    beacon.lineStyle(5, 0xffd15a, 0.2);
-    beacon.lineBetween(
-      BURROW_TARGET_X,
-      surfaceYAt(BURROW_TARGET_X),
-      BURROW_TARGET_X,
-      1120,
+    const routeMarker = this.add.graphics().setDepth(1);
+    routeMarker.lineStyle(5, 0x9fd064, 0.24);
+    routeMarker.lineBetween(
+      BURROW_VEHICLE_ROUTE.minimumX,
+      surfaceYAt(BURROW_VEHICLE_ROUTE.minimumX) - 12,
+      BURROW_VEHICLE_ROUTE.maximumX,
+      surfaceYAt(BURROW_VEHICLE_ROUTE.maximumX) - 12,
     );
-    beacon.fillStyle(0xffd15a, 0.14).fillCircle(BURROW_TARGET_X, 800, 70);
+    routeMarker.fillStyle(0x9fd064, 0.14).fillCircle(BURROW_VEHICLE_ROUTE.startX, 800, 70);
+
+    const structureMarker = this.add.graphics().setDepth(1);
+    structureMarker.lineStyle(5, 0xffb95e, 0.26);
+    structureMarker.lineBetween(
+      BURROW_HUT.centerX,
+      surfaceYAt(BURROW_HUT.centerX) - 210,
+      BURROW_HUT.centerX,
+      1040,
+    );
+    structureMarker.fillStyle(0xffb95e, 0.13).fillCircle(BURROW_HUT.centerX, 870, 80);
   }
 
   private createSurfaceDetails(): void {
@@ -204,38 +249,46 @@ export class BurrowGameScene extends Phaser.Scene {
       .setDepth(1);
   }
 
-  private createTarget(): void {
-    const targetY = surfaceYAt(BURROW_TARGET_X) - 45;
-    const targetGraphics = this.add.graphics();
-    targetGraphics.lineStyle(8, 0x3b2a25).lineBetween(0, 10, 0, 65);
-    targetGraphics.lineStyle(6, 0x3b2a25).lineBetween(-24, 30, 24, 30);
-    targetGraphics.fillStyle(0xffcf58).fillCircle(0, 0, 24);
-    targetGraphics.lineStyle(5, 0x5b3827).strokeCircle(0, 0, 24);
-    targetGraphics.lineStyle(4, 0xd85438).lineBetween(-11, -7, 11, 7);
-    targetGraphics.lineBetween(-11, 7, 11, -7);
-    const label = this.add
-      .text(0, -50, "BREACH-ZIEL", {
+  private createVehicle(): void {
+    this.vehicleGraphics = this.add.graphics().setDepth(8);
+    this.vehicleLabel = this.add
+      .text(0, 0, "", {
         fontFamily: "Arial Black, sans-serif",
-        fontSize: "17px",
-        color: "#fff1b8",
-        stroke: "#3b2a25",
+        fontSize: "16px",
+        color: "#e8f7bb",
+        stroke: "#25331e",
         strokeThickness: 5,
       })
-      .setOrigin(0.5);
-    this.targetContainer = this.add
-      .container(BURROW_TARGET_X, targetY, [targetGraphics, label])
+      .setOrigin(0.5)
+      .setDepth(9);
+    this.renderVehicle();
+  }
+
+  private createStructure(): void {
+    this.structureGraphics = this.add.graphics().setDepth(7);
+    this.structureLabel = this.add
+      .text(0, 0, "", {
+        align: "center",
+        fontFamily: "Arial Black, sans-serif",
+        fontSize: "16px",
+        color: "#ffd88a",
+        stroke: "#35241f",
+        strokeThickness: 5,
+      })
+      .setOrigin(0.5)
       .setDepth(8);
+    this.renderStructure();
   }
 
   private createHud(): void {
     const panel = this.add
-      .rectangle(18, 18, 570, 126, 0x10151c, 0.88)
+      .rectangle(18, 18, 570, 170, 0x10151c, 0.88)
       .setOrigin(0)
       .setScrollFactor(0)
       .setDepth(100)
       .setStrokeStyle(2, 0xffbd50, 0.75);
     this.add
-      .text(panel.x + 20, panel.y + 14, "BURROW LAB · GATE 1", {
+      .text(panel.x + 20, panel.y + 14, "BURROW LAB · GATE 3", {
         fontFamily: "Arial Black, sans-serif",
         fontSize: "25px",
         color: "#ffd66d",
@@ -323,7 +376,7 @@ export class BurrowGameScene extends Phaser.Scene {
       .setDepth(101);
 
     this.burstButton.on("pointerdown", () => {
-      this.burstQueued = true;
+      this.burstInput.queue();
     });
   }
 
@@ -376,6 +429,7 @@ export class BurrowGameScene extends Phaser.Scene {
       return;
     }
     this.steeringPointerId = null;
+    this.resetTouchDirection();
   }
 
   private updateTouchDirection(pointer: Phaser.Input.Pointer): void {
@@ -394,6 +448,14 @@ export class BurrowGameScene extends Phaser.Scene {
     );
   }
 
+  private resetTouchDirection(): void {
+    this.steeringPointerId = null;
+    this.touchDirection = null;
+    if (this.joystickNub && this.joystickBase) {
+      this.joystickNub.setPosition(this.joystickBase.x, this.joystickBase.y);
+    }
+  }
+
   private readDirection(): Point | null {
     let x = 0;
     let y = 0;
@@ -408,15 +470,15 @@ export class BurrowGameScene extends Phaser.Scene {
     return this.touchDirection;
   }
 
-  private consumeBurstInput(): boolean {
+  private captureBurstInput(): void {
     const keyboardBurst =
       (this.keyBurst ? Phaser.Input.Keyboard.JustDown(this.keyBurst) : false) ||
       (this.keyBurstAlternative
         ? Phaser.Input.Keyboard.JustDown(this.keyBurstAlternative)
         : false);
-    const pressed = this.burstQueued || keyboardBurst;
-    this.burstQueued = false;
-    return pressed;
+    if (keyboardBurst) {
+      this.burstInput.queue();
+    }
   }
 
   private renderWorm(): void {
@@ -467,31 +529,162 @@ export class BurrowGameScene extends Phaser.Scene {
     }
   }
 
-  private updateTarget(): void {
-    if (this.targetBroken) {
+  private renderVehicle(): void {
+    const vehicle = this.hunt.state.vehicle;
+    const graphics = this.vehicleGraphics;
+    graphics.clear();
+    this.vehicleLabel.setVisible(vehicle.active);
+    if (!vehicle.active) {
       return;
     }
-    const distance = Phaser.Math.Distance.Between(
-      this.motion.state.position.x,
-      this.motion.state.position.y,
-      this.targetContainer.x,
-      this.targetContainer.y,
+
+    const { x, y } = vehicle.position;
+    const facing = vehicle.direction;
+    const flash = this.vehicleHitFlash > 0;
+    graphics.fillStyle(0x2d2824, 1).fillCircle(x - 22, y + 16, 10).fillCircle(x + 23, y + 16, 10);
+    graphics.fillStyle(0x17161b, 1).fillCircle(x - 22, y + 16, 5).fillCircle(x + 23, y + 16, 5);
+    graphics.fillStyle(flash ? 0xfff1b0 : 0x6d9f56, 1).fillRoundedRect(x - 38, y - 12, 76, 27, 6);
+    graphics.lineStyle(4, 0x2d4734, 1).strokeRoundedRect(x - 38, y - 12, 76, 27, 6);
+    graphics.fillStyle(flash ? 0xffdd7d : 0xb8d6a0, 1).fillRoundedRect(x - 8, y - 29, 34, 20, 5);
+    graphics.lineStyle(3, 0x2d4734, 1).strokeRoundedRect(x - 8, y - 29, 34, 20, 5);
+    graphics.fillStyle(0xf8e8a5, 1).fillCircle(x + facing * 38, y - 2, 5);
+    graphics.fillStyle(0x4e2f24, 1).fillRect(x - 29, y - 3, 23, 5);
+
+    const hitPointsRatio = vehicle.hitPoints / vehicle.maximumHitPoints;
+    graphics.fillStyle(0x1a2020, 0.94).fillRoundedRect(x - 39, y - 52, 78, 12, 4);
+    graphics.fillStyle(0x86cf65, 1).fillRoundedRect(x - 37, y - 50, 74 * hitPointsRatio, 8, 3);
+    this.vehicleLabel.setPosition(x, y - 70).setText(`KUTSCHE · ${vehicle.hitPoints}/${vehicle.maximumHitPoints} HP`);
+  }
+
+  private renderStructure(): void {
+    const structure = this.structure.state;
+    const graphics = this.structureGraphics;
+    const surfaceY = surfaceYAt(BURROW_HUT.centerX);
+    const activeSupports = structure.supports.filter((support) => support.active).length;
+    graphics.clear();
+
+    if (structure.collapsed) {
+      graphics.fillStyle(0x4e3027, 1).fillTriangle(
+        BURROW_HUT.centerX - 118,
+        surfaceY + 6,
+        BURROW_HUT.centerX + 96,
+        surfaceY + 6,
+        BURROW_HUT.centerX + 38,
+        surfaceY - 66,
+      );
+      graphics.fillStyle(0x96613d, 1).fillTriangle(
+        BURROW_HUT.centerX - 88,
+        surfaceY - 1,
+        BURROW_HUT.centerX + 64,
+        surfaceY - 1,
+        BURROW_HUT.centerX + 22,
+        surfaceY - 50,
+      );
+      graphics.lineStyle(5, 0x2f2422, 1).strokeTriangle(
+        BURROW_HUT.centerX - 88,
+        surfaceY - 1,
+        BURROW_HUT.centerX + 64,
+        surfaceY - 1,
+        BURROW_HUT.centerX + 22,
+        surfaceY - 50,
+      );
+      for (const offset of [-102, -68, 72, 108]) {
+        graphics.fillStyle(0x745039, 1).fillCircle(BURROW_HUT.centerX + offset, surfaceY + 3, 9);
+      }
+      this.structureLabel
+        .setPosition(BURROW_HUT.centerX, surfaceY - 104)
+        .setText("HÜTTE EINGESTÜRZT!");
+      return;
+    }
+
+    for (const support of structure.supports) {
+      const topY = surfaceYAt(support.position.x) - 9;
+      graphics.lineStyle(13, support.active ? 0xc98242 : 0x4f3940, 1).lineBetween(
+        support.position.x,
+        topY,
+        support.position.x,
+        support.position.y,
+      );
+      graphics.lineStyle(4, 0x3b2925, 1).lineBetween(
+        support.position.x,
+        topY,
+        support.position.x,
+        support.position.y,
+      );
+      if (!support.active) {
+        graphics.lineStyle(5, 0xf0b24d, 1).lineBetween(
+          support.position.x - 12,
+          support.position.y - 12,
+          support.position.x + 12,
+          support.position.y + 12,
+        );
+      }
+    }
+    graphics.fillStyle(0x8e5a3d, 1).fillRoundedRect(
+      BURROW_HUT.centerX - 112,
+      surfaceY - 104,
+      224,
+      92,
+      9,
     );
-    if (distance > 62) {
+    graphics.lineStyle(6, 0x332521, 1).strokeRoundedRect(
+      BURROW_HUT.centerX - 112,
+      surfaceY - 104,
+      224,
+      92,
+      9,
+    );
+    graphics.fillStyle(0xd7a24d, 1).fillTriangle(
+      BURROW_HUT.centerX - 132,
+      surfaceY - 102,
+      BURROW_HUT.centerX + 132,
+      surfaceY - 102,
+      BURROW_HUT.centerX,
+      surfaceY - 162,
+    );
+    graphics.lineStyle(6, 0x332521, 1).strokeTriangle(
+      BURROW_HUT.centerX - 132,
+      surfaceY - 102,
+      BURROW_HUT.centerX + 132,
+      surfaceY - 102,
+      BURROW_HUT.centerX,
+      surfaceY - 162,
+    );
+    graphics.fillStyle(0x263b44, 1).fillRoundedRect(BURROW_HUT.centerX - 25, surfaceY - 72, 50, 60, 5);
+    graphics.fillStyle(0xf3d672, 0.82).fillCircle(BURROW_HUT.centerX + 58, surfaceY - 62, 16);
+    this.structureLabel
+      .setPosition(BURROW_HUT.centerX, surfaceY - 190)
+      .setText(`STÜTZENHÜTTE · ${activeSupports}/3`);
+  }
+
+  private announceBite(bite: BiteResult): void {
+    this.vehicleHitFlash = 0.18;
+    this.spawnDigDust(this.motion.state.position, this.motion.state.angle, bite.devoured ? 32 : 16);
+    this.cameras.main.shake(bite.devoured ? 230 : 120, bite.devoured ? 0.008 : 0.004);
+    if (bite.devoured) {
+      this.showEvent("VERSCHLUNGEN! +1 BIOMASSE", "#c7f279");
       return;
     }
-    this.targetBroken = true;
-    this.showEvent("VOLLTREFFER!", "#fff0a1");
-    this.spawnDigDust(this.motion.state.position, this.motion.state.angle, 28);
-    this.cameras.main.shake(260, 0.009);
-    this.tweens.add({
-      targets: this.targetContainer,
-      y: this.targetContainer.y - 90,
-      angle: 95,
-      alpha: 0,
-      duration: 650,
-      ease: "Quad.easeOut",
-    });
+    this.showEvent(
+      bite.damage > 1 ? "BURST-BITE! −2 HP" : "BITE! −1 HP",
+      bite.damage > 1 ? "#ffdf82" : "#fff0a1",
+    );
+  }
+
+  private announceSupportLoss(count: number): void {
+    this.showEvent(count > 1 ? "STÜTZEN WEG!" : "STÜTZE WEG!", "#ffd67a");
+    this.cameras.main.shake(140, 0.004);
+    for (const support of this.structure.state.supports) {
+      if (!support.active) {
+        this.spawnDigDust(support.position, Math.PI / 2, 10);
+      }
+    }
+  }
+
+  private announceStructureCollapse(): void {
+    this.showEvent("HÜTTE EINGESTÜRZT!", "#ffcb71");
+    this.cameras.main.shake(380, 0.011);
+    this.spawnDigDust({ x: BURROW_HUT.centerX, y: surfaceYAt(BURROW_HUT.centerX) }, Math.PI / 2, 44);
   }
 
   private announceModeChange(
@@ -584,21 +777,34 @@ export class BurrowGameScene extends Phaser.Scene {
     this.hudText.setText([
       `MODUS  ${modeLabel[state.mode]}   TEMPO  ${Math.round(state.speed)}`,
       `TUNNEL  ${Math.round(state.excavatedCells * 0.016)} m²   UPDATE  ${this.terrainRenderer.lastUpdatedTileCount} KACHEL(N)`,
+      `BEUTE  ${this.hunt.state.vehicle.active ? `${this.hunt.state.vehicle.hitPoints}/${this.hunt.state.vehicle.maximumHitPoints} HP` : "VERSCHLUNGEN"}   BIOMASSE  ${this.hunt.state.biomass}`,
+      `HÜTTE  ${this.structure.state.collapsed ? "EINGESTÜRZT" : `${this.structure.state.supports.filter((support) => support.active).length}/3 STÜTZEN`}`,
     ]);
-    const targetDistance = Math.round(
+    const vehicle = this.hunt.state.vehicle;
+    const vehicleDistance = Math.round(
       Phaser.Math.Distance.Between(
         state.position.x,
         state.position.y,
-        BURROW_TARGET_X,
-        surfaceYAt(BURROW_TARGET_X),
+        vehicle.position.x,
+        vehicle.position.y,
+      ) / 10,
+    );
+    const structureDistance = Math.round(
+      Phaser.Math.Distance.Between(
+        state.position.x,
+        state.position.y,
+        BURROW_HUT.centerX,
+        surfaceYAt(BURROW_HUT.centerX),
       ) / 10,
     );
     this.goalText.setText(
       !this.started
         ? "RICHTUNG HALTEN\nZUM STARTEN"
-        : this.targetBroken
-        ? "BREACH-ZIEL GETROFFEN\nR: NOCHMAL"
-        : `GELBER PEILSTRAHL\nBREACH-ZIEL ${targetDistance} m`,
+        : this.structure.state.collapsed
+        ? "HÜTTE EINGESTÜRZT\nJAGD WEITER TESTEN"
+        : !vehicle.active
+        ? `BEUTE VERDAUT\nNEUE KUTSCHE IN ${Math.ceil(vehicle.respawnRemaining)} s`
+        : `KUTSCHE ${vehicleDistance} m\nHÜTTE ${structureDistance} m · 2 STÜTZEN`,
     );
     const cooldownRatio = Phaser.Math.Clamp(
       state.burstCooldown / BURROW_MOTION_CONSTANTS.burstCooldown,
@@ -616,7 +822,7 @@ export class BurrowGameScene extends Phaser.Scene {
     );
     if (this.liveStatus) {
       this.liveStatus.textContent = this.started
-        ? `Modus ${modeLabel[state.mode]}, Tempo ${Math.round(state.speed)}, Position ${Math.round(state.position.x)} zu ${Math.round(state.position.y)}, ${this.targetBroken ? "Breach-Ziel getroffen" : "Breach-Ziel offen"}.`
+        ? `Modus ${modeLabel[state.mode]}, Tempo ${Math.round(state.speed)}, Position ${Math.round(state.position.x)} zu ${Math.round(state.position.y)}, ${vehicle.active ? `Kutsche ${vehicle.hitPoints} von ${vehicle.maximumHitPoints} HP` : "Kutsche verschlungen"}, Biomasse ${this.hunt.state.biomass}, ${this.structure.state.collapsed ? "Hütte eingestürzt" : `${this.structure.state.supports.filter((support) => support.active).length} Stützen aktiv`}.`
         : "Burrow wartet auf eine Richtung.";
     }
   }

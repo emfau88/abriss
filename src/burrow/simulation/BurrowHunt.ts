@@ -1,0 +1,198 @@
+import type { Point } from "./BurrowTerrain";
+
+export interface VehicleRoute {
+  readonly minimumX: number;
+  readonly maximumX: number;
+  readonly startX: number;
+  readonly surfaceYAt: (worldX: number) => number;
+}
+
+export interface BurrowVehicleState {
+  readonly position: Point;
+  readonly direction: -1 | 1;
+  readonly hitPoints: number;
+  readonly maximumHitPoints: number;
+  readonly active: boolean;
+  readonly respawnRemaining: number;
+}
+
+export interface BurrowHuntState {
+  readonly vehicle: BurrowVehicleState;
+  readonly biomass: number;
+  readonly biteCooldown: number;
+}
+
+export interface BiteAttempt {
+  readonly headPosition: Point;
+  readonly speed: number;
+  readonly burstActive: boolean;
+}
+
+export interface BiteResult {
+  readonly damage: number;
+  readonly devoured: boolean;
+  readonly remainingHitPoints: number;
+}
+
+export interface HuntStepResult {
+  readonly respawned: boolean;
+}
+
+const VEHICLE_SPEED = 48;
+const VEHICLE_HEIGHT_ABOVE_SURFACE = 31;
+const VEHICLE_CONTACT_RADIUS = 64;
+const MINIMUM_BITE_SPEED = 170;
+const HEAVY_BITE_SPEED = 300;
+const BITE_COOLDOWN = 0.58;
+const RESPAWN_SECONDS = 3.2;
+const VEHICLE_HIT_POINTS = 3;
+
+/**
+ * Rendererfreie Jagdschleife für Gate 2. Das Fahrzeug folgt bewusst nur einer
+ * festen Oberflächenroute: Es ist Beute und kein allgemeines Physikobjekt.
+ */
+export class BurrowHunt {
+  private mutableState: BurrowHuntState;
+
+  public constructor(private readonly route: VehicleRoute) {
+    if (route.minimumX >= route.maximumX) {
+      throw new Error("A vehicle route needs a positive horizontal span.");
+    }
+    if (route.startX < route.minimumX || route.startX > route.maximumX) {
+      throw new Error("The vehicle start must be inside its patrol route.");
+    }
+    this.mutableState = {
+      vehicle: this.createVehicle(route.startX, 1),
+      biomass: 0,
+      biteCooldown: 0,
+    };
+  }
+
+  public get state(): BurrowHuntState {
+    return this.mutableState;
+  }
+
+  public step(deltaSeconds: number): HuntStepResult {
+    if (!Number.isFinite(deltaSeconds) || deltaSeconds <= 0 || deltaSeconds > 0.1) {
+      throw new Error("Burrow hunt requires a positive fixed step up to 100 ms.");
+    }
+
+    const biteCooldown = Math.max(0, this.mutableState.biteCooldown - deltaSeconds);
+    const vehicle = this.mutableState.vehicle;
+    if (!vehicle.active) {
+      const respawnRemaining = Math.max(0, vehicle.respawnRemaining - deltaSeconds);
+      if (respawnRemaining > 0) {
+        this.mutableState = {
+          ...this.mutableState,
+          biteCooldown,
+          vehicle: { ...vehicle, respawnRemaining },
+        };
+        return { respawned: false };
+      }
+      this.mutableState = {
+        ...this.mutableState,
+        biteCooldown,
+        vehicle: this.createVehicle(this.route.startX, 1),
+      };
+      return { respawned: true };
+    }
+
+    const patrol = advancePatrol(
+      vehicle.position.x,
+      vehicle.direction,
+      VEHICLE_SPEED * deltaSeconds,
+      this.route.minimumX,
+      this.route.maximumX,
+    );
+    this.mutableState = {
+      ...this.mutableState,
+      biteCooldown,
+      vehicle: {
+        ...vehicle,
+        position: this.vehiclePosition(patrol.x),
+        direction: patrol.direction,
+      },
+    };
+    return { respawned: false };
+  }
+
+  public tryBite(attempt: BiteAttempt): BiteResult | null {
+    const vehicle = this.mutableState.vehicle;
+    if (
+      !vehicle.active ||
+      this.mutableState.biteCooldown > 0 ||
+      attempt.speed < MINIMUM_BITE_SPEED ||
+      distance(attempt.headPosition, vehicle.position) > VEHICLE_CONTACT_RADIUS
+    ) {
+      return null;
+    }
+
+    const damage = attempt.burstActive || attempt.speed >= HEAVY_BITE_SPEED ? 2 : 1;
+    const remainingHitPoints = Math.max(0, vehicle.hitPoints - damage);
+    const devoured = remainingHitPoints === 0;
+    this.mutableState = {
+      ...this.mutableState,
+      biomass: this.mutableState.biomass + (devoured ? 1 : 0),
+      biteCooldown: BITE_COOLDOWN,
+      vehicle: devoured
+        ? {
+            ...vehicle,
+            hitPoints: 0,
+            active: false,
+            respawnRemaining: RESPAWN_SECONDS,
+          }
+        : { ...vehicle, hitPoints: remainingHitPoints },
+    };
+    return { damage, devoured, remainingHitPoints };
+  }
+
+  private createVehicle(x: number, direction: -1 | 1): BurrowVehicleState {
+    return {
+      position: this.vehiclePosition(x),
+      direction,
+      hitPoints: VEHICLE_HIT_POINTS,
+      maximumHitPoints: VEHICLE_HIT_POINTS,
+      active: true,
+      respawnRemaining: 0,
+    };
+  }
+
+  private vehiclePosition(x: number): Point {
+    return { x, y: this.route.surfaceYAt(x) - VEHICLE_HEIGHT_ABOVE_SURFACE };
+  }
+}
+
+export const BURROW_HUNT_CONSTANTS = {
+  vehicleSpeed: VEHICLE_SPEED,
+  vehicleContactRadius: VEHICLE_CONTACT_RADIUS,
+  minimumBiteSpeed: MINIMUM_BITE_SPEED,
+  heavyBiteSpeed: HEAVY_BITE_SPEED,
+  biteCooldown: BITE_COOLDOWN,
+  respawnSeconds: RESPAWN_SECONDS,
+  vehicleHitPoints: VEHICLE_HIT_POINTS,
+} as const;
+
+function advancePatrol(
+  x: number,
+  direction: -1 | 1,
+  distanceToTravel: number,
+  minimumX: number,
+  maximumX: number,
+): { readonly x: number; readonly direction: -1 | 1 } {
+  let nextX = x + direction * distanceToTravel;
+  let nextDirection = direction;
+  while (nextX < minimumX || nextX > maximumX) {
+    if (nextX > maximumX) {
+      nextX = maximumX - (nextX - maximumX);
+      nextDirection = -1;
+    } else {
+      nextX = minimumX + (minimumX - nextX);
+      nextDirection = 1;
+    }
+  }
+  return { x: nextX, direction: nextDirection };
+}
+
+function distance(first: Point, second: Point): number {
+  return Math.hypot(first.x - second.x, first.y - second.y);
+}

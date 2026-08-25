@@ -598,3 +598,41 @@ der jeweilige Managerkern gezielt vertieft. Uneindeutige Ergebnisse führen zu
 einem kleineren Folgetest, nicht automatisch zu mehr Content.
 
 **Umsetzung:** Task 036, abgeschlossen am 24. August 2026.
+
+## 2026-08-25 – D-053: Burrow bleibt ein isoliertes Produktlabor im Abriss-Repository
+
+**Entscheidung:** Burrow wird nicht in Projekt Abriss eingebaut. Es besitzt mit
+`burrow.html`, `src/burrow/`, `public/burrow/` und `docs/burrow/` eigene
+Einstiegs-, Code-, Asset- und Produktgrenzen. `index.html` bleibt Abriss.
+Burrow importiert keine Abriss-Szene, Artillery-Simulation oder Managerlogik.
+
+**Grund:** Das vorhandene Repository bietet eine stabile TypeScript-, Phaser-,
+Test- und Pages-Infrastruktur. Die direkte Monstersteuerung widerspricht aber
+der autonomen Managerfantasie von Abriss und darf sie weder technisch noch
+dokumentarisch stillschweigend ersetzen.
+
+**Konsequenz:** Der Vite-Build veröffentlicht beide HTML-Einstiege. Gemeinsame
+Abhängigkeiten und CI sind erlaubt; Gameplaycode bleibt getrennt. Ein
+automatisierter Isolationstest sperrt versehentliche Abriss-Imports. Burrow ist
+erst nach seinen eigenen Entscheidungstoren ein möglicher Produktpivot.
+
+**Umsetzung:** Gate 0 von Task 037, abgeschlossen am 25. August 2026.
+
+## 2026-08-25 – D-054: Burrow Gate 1 prüft ausschließlich Bewegungsgefühl
+
+**Entscheidung:** Der erste spielbare Burrow-Test umfasst nur Kurssteuerung,
+distanzbasierten Körpertrail, kontinuierliches Graben, schnelleres
+Tunnelgleiten, Burst, Oberflächendurchbruch, Flug und Wiedereintauchen sowie ein
+unbewegliches Breach-Ziel. Beute, Gegner, Gebäude, Meta und große Chunkwelt
+bleiben ausgeschlossen.
+
+**Grund:** Bewegung und Terrainmutation sind das größte frühe Produktrisiko.
+Zusätzliche Systeme würden ein negatives Ergebnis schwer deutbar machen und
+unnötige Produktion vor dem Kernbeweis erzeugen.
+
+**Konsequenz:** Die kleine 2048×1280-Arena nutzt eine eigene 4-Pixel-Maske und
+256×256-Weltpixel große Renderkacheln. Nur berührte Kacheln werden aktualisiert.
+Die Körpersegmente folgen zurückgelegter Distanz statt Renderframes. Gate 2
+beginnt erst nach echter Bewertung dieses Spielgefühls.
+
+**Umsetzung:** Gate 1 von Task 037, abgeschlossen am 25. August 2026.

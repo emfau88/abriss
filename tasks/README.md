@@ -43,6 +43,7 @@ andere Priorität bestätigt. Es darf höchstens ein Task als `in Arbeit` gelten
 | `034_DELEGATED_TARGET_HYBRID.md` | abgeschlossen | Zielauftrag als dritter, weiterhin autonom ausgeführter Kontrollmodus |
 | `035_CONFLICT_PROBES_AND_VALIDATION_MATCH.md` | abgeschlossen | 24 Konfliktsonden und spielbares Kurzmatch für den Kernloop-Vergleich |
 | `036_DOCUMENTATION_AND_PLAYTEST_PROTOCOL.md` | abgeschlossen | aktueller Dokumentationsstand und externes A/B/C-Testprotokoll |
+| `037_BURROW_GATE_0_AND_1.md` | abgeschlossen | isoliertes Burrow-Produktlabor und erster Bewegungsbeweis |
 
 Ein Status wird erst nach überprüfter Abnahme geändert. Scope-Erweiterungen
 gehören in einen neuen Task, nicht stillschweigend in einen bestehenden.

@@ -57,3 +57,15 @@ Produktsignal.
 - spätere Form der Management- und Kampagnenebene.
 
 Diese Entscheidungen blockieren den technischen Vertical Slice nicht.
+
+## Isoliertes Burrow-Produktlabor
+
+Burrow ist seit dem 25. August 2026 als separater Multi-Page-Einstieg im selben
+Repository vorhanden. Es ist kein bestätigter Pivot und verändert keine
+Abriss-Produktentscheidung. Verbindlich für diesen abgegrenzten Bereich sind:
+
+- `burrow/VISION.md`,
+- `burrow/VERTICAL_SLICE.md`,
+- `burrow/TECHNICAL_PLAN.md`.
+
+Der direkte Test läuft über `burrow.html`; Abriss bleibt unter `index.html`.

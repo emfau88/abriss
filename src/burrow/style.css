@@ -1,0 +1,148 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  background: #120f15;
+  color: #fff2d1;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  min-width: 320px;
+  height: 100%;
+  min-height: 100%;
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body {
+  min-height: 100svh;
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 50% 100%, rgb(130 72 39 / 30%), transparent 45%),
+    linear-gradient(155deg, #2b2027, #100d13 72%);
+}
+
+.burrow-shell {
+  position: relative;
+  display: grid;
+  width: 100%;
+  height: 100vh;
+  height: 100svh;
+  height: 100dvh;
+  place-items: center;
+  padding:
+    max(10px, env(safe-area-inset-top))
+    max(10px, env(safe-area-inset-right))
+    max(10px, env(safe-area-inset-bottom))
+    max(10px, env(safe-area-inset-left));
+}
+
+#burrow-game {
+  display: grid;
+  width: min(100%, 1280px);
+  height: 100%;
+  max-height: 720px;
+  place-items: center;
+  overflow: hidden;
+  border: 2px solid rgb(255 204 105 / 34%);
+  border-radius: 18px;
+  background: #17151c;
+  box-shadow: 0 28px 80px rgb(0 0 0 / 55%);
+}
+
+#burrow-game canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  touch-action: none;
+}
+
+.abriss-link,
+.burrow-fullscreen {
+  position: fixed;
+  z-index: 10;
+  min-height: 44px;
+  border: 1px solid rgb(255 232 185 / 35%);
+  border-radius: 999px;
+  color: #fff2d1;
+  background: rgb(26 19 24 / 82%);
+  box-shadow: 0 7px 24px rgb(0 0 0 / 35%);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 42px;
+  text-decoration: none;
+  backdrop-filter: blur(8px);
+}
+
+.abriss-link {
+  top: max(10px, env(safe-area-inset-top));
+  right: max(10px, env(safe-area-inset-right));
+  padding: 0 14px;
+}
+
+.burrow-fullscreen {
+  right: max(10px, env(safe-area-inset-right));
+  bottom: max(10px, env(safe-area-inset-bottom));
+  padding: 0 14px;
+  cursor: pointer;
+}
+
+.abriss-link:hover,
+.abriss-link:focus-visible,
+.burrow-fullscreen:hover,
+.burrow-fullscreen:focus-visible {
+  border-color: #ffd66d;
+  outline: none;
+  background: rgb(82 48 35 / 92%);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 900px), (max-height: 600px) {
+  .burrow-shell {
+    padding:
+      env(safe-area-inset-top)
+      env(safe-area-inset-right)
+      env(safe-area-inset-bottom)
+      env(safe-area-inset-left);
+  }
+
+  #burrow-game {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .abriss-link,
+  .burrow-fullscreen {
+    display: none;
+  }
+}
+
+@media (pointer: fine) {
+  .burrow-fullscreen {
+    display: none;
+  }
+}

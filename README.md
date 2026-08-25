@@ -1,6 +1,10 @@
 # Projekt Abriss
 
-[Spielbare GitHub-Pages-Version](https://emfau88.github.io/abriss/)
+[Projekt Abriss spielen](https://emfau88.github.io/abriss/) ·
+[Isoliertes Burrow-Bewegungslabor](https://emfau88.github.io/abriss/burrow.html)
+
+> **Burrow ist ein separates Produktlabor.** Der direkte Mobile-First-Test
+> verändert weder Abriss noch dessen Produktentscheidung.
 
 Arbeitstitel für ein browserbasiertes, rundenartig inszeniertes Auto-Artillery-Spiel über eine chaotische Crew unterschiedlicher Fantasy-Wesen.
 
@@ -86,6 +90,25 @@ Aktueller spielbarer Ablauf:
 
 Der nächste Produktentscheid erfolgt nicht aus Bauchgefühl oder einem weiteren
 internen Tuning, sondern über das [externe A/B/C-Playtest-Protokoll](docs/08_PLAYTEST_PROTOCOL.md).
+
+## Separates Burrow-Produktlabor
+
+[Burrow Gate 1 direkt starten](https://emfau88.github.io/abriss/burrow.html)
+
+Burrow ist ein technisch und inhaltlich isolierter Mobile-First-Test innerhalb
+desselben Repositories. Er prüft zunächst ausschließlich, ob sich ein schweres
+Wesen beim Graben, im eigenen Tunnel, mit Burst, beim Oberflächendurchbruch und
+in der Flugphase gut steuern lässt. Der Test verwendet eigene Simulation,
+Darstellung, Styles und URL; er importiert keine Abriss-Szene, -KI oder
+Managerlogik.
+
+Steuerung:
+
+- Desktop: `WASD` oder Pfeiltasten für den Kurs, `Shift` oder `Leertaste` für Burst,
+- Touch: links den gewünschten Kurs ziehen, rechts `BURST` antippen,
+- `R`: Testarena zurücksetzen.
+
+Produktregeln und Entscheidungstore stehen unter [docs/burrow/](docs/burrow/).
 
 ## Einstieg
 

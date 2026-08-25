@@ -2,7 +2,7 @@
 
 ## Projekt
 
-Dieses Repository enthält „Projekt Abriss“, ein browserbasiertes, rundenartig inszeniertes 2D-Auto-Artillery-Teammanagement-Spiel. Der öffentliche Titel ist noch nicht festgelegt.
+Dieses Repository enthält „Projekt Abriss“, ein browserbasiertes, rundenartig inszeniertes 2D-Auto-Artillery-Teammanagement-Spiel. Der öffentliche Titel ist noch nicht festgelegt. Zusätzlich liegt unter `src/burrow/` ein ausdrücklich isoliertes, direkt gesteuertes Produktlabor. Dessen Regeln und Entscheidungstore stehen unter `docs/burrow/`; es verändert die Abriss-Produktvision nicht.
 
 Der verbindliche Dokumentationsindex befindet sich in `docs/00_PROJECT_INDEX.md`.
 
@@ -29,6 +29,12 @@ Bei Widersprüchen gilt diese Reihenfolge:
 Ein Task darf Produktvision oder Architektur nicht stillschweigend überschreiben. Notwendige Abweichungen werden vor oder mit der Umsetzung in `docs/DECISIONS.md` dokumentiert.
 
 ## Unveränderliche Produktregeln
+
+Die folgenden Produktregeln gelten für Projekt Abriss. Für Dateien unter
+`src/burrow/`, `public/burrow/`, `docs/burrow/` sowie `burrow.html` gelten
+stattdessen `docs/burrow/VISION.md` und `docs/burrow/VERTICAL_SLICE.md`. Die
+technischen Regeln, Scope-Disziplin und Definition of Done dieser Datei gelten
+für beide Produkte.
 
 - Der Ton bleibt freundlich, farbenfroh und slapstickhaft, nicht zynisch oder grimdark.
 - Große Kampfaktionen werden nacheinander inszeniert und bleiben lesbar.
@@ -79,4 +85,3 @@ Eine Aufgabe ist nur abgeschlossen, wenn:
 - keine sachfremden Änderungen enthalten sind,
 - neue verbindliche Entscheidungen dokumentiert sind,
 - bekannte Einschränkungen benannt werden.
-

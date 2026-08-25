@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+    />
+    <meta name="theme-color" content="#17151c" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="description"
+      content="Burrow Gate 1 – isoliertes Mobile-First-Bewegungslabor."
+    />
+    <title>Burrow Lab · Gate 1</title>
+  </head>
+  <body>
+    <main class="burrow-shell" aria-label="Burrow Bewegungslabor">
+      <p class="sr-only" id="burrow-description">
+        Isolierter Bewegungsprototyp für Graben, Tunnelgleiten, Burst und
+        Oberflächendurchbruch. Links Richtung steuern, rechts Burst auslösen.
+      </p>
+      <output id="burrow-live-status" class="sr-only" aria-live="polite">
+        Burrow wartet auf eine Richtung.
+      </output>
+      <div id="burrow-game" aria-describedby="burrow-description"></div>
+      <a class="abriss-link" href="./">← Projekt Abriss</a>
+      <button id="burrow-fullscreen" class="burrow-fullscreen" type="button" hidden>
+        ⛶ <span>Vollbild</span>
+      </button>
+    </main>
+    <script type="module" src="/src/burrow/main.ts"></script>
+  </body>
+</html>

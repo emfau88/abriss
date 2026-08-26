@@ -49,6 +49,17 @@ describe("BurrowMotion", () => {
     expect(motion.state.velocity).toEqual({ x: 0, y: 0 });
   });
 
+  it("takes a strong new course within a few fixed steering steps", () => {
+    const terrain = filledTerrain();
+    const motion = new BurrowMotion(terrain, { x: 300, y: 220 });
+
+    for (let step = 0; step < 12; step += 1) {
+      motion.step({ direction: { x: 0, y: -1 }, burstPressed: false }, FIXED_STEP);
+    }
+
+    expect(motion.state.angle).toBeLessThan(-1.35);
+  });
+
   it("switches to flight above the surface and can re-enter terrain", () => {
     const terrain = new BurrowTerrain({
       worldWidth: 700,

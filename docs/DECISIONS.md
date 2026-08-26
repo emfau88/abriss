@@ -699,3 +699,24 @@ Darstellungsfeedback. Gate 4 und alle Meta-Systeme bleiben ausgeschlossen.
 
 **Umsetzung:** Task 039, technisch abgeschlossen am 25. August 2026;
 öffentliche persönliche Abnahme steht offen.
+
+## 2026-08-25 – D-058: Mobiles Burrow priorisiert Vollbild, randlose Fläche und unmittelbare Kursreaktion
+
+**Entscheidung:** Burrow wechselt auf eine responsive Phaser-Fläche statt
+mobilem 16:9-Fit mit seitlicher Letterbox. Auf Touchgeräten bleibt ein
+Vollbildbutton sichtbar, sofern der Browser Vollbild unterstützt. Kurswechsel
+reagieren schneller, die Bewegungsbeschleunigung ist kürzer und der
+Touch-Deadzone kleiner.
+
+**Grund:** Der persönliche Mobiltest meldet fehlenden Vollbildzugang,
+schwarze Seitenränder und eine zu indirekte Steuerung. Diese Probleme betreffen
+die unmittelbare Spielbarkeit des bestehenden Gate-1-Kerns und müssen vor
+weiteren Content-Gates korrigiert werden.
+
+**Konsequenz:** Das Sichtfeld kann auf sehr breiten Mobilgeräten mehr
+Weltbreite zeigen; die kompakte HUD- und Touchposition passt sich an die echte
+Canvasgröße an. Die Simulationsschritte, Terrainmaske und Produktisolation
+bleiben unverändert. Browser ohne Fullscreen-API behalten die randlose
+Viewport-Version ohne irreführenden Button.
+
+**Umsetzung:** Task 040, technisch abgeschlossen am 26. August 2026.

@@ -6,9 +6,13 @@ import "./style.css";
 const game = new Phaser.Game(createBurrowGameConfig());
 const fullscreenButton = document.querySelector<HTMLButtonElement>("#burrow-fullscreen");
 
+function canUseFullscreen(): boolean {
+  return document.fullscreenEnabled && typeof document.documentElement.requestFullscreen === "function";
+}
+
 function updateFullscreenButton(): void {
   if (!fullscreenButton) return;
-  fullscreenButton.hidden = !document.fullscreenEnabled;
+  fullscreenButton.hidden = !canUseFullscreen();
   fullscreenButton.setAttribute("aria-pressed", String(Boolean(document.fullscreenElement)));
   const label = fullscreenButton.querySelector("span");
   if (label) {

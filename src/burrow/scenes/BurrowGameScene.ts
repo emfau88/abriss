@@ -47,12 +47,16 @@ export class BurrowGameScene extends Phaser.Scene {
   private wormGraphics!: Phaser.GameObjects.Graphics;
   private dustGraphics!: Phaser.GameObjects.Graphics;
   private hudText!: Phaser.GameObjects.Text;
+  private hudPanel!: Phaser.GameObjects.Rectangle;
+  private hudTitle!: Phaser.GameObjects.Text;
   private goalText!: Phaser.GameObjects.Text;
   private eventText!: Phaser.GameObjects.Text;
   private joystickBase!: Phaser.GameObjects.Arc;
   private joystickNub!: Phaser.GameObjects.Arc;
+  private directionLabel!: Phaser.GameObjects.Text;
   private burstButton!: Phaser.GameObjects.Arc;
   private burstLabel!: Phaser.GameObjects.Text;
+  private controlsHint!: Phaser.GameObjects.Text;
   private vehicleGraphics!: Phaser.GameObjects.Graphics;
   private vehicleLabel!: Phaser.GameObjects.Text;
   private structureGraphics!: Phaser.GameObjects.Graphics;
@@ -64,6 +68,7 @@ export class BurrowGameScene extends Phaser.Scene {
   private readonly burstInput = new OneShotInputBuffer();
   private accumulator = 0;
   private dustParticles: DustParticle[] = [];
+  private uiScale = 1;
   private keyW?: Phaser.Input.Keyboard.Key;
   private keyA?: Phaser.Input.Keyboard.Key;
   private keyS?: Phaser.Input.Keyboard.Key;
@@ -109,6 +114,7 @@ export class BurrowGameScene extends Phaser.Scene {
       this.input.off("pointermove", this.handlePointerMove, this);
       this.input.off("pointerup", this.handlePointerUp, this);
       this.input.off("pointerupoutside", this.handlePointerUp, this);
+      this.scale.off(Phaser.Scale.Events.RESIZE, this.layoutHud, this);
     });
   }
 
@@ -281,14 +287,14 @@ export class BurrowGameScene extends Phaser.Scene {
   }
 
   private createHud(): void {
-    const panel = this.add
+    this.hudPanel = this.add
       .rectangle(18, 18, 570, 170, 0x10151c, 0.88)
       .setOrigin(0)
       .setScrollFactor(0)
       .setDepth(100)
       .setStrokeStyle(2, 0xffbd50, 0.75);
-    this.add
-      .text(panel.x + 20, panel.y + 14, "BURROW LAB · GATE 3", {
+    this.hudTitle = this.add
+      .text(38, 32, "BURROW LAB · GATE 3", {
         fontFamily: "Arial Black, sans-serif",
         fontSize: "25px",
         color: "#ffd66d",
@@ -296,7 +302,7 @@ export class BurrowGameScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(101);
     this.hudText = this.add
-      .text(panel.x + 20, panel.y + 51, "", {
+      .text(38, 69, "", {
         fontFamily: "Consolas, monospace",
         fontSize: "16px",
         color: "#f6edda",
@@ -338,7 +344,7 @@ export class BurrowGameScene extends Phaser.Scene {
       .circle(116, VIEW_HEIGHT - 108, 29, 0xd78843, 0.8)
       .setScrollFactor(0)
       .setDepth(101);
-    this.add
+    this.directionLabel = this.add
       .text(116, VIEW_HEIGHT - 23, "RICHTUNG", {
         fontFamily: "Arial Black, sans-serif",
         fontSize: "13px",
@@ -363,7 +369,7 @@ export class BurrowGameScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setScrollFactor(0)
       .setDepth(101);
-    this.add
+    this.controlsHint = this.add
       .text(VIEW_WIDTH / 2, VIEW_HEIGHT - 33, "WASD / PFEILE · SHIFT / LEERTASTE · R NEUSTART", {
         fontFamily: "Consolas, monospace",
         fontSize: "14px",
@@ -378,6 +384,34 @@ export class BurrowGameScene extends Phaser.Scene {
     this.burstButton.on("pointerdown", () => {
       this.burstInput.queue();
     });
+    this.scale.on(Phaser.Scale.Events.RESIZE, this.layoutHud, this);
+    this.layoutHud();
+  }
+
+  private layoutHud(): void {
+    const width = this.scale.width;
+    const height = this.scale.height;
+    const scale = Math.min(1, width / VIEW_WIDTH, height / VIEW_HEIGHT);
+    const at = (value: number): number => value * scale;
+    this.uiScale = scale;
+
+    this.hudPanel.setPosition(at(18), at(18)).setSize(at(570), at(170));
+    this.hudTitle.setPosition(at(38), at(32)).setScale(scale);
+    this.hudText.setPosition(at(38), at(69)).setScale(scale);
+    this.goalText.setPosition(width - at(22), at(22)).setScale(scale);
+    this.eventText.setPosition(width / 2, at(125)).setScale(scale);
+
+    const joystickX = at(116);
+    const joystickY = height - at(108);
+    this.joystickBase.setPosition(joystickX, joystickY).setRadius(at(66));
+    this.joystickNub.setPosition(joystickX, joystickY).setRadius(at(29));
+    this.directionLabel.setPosition(joystickX, height - at(23)).setScale(scale);
+
+    const burstX = width - at(105);
+    const burstY = height - at(106);
+    this.burstButton.setPosition(burstX, burstY).setRadius(at(62));
+    this.burstLabel.setPosition(burstX, burstY).setScale(scale);
+    this.controlsHint.setPosition(width / 2, height - at(33)).setScale(scale);
   }
 
   private configureInput(): void {
@@ -410,7 +444,11 @@ export class BurrowGameScene extends Phaser.Scene {
   }
 
   private handlePointerDown(pointer: Phaser.Input.Pointer): void {
-    if (pointer.x > 250 || pointer.y < VIEW_HEIGHT - 230) {
+    const joystickReach = 132 * this.uiScale;
+    if (
+      pointer.x > this.joystickBase.x + joystickReach ||
+      pointer.y < this.joystickBase.y - joystickReach
+    ) {
       return;
     }
     this.steeringPointerId = pointer.id;
@@ -436,12 +474,12 @@ export class BurrowGameScene extends Phaser.Scene {
     const deltaX = pointer.x - this.joystickBase.x;
     const deltaY = pointer.y - this.joystickBase.y;
     const distance = Math.hypot(deltaX, deltaY);
-    if (distance < 5) {
+    if (distance < 2 * this.uiScale) {
       this.touchDirection = null;
       return;
     }
     this.touchDirection = { x: deltaX / distance, y: deltaY / distance };
-    const visualDistance = Math.min(37, distance);
+    const visualDistance = Math.min(40 * this.uiScale, distance);
     this.joystickNub.setPosition(
       this.joystickBase.x + (deltaX / distance) * visualDistance,
       this.joystickBase.y + (deltaY / distance) * visualDistance,
@@ -702,16 +740,21 @@ export class BurrowGameScene extends Phaser.Scene {
   }
 
   private showEvent(message: string, color: string): void {
-    this.eventText.setText(message).setColor(color).setAlpha(1).setScale(0.82);
+    const baseScale = this.uiScale;
+    this.eventText
+      .setText(message)
+      .setColor(color)
+      .setAlpha(1)
+      .setScale(baseScale * 0.82);
     this.tweens.killTweensOf(this.eventText);
     this.tweens.add({
       targets: this.eventText,
       alpha: 0,
-      scale: 1.08,
-      y: 105,
+      scale: baseScale * 1.08,
+      y: 105 * baseScale,
       duration: 950,
       ease: "Quad.easeOut",
-      onComplete: () => this.eventText.setY(125),
+      onComplete: () => this.eventText.setY(125 * baseScale),
     });
   }
 

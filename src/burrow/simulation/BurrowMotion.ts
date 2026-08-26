@@ -32,8 +32,8 @@ const TUNNEL_RADIUS = 31;
 const DIG_SPEED = 145;
 const TUNNEL_SPEED = 225;
 const BURST_SPEED = 370;
-const TURN_RATE = 3.25;
-const AIR_TURN_RATE = 1.45;
+const TURN_RATE = 7.2;
+const AIR_TURN_RATE = 2.8;
 const GRAVITY = 520;
 const BURST_DURATION = 0.68;
 const BURST_COOLDOWN = 1.65;
@@ -162,7 +162,7 @@ export class BurrowMotion {
       : solidAhead
         ? DIG_SPEED
         : TUNNEL_SPEED;
-    const speed = approach(this.mutableState.speed, targetSpeed, 390 * deltaSeconds);
+    const speed = approach(this.mutableState.speed, targetSpeed, 780 * deltaSeconds);
     const constrained = constrainUndergroundMovement(
       {
         x: this.mutableState.position.x + direction.x * speed * deltaSeconds,

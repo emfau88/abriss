@@ -116,14 +116,19 @@ Aktueller Teststand:
 - Gate 2: Kutsche, automatische Bites, HP, Devour und Biomasse; Burst-Puffer,
   Stopp bei losgelassener Richtung sowie breitere Jagdroute technisch geprüft,
 - Gate 3: einzelne Stützenhütte; zwei untergrabene Terrainanker führen zu
-  einem sichtbaren Kollaps in einer moderat größeren 2.560×1.280-Arena.
+  einem sichtbaren Kollaps in einer moderat größeren 2.560×1.280-Arena,
+- Mobile-Politur: die Phaser-Fläche füllt im Querformat den verfügbaren
+  Viewport ohne seitliche Letterbox-Balken. Ein Vollbildschalter erscheint auf
+  Touch-Geräten, wenn der Browser die Fullscreen-API freigibt.
 
 Steuerung:
 
-- Desktop: `WASD` oder Pfeiltasten gedrückt halten für den Kurs; beim Loslassen
-  hält der Wurm unter Erde an. `Shift` oder `Leertaste` löst Burst aus,
+- Desktop: `WASD` oder Pfeiltasten gedrückt halten für einen direkten, schnellen
+  Kurswechsel; beim Loslassen hält der Wurm unter Erde an. `Shift` oder
+  `Leertaste` löst Burst aus,
 - Touch: links den gewünschten Kurs halten; beim Loslassen zentriert sich der
-  Stick und der Wurm stoppt. Rechts `BURST` antippen,
+  Stick und der Wurm stoppt. Rechts `BURST` antippen; auf unterstützten
+  Geräten steht oberhalb davon `Vollbild` bereit,
 - `R`: Testarena zurücksetzen.
 
 Produktregeln, Entscheidungstore und technische Grenzen stehen unter

@@ -21,8 +21,11 @@ export function createBurrowGameConfig(): Phaser.Types.Core.GameConfig {
       activePointers: 3,
     },
     scale: {
-      mode: Phaser.Scale.FIT,
-      autoCenter: Phaser.Scale.CENTER_BOTH,
+      // Die Spielfläche folgt dem verfügbaren Viewport statt ein starres
+      // 16:9-Bild mit seitlichen Balken einzupassen. Die Scene legt ihr HUD
+      // daraufhin responsiv aus; die Simulation bleibt weiterhin weltbasiert.
+      mode: Phaser.Scale.RESIZE,
+      autoCenter: Phaser.Scale.NO_CENTER,
     },
     scene: [BurrowGameScene],
   };

@@ -121,6 +121,28 @@ Aktueller Teststand:
   Viewport ohne seitliche Letterbox-Balken. Ein Vollbildschalter erscheint auf
   Touch-Geräten, wenn der Browser die Fullscreen-API freigibt.
 
+### Offene Produktfrage: dauerhafte Tunnel und Spielfeldschwerpunkt
+
+Der aktuelle Test hat eine wichtige, noch **unentschiedene** Designfrage
+sichtbar gemacht: Das Monster braucht Erde nicht nur als zerstörbares
+Hindernis, sondern als kontrollierbares Bewegungsmedium. Werden wiederholt
+benutzte Tunnel zu breit, behandelt der bisherige Prototyp den leeren Raum zu
+leicht wie eine Flugphase; dadurch verlieren Kurven, Distanz und erneute
+Oberflächenangriffe an Präzision. Dauerhafte Zerstörung darf normales Spielen
+nicht in eine selbst erzeugte Sackgasse verwandeln.
+
+Eine zu prüfende Alternative ist deshalb ein überwiegend unterirdischer
+Kernloop: belebte Höhlen, unterirdische Siedlungen und Wesen wären die
+regelmäßigen Ziele; spektakuläre Oberflächendurchbrüche blieben seltene,
+frei gewählte Höhepunkte. Das wäre **keine beschlossene Richtungsänderung**.
+Vor weiterem Content wird geprüft, ob breite unterirdische Hohlräume einen
+eigenen, präzisen Kavernenmodus erhalten sollen, während ausschließlich
+tatsächliche Oberfläche Flugphysik verwendet.
+
+Der aktuelle Höhlenschrein ist ebenfalls als Präsentationsproblem markiert:
+Er braucht bei einer Wiederaufnahme eine natürlich verankerte Fundkammer
+statt einer leeren, schwebenden Dekoration.
+
 Steuerung:
 
 - Desktop: `WASD` oder Pfeiltasten gedrückt halten für einen direkten, schnellen

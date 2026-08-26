@@ -17,13 +17,16 @@ interface TerrainTile {
 
 export class TiledTerrainRenderer {
   private readonly tiles: TerrainTile[] = [];
+  private readonly earthTexture: CanvasImageSource;
   public lastUpdatedTileCount = 0;
 
   public constructor(
     scene: Phaser.Scene,
     private readonly terrain: BurrowTerrain,
     texturePrefix: string,
+    earthTextureKey: string,
   ) {
+    this.earthTexture = scene.textures.get(earthTextureKey).getSourceImage() as CanvasImageSource;
     const tileCellSize = TILE_WORLD_SIZE / terrain.cellSize;
     const columns = Math.ceil(terrain.worldWidth / TILE_WORLD_SIZE);
     const rows = Math.ceil(terrain.worldHeight / TILE_WORLD_SIZE);
@@ -84,52 +87,65 @@ export class TiledTerrainRenderer {
   private renderTile(tile: TerrainTile): void {
     const context = tile.texture.getContext();
     context.clearRect(0, 0, tile.texture.width, tile.texture.height);
-    context.imageSmoothingEnabled = false;
+    context.imageSmoothingEnabled = true;
+
+    const earthPattern = context.createPattern(this.earthTexture, "repeat");
+    if (!earthPattern) {
+      throw new Error("Could not create the Burrow earth texture pattern.");
+    }
+    context.save();
+    context.translate(
+      -tile.cellX * this.terrain.cellSize,
+      -tile.cellY * this.terrain.cellSize,
+    );
+    context.fillStyle = earthPattern;
+    context.fillRect(
+      tile.cellX * this.terrain.cellSize,
+      tile.cellY * this.terrain.cellSize,
+      tile.texture.width,
+      tile.texture.height,
+    );
+    context.restore();
 
     for (let localCellY = 0; localCellY < tile.cellHeight; localCellY += 1) {
       const cellY = tile.cellY + localCellY;
       for (let localCellX = 0; localCellX < tile.cellWidth; localCellX += 1) {
         const cellX = tile.cellX + localCellX;
         if (!this.terrain.isSolidCell(cellX, cellY)) {
+          context.clearRect(
+            localCellX * this.terrain.cellSize,
+            localCellY * this.terrain.cellSize,
+            this.terrain.cellSize,
+            this.terrain.cellSize,
+          );
           continue;
         }
-        context.fillStyle = colorForCell(this.terrain, cellX, cellY);
-        context.fillRect(
-          localCellX * this.terrain.cellSize,
-          localCellY * this.terrain.cellSize,
-          this.terrain.cellSize,
-          this.terrain.cellSize,
-        );
+        const edgeColor = edgeColorForCell(this.terrain, cellX, cellY);
+        if (edgeColor) {
+          context.fillStyle = edgeColor;
+          context.fillRect(
+            localCellX * this.terrain.cellSize,
+            localCellY * this.terrain.cellSize,
+            this.terrain.cellSize,
+            this.terrain.cellSize,
+          );
+        }
       }
     }
     tile.texture.refresh();
   }
 }
 
-function colorForCell(terrain: BurrowTerrain, cellX: number, cellY: number): string {
+function edgeColorForCell(terrain: BurrowTerrain, cellX: number, cellY: number): string | null {
   const touchesAir =
     !terrain.isSolidCell(cellX - 1, cellY) ||
     !terrain.isSolidCell(cellX + 1, cellY) ||
     !terrain.isSolidCell(cellX, cellY - 1) ||
     !terrain.isSolidCell(cellX, cellY + 1);
   const worldY = cellY * terrain.cellSize;
-  const noise = hash(cellX, cellY) % 4;
-  if (touchesAir) {
-    if (worldY < 410) return ["#8eb850", "#a7ce5a", "#78a240", "#94be4d"][noise]!;
-    return worldY > 900
-      ? ["#352540", "#402d4b", "#493553", "#30223a"][noise]!
-      : ["#503449", "#5d3b50", "#674257", "#482f43"][noise]!;
-  }
-  if (worldY < 470) return ["#c68742", "#d4994d", "#b9783b", "#dcaa59"][noise]!;
-  if (worldY < 820) return ["#96603e", "#a86d45", "#875338", "#b4774b"][noise]!;
-  if (worldY > 960) {
-    return ["#493047", "#563852", "#402b40", "#60405a"][noise]!;
-  }
-  return ["#754537", "#824e3d", "#693c33", "#915845"][noise]!;
-}
-
-function hash(x: number, y: number): number {
-  return Math.abs(((x * 73856093) ^ (y * 19349663)) >>> 0);
+  if (!touchesAir) return null;
+  if (worldY < 410) return "#9dcb53";
+  return worldY > 900 ? "#33243d" : "#4b3044";
 }
 
 function expandRegion(

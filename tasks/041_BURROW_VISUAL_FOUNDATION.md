@@ -25,8 +25,10 @@ Gate-5-Content.
 ## Scope
 
 - drei klar unterscheidbare Erdschichten und kontrastreiche Tunnelränder,
-- codegezeichnete Landmarken mit weniger visuellem Rauschen,
-- modulare Kreaturendarstellung: Kopf, wiederholbare Körpersegmente,
+- gemalte Landmarken: Kutsche, Stützen-Außenposten, Tierdetail und ein
+  erreichbarer Höhlenschrein,
+- modulare Kreaturendarstellung aus getrennten Kopf- und wiederholbaren
+  Körpersegment-Assets,
   Schwanz und sichtbare Rückenplatten als getrennte Renderbauteile,
 - vorbereitete, rein visuelle Wachstumsstufen ohne Änderung der Bewegungs- oder
   Kollisionsfachlogik,
@@ -58,6 +60,9 @@ Gate-5-Content.
 
 - Fachtests, Gesamttests, Typecheck und Produktionsbuild bestehen am
   26. August 2026.
+- Der visuelle Pack verwendet bewusst ausschließlich statische Darstellungs-Assets:
+  Kutsche und Hütte behalten ihre bisherigen fachlichen Zustände, der Schrein ist
+  als Fundort sichtbar, aber noch keine neue Interaktionsregel.
 - Die Browserautomatisierung wurde beim lokalen Reload durch die
   Sicherheitsrichtlinie des eingebetteten Browsers abgewiesen. Der offene
   manuelle Test prüft daher ausschließlich die mobile visuelle Lesbarkeit;

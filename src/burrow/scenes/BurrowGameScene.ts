@@ -46,6 +46,8 @@ export class BurrowGameScene extends Phaser.Scene {
   private hunt!: BurrowHunt;
   private structure!: BurrowStructure;
   private wormGraphics!: Phaser.GameObjects.Graphics;
+  private wormHead!: Phaser.GameObjects.Image;
+  private wormSegments: Phaser.GameObjects.Image[] = [];
   private dustGraphics!: Phaser.GameObjects.Graphics;
   private hudText!: Phaser.GameObjects.Text;
   private hudPanel!: Phaser.GameObjects.Rectangle;
@@ -59,8 +61,10 @@ export class BurrowGameScene extends Phaser.Scene {
   private burstLabel!: Phaser.GameObjects.Text;
   private controlsHint!: Phaser.GameObjects.Text;
   private vehicleGraphics!: Phaser.GameObjects.Graphics;
+  private vehicleSprite!: Phaser.GameObjects.Image;
   private vehicleLabel!: Phaser.GameObjects.Text;
   private structureGraphics!: Phaser.GameObjects.Graphics;
+  private structureSprite!: Phaser.GameObjects.Image;
   private structureLabel!: Phaser.GameObjects.Text;
   private vehicleHitFlash = 0;
   private started = false;
@@ -87,15 +91,31 @@ export class BurrowGameScene extends Phaser.Scene {
     super("BurrowGameScene");
   }
 
+  public preload(): void {
+    this.load.image("burrow-head", "burrow/burrow-head-v1.png");
+    this.load.image("burrow-body-segment", "burrow/burrow-body-segment-v1.png");
+    this.load.image("burrow-earth", "burrow/burrow-earth-v1.png");
+    this.load.image("burrow-cart", "burrow/burrow-cart-v1.png");
+    this.load.image("burrow-outpost", "burrow/burrow-outpost-v1.png");
+    this.load.image("burrow-goat", "burrow/burrow-goat-v1.png");
+    this.load.image("burrow-shrine", "burrow/burrow-shrine-v1.png");
+  }
+
   public create(): void {
     const terrain = createBurrowArena();
     this.createWorldBackdrop();
-    this.terrainRenderer = new TiledTerrainRenderer(this, terrain, "burrow-terrain");
+    this.terrainRenderer = new TiledTerrainRenderer(this, terrain, "burrow-terrain", "burrow-earth");
     this.createSurfaceDetails();
+    this.createEnvironmentAssets();
     this.motion = new BurrowMotion(terrain, BURROW_START, -0.16);
     this.hunt = new BurrowHunt({ ...BURROW_VEHICLE_ROUTE, surfaceYAt });
     this.structure = new BurrowStructure(terrain, createHutSupportPoints());
     this.wormGraphics = this.add.graphics().setDepth(12);
+    this.wormHead = this.add.image(BURROW_START.x, BURROW_START.y, "burrow-head").setDepth(13);
+    this.wormSegments = Array.from(
+      { length: 28 },
+      () => this.add.image(BURROW_START.x, BURROW_START.y, "burrow-body-segment").setDepth(12),
+    );
     this.dustGraphics = this.add.graphics().setDepth(11);
     this.createVehicle();
     this.createStructure();
@@ -243,8 +263,18 @@ export class BurrowGameScene extends Phaser.Scene {
     }
   }
 
+  private createEnvironmentAssets(): void {
+    this.add.image(1115, 885, "burrow-shrine")
+      .setOrigin(0.5, 1).setDisplaySize(165, 182).setDepth(1);
+    this.structureSprite = this.add.image(BURROW_HUT.centerX, surfaceYAt(BURROW_HUT.centerX) + 5, "burrow-outpost")
+      .setOrigin(0.5, 1).setDisplaySize(270, 250).setDepth(6);
+    this.add.image(1710, surfaceYAt(1710) + 3, "burrow-goat")
+      .setOrigin(0.5, 1).setDisplaySize(78, 70).setDepth(6);
+  }
+
   private createVehicle(): void {
     this.vehicleGraphics = this.add.graphics().setDepth(8);
+    this.vehicleSprite = this.add.image(0, 0, "burrow-cart").setDepth(8);
     this.vehicleLabel = this.add
       .text(0, 0, "", {
         fontFamily: "Arial Black, sans-serif",
@@ -514,62 +544,37 @@ export class BurrowGameScene extends Phaser.Scene {
     const graphics = this.wormGraphics;
     graphics.clear();
 
-    for (let index = samples.length - 1; index >= 1; index -= 1) {
-      const point = samples[index]!;
-      const bodyRatio = 1 - index / samples.length;
-      const radius = (7 + bodyRatio * 14) * visual.bodyRadiusMultiplier;
-      graphics.fillStyle(0x251832, 1).fillCircle(point.x, point.y, radius + 4);
-      graphics.fillStyle(index % 2 === 0 ? 0x7650a4 : 0x674495, 1).fillCircle(point.x, point.y, radius);
-      graphics.fillStyle(0xf0c8bb, 0.86).fillCircle(point.x, point.y + radius * 0.38, radius * 0.45);
-      if (index % visual.plateEvery === 0 && index < samples.length - 2) {
-        graphics.fillStyle(0x31203e, 1).fillTriangle(
-          point.x - radius * 0.48,
-          point.y - radius * 0.52,
-          point.x,
-          point.y - radius * 1.34,
-          point.x + radius * 0.48,
-          point.y - radius * 0.52,
-        );
-        graphics.fillStyle(0xed746f, 1).fillTriangle(
-          point.x - radius * 0.3,
-          point.y - radius * 0.52,
-          point.x,
-          point.y - radius * 1.14,
-          point.x + radius * 0.3,
-          point.y - radius * 0.52,
-        );
-      }
+    const segmentCount = Math.min(samples.length - 1, this.wormSegments.length);
+    for (let index = 0; index < segmentCount; index += 1) {
+      const sampleIndex = index + 1;
+      const point = samples[sampleIndex]!;
+      const nextPoint = samples[Math.max(0, sampleIndex - 1)]!;
+      const bodyRatio = 1 - sampleIndex / samples.length;
+      const size = (46 + bodyRatio * 15) * visual.bodyRadiusMultiplier;
+      this.wormSegments[index]!
+        .setVisible(true)
+        .setPosition(point.x, point.y)
+        .setRotation(Phaser.Math.Angle.Between(point.x, point.y, nextPoint.x, nextPoint.y))
+        .setDisplaySize(size, size * 0.88)
+        .setAlpha(0.98);
+    }
+    for (let index = segmentCount; index < this.wormSegments.length; index += 1) {
+      this.wormSegments[index]!.setVisible(false);
     }
 
+    /* Keep only the short burst halo in Graphics; the creature itself uses assets. */
     const head = state.position;
-    const forward = { x: Math.cos(state.angle), y: Math.sin(state.angle) };
-    const side = { x: -forward.y, y: forward.x };
     const headRadius = visual.headRadius;
-    graphics.fillStyle(0x251832, 1).fillCircle(head.x, head.y, headRadius + 5);
-    graphics.fillStyle(state.burstRemaining > 0 ? 0xaa73d7 : 0x825ab2, 1).fillCircle(head.x, head.y, headRadius);
-    graphics.fillStyle(0xf0c8bb, 1).fillCircle(
-      head.x - forward.x * headRadius * 0.15 + side.x * headRadius * 0.4,
-      head.y - forward.y * headRadius * 0.15 + side.y * headRadius * 0.4,
-      headRadius * 0.52,
+    this.wormHead
+      .setPosition(head.x, head.y)
+      .setRotation(state.angle)
+      .setDisplaySize(headRadius * 3.25, headRadius * 2.7)
+      .setAlpha(state.burstRemaining > 0 ? 1 : 0.98);
+    graphics.fillStyle(0xaa73d7, state.burstRemaining > 0 ? 0.34 : 0).fillCircle(
+      head.x,
+      head.y,
+      headRadius * 1.65,
     );
-    graphics.fillStyle(0xed746f, 1).fillTriangle(
-      head.x - side.x * headRadius * 0.45 - forward.x * headRadius * 0.1,
-      head.y - side.y * headRadius * 0.45 - forward.y * headRadius * 0.1,
-      head.x - forward.x * headRadius * 0.75,
-      head.y - forward.y * headRadius * 0.75,
-      head.x + side.x * headRadius * 0.45 - forward.x * headRadius * 0.1,
-      head.y + side.y * headRadius * 0.45 - forward.y * headRadius * 0.1,
-    );
-    for (const sideSign of [-1, 1]) {
-      const eyeX = head.x + forward.x * headRadius * 0.32 + side.x * headRadius * 0.34 * sideSign;
-      const eyeY = head.y + forward.y * headRadius * 0.32 + side.y * headRadius * 0.34 * sideSign;
-      graphics.fillStyle(0xfff6df, 1).fillCircle(eyeX, eyeY, headRadius * 0.23);
-      graphics.fillStyle(0x29171d, 1).fillCircle(
-        eyeX + forward.x * headRadius * 0.08,
-        eyeY + forward.y * headRadius * 0.08,
-        headRadius * 0.1,
-      );
-    }
   }
 
   private renderVehicle(): void {
@@ -577,6 +582,7 @@ export class BurrowGameScene extends Phaser.Scene {
     const graphics = this.vehicleGraphics;
     graphics.clear();
     this.vehicleLabel.setVisible(vehicle.active);
+    this.vehicleSprite.setVisible(vehicle.active);
     if (!vehicle.active) {
       return;
     }
@@ -584,14 +590,11 @@ export class BurrowGameScene extends Phaser.Scene {
     const { x, y } = vehicle.position;
     const facing = vehicle.direction;
     const flash = this.vehicleHitFlash > 0;
-    graphics.fillStyle(0x2d2824, 1).fillCircle(x - 22, y + 16, 10).fillCircle(x + 23, y + 16, 10);
-    graphics.fillStyle(0x17161b, 1).fillCircle(x - 22, y + 16, 5).fillCircle(x + 23, y + 16, 5);
-    graphics.fillStyle(flash ? 0xfff1b0 : 0x6d9f56, 1).fillRoundedRect(x - 38, y - 12, 76, 27, 6);
-    graphics.lineStyle(4, 0x2d4734, 1).strokeRoundedRect(x - 38, y - 12, 76, 27, 6);
-    graphics.fillStyle(flash ? 0xffdd7d : 0xb8d6a0, 1).fillRoundedRect(x - 8, y - 29, 34, 20, 5);
-    graphics.lineStyle(3, 0x2d4734, 1).strokeRoundedRect(x - 8, y - 29, 34, 20, 5);
-    graphics.fillStyle(0xf8e8a5, 1).fillCircle(x + facing * 38, y - 2, 5);
-    graphics.fillStyle(0x4e2f24, 1).fillRect(x - 29, y - 3, 23, 5);
+    this.vehicleSprite
+      .setPosition(x, y + 3)
+      .setDisplaySize(92, 68)
+      .setFlipX(facing < 0)
+      .setAlpha(flash ? 0.72 : 1);
 
     const hitPointsRatio = vehicle.hitPoints / vehicle.maximumHitPoints;
     graphics.fillStyle(0x1a2020, 0.94).fillRoundedRect(x - 39, y - 52, 78, 12, 4);
@@ -607,6 +610,7 @@ export class BurrowGameScene extends Phaser.Scene {
     graphics.clear();
 
     if (structure.collapsed) {
+      this.structureSprite.setVisible(false);
       graphics.fillStyle(0x4e3027, 1).fillTriangle(
         BURROW_HUT.centerX - 118,
         surfaceY + 6,
@@ -640,6 +644,8 @@ export class BurrowGameScene extends Phaser.Scene {
       return;
     }
 
+    this.structureSprite.setVisible(true);
+
     for (const support of structure.supports) {
       const topY = surfaceYAt(support.position.x) - 9;
       graphics.lineStyle(13, support.active ? 0xc98242 : 0x4f3940, 1).lineBetween(
@@ -663,38 +669,6 @@ export class BurrowGameScene extends Phaser.Scene {
         );
       }
     }
-    graphics.fillStyle(0x8e5a3d, 1).fillRoundedRect(
-      BURROW_HUT.centerX - 112,
-      surfaceY - 104,
-      224,
-      92,
-      9,
-    );
-    graphics.lineStyle(6, 0x332521, 1).strokeRoundedRect(
-      BURROW_HUT.centerX - 112,
-      surfaceY - 104,
-      224,
-      92,
-      9,
-    );
-    graphics.fillStyle(0xd7a24d, 1).fillTriangle(
-      BURROW_HUT.centerX - 132,
-      surfaceY - 102,
-      BURROW_HUT.centerX + 132,
-      surfaceY - 102,
-      BURROW_HUT.centerX,
-      surfaceY - 162,
-    );
-    graphics.lineStyle(6, 0x332521, 1).strokeTriangle(
-      BURROW_HUT.centerX - 132,
-      surfaceY - 102,
-      BURROW_HUT.centerX + 132,
-      surfaceY - 102,
-      BURROW_HUT.centerX,
-      surfaceY - 162,
-    );
-    graphics.fillStyle(0x263b44, 1).fillRoundedRect(BURROW_HUT.centerX - 25, surfaceY - 72, 50, 60, 5);
-    graphics.fillStyle(0xf3d672, 0.82).fillCircle(BURROW_HUT.centerX + 58, surfaceY - 62, 16);
     this.structureLabel
       .setPosition(BURROW_HUT.centerX, surfaceY - 190)
       .setText(`STÜTZENHÜTTE · ${activeSupports}/3`);

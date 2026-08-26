@@ -720,3 +720,23 @@ bleiben unverändert. Browser ohne Fullscreen-API behalten die randlose
 Viewport-Version ohne irreführenden Button.
 
 **Umsetzung:** Task 040, technisch abgeschlossen am 26. August 2026.
+
+## 2026-08-26 – D-059: Burrow prüft eine modulare visuelle Grundlage vor Gate 4
+
+**Entscheidung:** Vor Sensorik, Hunter und Ergebnis-Loop erhält Burrow einen
+kleinen, codegezeichneten Stil- und Lesbarkeits-Pass. Die Kreatur wird in Kopf,
+Körpersegmente, Schwanz und aufsetzbare Rückenmerkmale getrennt; drei rein
+visuelle Wachstumsstufen dürfen dieselbe Bewegungsdatenbasis verwenden.
+
+**Grund:** Der Nutzer bestätigte die kompakte, kontrastreiche Cartoon-Richtung
+als passend. Eine modulare Darstellung vermeidet spätere Vollkörper-
+Spritesheets für jede Kreaturengröße und macht sichtbares Wachstum möglich,
+ohne den noch unbestätigten Gate-4-/Gate-5-Loop vorwegzunehmen.
+
+**Konsequenz:** Terrainmaske, Kollisionsradien, feste Simulationsschritte und
+Gameplaywerte bleiben unangetastet. Der Pass verwendet keine finalen
+Produktionsassets und fügt keine Gegner-, Mutations- oder Chunkwelt-Regel ein.
+Gate 4 bleibt ein eigenes Freigabetor.
+
+**Umsetzung:** Task 041, technisch abgeschlossen am 26. August 2026;
+visueller Spieltest auf Mobilgerät steht offen.

@@ -113,14 +113,19 @@ function colorForCell(terrain: BurrowTerrain, cellX: number, cellY: number): str
     !terrain.isSolidCell(cellX, cellY - 1) ||
     !terrain.isSolidCell(cellX, cellY + 1);
   const worldY = cellY * terrain.cellSize;
-  if (touchesAir) {
-    return worldY < 410 ? "#8e9c4a" : "#a96836";
-  }
   const noise = hash(cellX, cellY) % 4;
-  if (worldY > 960) {
-    return ["#30252b", "#37292f", "#3c2d31", "#2b232a"][noise]!;
+  if (touchesAir) {
+    if (worldY < 410) return ["#8eb850", "#a7ce5a", "#78a240", "#94be4d"][noise]!;
+    return worldY > 900
+      ? ["#352540", "#402d4b", "#493553", "#30223a"][noise]!
+      : ["#503449", "#5d3b50", "#674257", "#482f43"][noise]!;
   }
-  return ["#65432f", "#704a31", "#795137", "#5c3d2d"][noise]!;
+  if (worldY < 470) return ["#c68742", "#d4994d", "#b9783b", "#dcaa59"][noise]!;
+  if (worldY < 820) return ["#96603e", "#a86d45", "#875338", "#b4774b"][noise]!;
+  if (worldY > 960) {
+    return ["#493047", "#563852", "#402b40", "#60405a"][noise]!;
+  }
+  return ["#754537", "#824e3d", "#693c33", "#915845"][noise]!;
 }
 
 function hash(x: number, y: number): number {

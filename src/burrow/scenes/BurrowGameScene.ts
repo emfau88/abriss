@@ -11,6 +11,7 @@ import {
   surfaceYAt,
 } from "../content/arena";
 import { OneShotInputBuffer } from "../input/OneShotInputBuffer";
+import { creatureVisualForBiomass } from "../rendering/BurrowCreatureVisual";
 import { TiledTerrainRenderer } from "../rendering/TiledTerrainRenderer";
 import { BurrowHunt, type BiteResult } from "../simulation/BurrowHunt";
 import {
@@ -192,14 +193,14 @@ export class BurrowGameScene extends Phaser.Scene {
 
   private createWorldBackdrop(): void {
     const graphics = this.add.graphics().setDepth(0);
-    graphics.fillStyle(0x86bfd0).fillRect(0, 0, BURROW_WORLD_WIDTH, 390);
-    graphics.fillStyle(0xd3e7d5).fillCircle(220, 105, 74);
+    graphics.fillStyle(0x5b90bd).fillRect(0, 0, BURROW_WORLD_WIDTH, 390);
+    graphics.fillStyle(0x86c8d3).fillCircle(220, 105, 74);
     graphics.fillCircle(300, 92, 52);
-    graphics.fillCircle(1640, 116, 62);
+    graphics.fillStyle(0xa6d5d0).fillCircle(1640, 116, 62);
     graphics.fillCircle(1720, 104, 46);
-    graphics.fillStyle(0x17151c).fillRect(0, 300, BURROW_WORLD_WIDTH, BURROW_WORLD_HEIGHT - 300);
-    graphics.fillStyle(0x211b23).fillCircle(1090, 940, 190);
-    graphics.fillStyle(0x28202a).fillCircle(1210, 900, 150);
+    graphics.fillStyle(0x1d1828).fillRect(0, 300, BURROW_WORLD_WIDTH, BURROW_WORLD_HEIGHT - 300);
+    graphics.fillStyle(0x28203a).fillCircle(1090, 940, 190);
+    graphics.fillStyle(0x332545).fillCircle(1210, 900, 150);
 
     const routeMarker = this.add.graphics().setDepth(1);
     routeMarker.lineStyle(5, 0x9fd064, 0.24);
@@ -231,28 +232,15 @@ export class BurrowGameScene extends Phaser.Scene {
       details.lineBetween(x + 6, y + 2, x + 12, y - 8);
     }
 
-    details.fillStyle(0x435967).fillRect(1320, surfaceYAt(1320) - 13, 160, 13);
-    details.fillStyle(0xd2c7a2).fillRect(1328, surfaceYAt(1320) - 20, 30, 7);
+    details.fillStyle(0x34455e).fillRect(1320, surfaceYAt(1320) - 13, 160, 13);
+    details.fillStyle(0xf0c868).fillRect(1328, surfaceYAt(1320) - 20, 30, 7);
     details.fillRect(1415, surfaceYAt(1320) - 20, 56, 7);
 
-    this.add
-      .text(1100, surfaceYAt(1100) - 92, "OBERFLÄCHE", {
-        fontFamily: "Arial Black, sans-serif",
-        fontSize: "22px",
-        color: "#29404b",
-      })
-      .setOrigin(0.5)
-      .setDepth(4);
-    this.add
-      .text(1090, 940, "ALTE HÖHLE\nFLUGPHASE TESTEN", {
-        align: "center",
-        fontFamily: "Arial, sans-serif",
-        fontSize: "19px",
-        color: "#a9909f",
-        fontStyle: "bold",
-      })
-      .setOrigin(0.5)
-      .setDepth(1);
+    for (const x of [260, 760, 1180, 1780, 2220]) {
+      const y = surfaceYAt(x);
+      details.fillStyle(0x6c4b6d, 0.8).fillCircle(x, y + 140, 14);
+      details.fillStyle(0x9e6e9a, 0.9).fillTriangle(x, y + 128, x - 10, y + 156, x + 10, y + 156);
+    }
   }
 
   private createVehicle(): void {
@@ -288,13 +276,13 @@ export class BurrowGameScene extends Phaser.Scene {
 
   private createHud(): void {
     this.hudPanel = this.add
-      .rectangle(18, 18, 570, 170, 0x10151c, 0.88)
+      .rectangle(18, 18, 500, 137, 0x17122a, 0.9)
       .setOrigin(0)
       .setScrollFactor(0)
       .setDepth(100)
       .setStrokeStyle(2, 0xffbd50, 0.75);
     this.hudTitle = this.add
-      .text(38, 32, "BURROW LAB · GATE 3", {
+      .text(38, 32, "BURROW · VISUAL LAB", {
         fontFamily: "Arial Black, sans-serif",
         fontSize: "25px",
         color: "#ffd66d",
@@ -302,11 +290,11 @@ export class BurrowGameScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(101);
     this.hudText = this.add
-      .text(38, 69, "", {
-        fontFamily: "Consolas, monospace",
-        fontSize: "16px",
+      .text(38, 67, "", {
+        fontFamily: "Arial Black, sans-serif",
+        fontSize: "15px",
         color: "#f6edda",
-        lineSpacing: 5,
+        lineSpacing: 7,
       })
       .setScrollFactor(0)
       .setDepth(101);
@@ -395,7 +383,7 @@ export class BurrowGameScene extends Phaser.Scene {
     const at = (value: number): number => value * scale;
     this.uiScale = scale;
 
-    this.hudPanel.setPosition(at(18), at(18)).setSize(at(570), at(170));
+    this.hudPanel.setPosition(at(18), at(18)).setSize(at(500), at(137));
     this.hudTitle.setPosition(at(38), at(32)).setScale(scale);
     this.hudText.setPosition(at(38), at(69)).setScale(scale);
     this.goalText.setPosition(width - at(22), at(22)).setScale(scale);
@@ -521,23 +509,34 @@ export class BurrowGameScene extends Phaser.Scene {
 
   private renderWorm(): void {
     const state = this.motion.state;
-    const samples = this.motion.trail.sample(23, 18);
+    const visual = creatureVisualForBiomass(this.hunt.state.biomass);
+    const samples = this.motion.trail.sample(visual.sampleCount, visual.segmentSpacing);
     const graphics = this.wormGraphics;
     graphics.clear();
 
     for (let index = samples.length - 1; index >= 1; index -= 1) {
       const point = samples[index]!;
       const bodyRatio = 1 - index / samples.length;
-      const radius = 7 + bodyRatio * 13;
-      graphics.fillStyle(0x2a1820, 1).fillCircle(point.x, point.y, radius + 4);
-      graphics
-        .fillStyle(index % 3 === 0 ? 0xc75a35 : 0xdf7840, 1)
-        .fillCircle(point.x, point.y, radius);
-      if (index % 4 === 0) {
-        graphics.fillStyle(0xf2a34f, 0.75).fillCircle(
-          point.x - radius * 0.2,
-          point.y - radius * 0.35,
-          Math.max(2, radius * 0.22),
+      const radius = (7 + bodyRatio * 14) * visual.bodyRadiusMultiplier;
+      graphics.fillStyle(0x251832, 1).fillCircle(point.x, point.y, radius + 4);
+      graphics.fillStyle(index % 2 === 0 ? 0x7650a4 : 0x674495, 1).fillCircle(point.x, point.y, radius);
+      graphics.fillStyle(0xf0c8bb, 0.86).fillCircle(point.x, point.y + radius * 0.38, radius * 0.45);
+      if (index % visual.plateEvery === 0 && index < samples.length - 2) {
+        graphics.fillStyle(0x31203e, 1).fillTriangle(
+          point.x - radius * 0.48,
+          point.y - radius * 0.52,
+          point.x,
+          point.y - radius * 1.34,
+          point.x + radius * 0.48,
+          point.y - radius * 0.52,
+        );
+        graphics.fillStyle(0xed746f, 1).fillTriangle(
+          point.x - radius * 0.3,
+          point.y - radius * 0.52,
+          point.x,
+          point.y - radius * 1.14,
+          point.x + radius * 0.3,
+          point.y - radius * 0.52,
         );
       }
     }
@@ -545,24 +544,30 @@ export class BurrowGameScene extends Phaser.Scene {
     const head = state.position;
     const forward = { x: Math.cos(state.angle), y: Math.sin(state.angle) };
     const side = { x: -forward.y, y: forward.x };
-    graphics.fillStyle(0x24151c, 1).fillCircle(head.x, head.y, 29);
-    graphics.fillStyle(state.burstRemaining > 0 ? 0xff9b3f : 0xd85f35, 1).fillCircle(head.x, head.y, 24);
-    graphics.fillStyle(0xf2a34f, 1).fillTriangle(
-      head.x + forward.x * 31,
-      head.y + forward.y * 31,
-      head.x + side.x * 17 - forward.x * 4,
-      head.y + side.y * 17 - forward.y * 4,
-      head.x - side.x * 17 - forward.x * 4,
-      head.y - side.y * 17 - forward.y * 4,
+    const headRadius = visual.headRadius;
+    graphics.fillStyle(0x251832, 1).fillCircle(head.x, head.y, headRadius + 5);
+    graphics.fillStyle(state.burstRemaining > 0 ? 0xaa73d7 : 0x825ab2, 1).fillCircle(head.x, head.y, headRadius);
+    graphics.fillStyle(0xf0c8bb, 1).fillCircle(
+      head.x - forward.x * headRadius * 0.15 + side.x * headRadius * 0.4,
+      head.y - forward.y * headRadius * 0.15 + side.y * headRadius * 0.4,
+      headRadius * 0.52,
+    );
+    graphics.fillStyle(0xed746f, 1).fillTriangle(
+      head.x - side.x * headRadius * 0.45 - forward.x * headRadius * 0.1,
+      head.y - side.y * headRadius * 0.45 - forward.y * headRadius * 0.1,
+      head.x - forward.x * headRadius * 0.75,
+      head.y - forward.y * headRadius * 0.75,
+      head.x + side.x * headRadius * 0.45 - forward.x * headRadius * 0.1,
+      head.y + side.y * headRadius * 0.45 - forward.y * headRadius * 0.1,
     );
     for (const sideSign of [-1, 1]) {
-      const eyeX = head.x + forward.x * 8 + side.x * 10 * sideSign;
-      const eyeY = head.y + forward.y * 8 + side.y * 10 * sideSign;
-      graphics.fillStyle(0xfff4d2, 1).fillCircle(eyeX, eyeY, 5);
+      const eyeX = head.x + forward.x * headRadius * 0.32 + side.x * headRadius * 0.34 * sideSign;
+      const eyeY = head.y + forward.y * headRadius * 0.32 + side.y * headRadius * 0.34 * sideSign;
+      graphics.fillStyle(0xfff6df, 1).fillCircle(eyeX, eyeY, headRadius * 0.23);
       graphics.fillStyle(0x29171d, 1).fillCircle(
-        eyeX + forward.x * 2,
-        eyeY + forward.y * 2,
-        2.5,
+        eyeX + forward.x * headRadius * 0.08,
+        eyeY + forward.y * headRadius * 0.08,
+        headRadius * 0.1,
       );
     }
   }
@@ -817,11 +822,11 @@ export class BurrowGameScene extends Phaser.Scene {
       tunnel: "TUNNELGLEITEN",
       airborne: "FLUGPHASE",
     };
+    const visual = creatureVisualForBiomass(this.hunt.state.biomass);
     this.hudText.setText([
-      `MODUS  ${modeLabel[state.mode]}   TEMPO  ${Math.round(state.speed)}`,
-      `TUNNEL  ${Math.round(state.excavatedCells * 0.016)} m²   UPDATE  ${this.terrainRenderer.lastUpdatedTileCount} KACHEL(N)`,
-      `BEUTE  ${this.hunt.state.vehicle.active ? `${this.hunt.state.vehicle.hitPoints}/${this.hunt.state.vehicle.maximumHitPoints} HP` : "VERSCHLUNGEN"}   BIOMASSE  ${this.hunt.state.biomass}`,
-      `HÜTTE  ${this.structure.state.collapsed ? "EINGESTÜRZT" : `${this.structure.state.supports.filter((support) => support.active).length}/3 STÜTZEN`}`,
+      `BIOMASSE  ${this.hunt.state.biomass} · ${visual.label}`,
+      `BEUTE  ${this.hunt.state.vehicle.active ? `${this.hunt.state.vehicle.hitPoints}/${this.hunt.state.vehicle.maximumHitPoints} HP` : "VERDAUT"}   HÜTTE  ${this.structure.state.collapsed ? "KOLLAPS" : `${this.structure.state.supports.filter((support) => support.active).length}/3`}`,
+      `GEFAHR  RUHEPHASE   ·   ${modeLabel[state.mode]}`,
     ]);
     const vehicle = this.hunt.state.vehicle;
     const vehicleDistance = Math.round(

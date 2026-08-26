@@ -47,6 +47,7 @@ andere Priorität bestätigt. Es darf höchstens ein Task als `in Arbeit` gelten
 | `038_BURROW_GATE_2_HUNT.md` | abgeschlossen (technisch) | einzelner Jagd-, Bite- und Biomasse-Test mit Feedback-Iteration |
 | `039_BURROW_GATE_3_STRUCTURE.md` | abgeschlossen (technisch) | einzelne Stützenhütte, Untergraben und Kollaps |
 | `040_BURROW_MOBILE_DIRECT_CONTROL.md` | abgeschlossen | randlose Mobilansicht, Vollbild und direkte Steuerung |
+| `041_BURROW_VISUAL_FOUNDATION.md` | technisch abgeschlossen, visueller Spieltest offen | lesbarer Stil- und Kreaturenbaukasten vor Gate 4 |
 
 Ein Status wird erst nach überprüfter Abnahme geändert. Scope-Erweiterungen
 gehören in einen neuen Task, nicht stillschweigend in einen bestehenden.

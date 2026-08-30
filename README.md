@@ -127,20 +127,20 @@ Aktueller Teststand:
   Viewport ohne seitliche Letterbox-Balken. Ein Vollbildschalter erscheint auf
   Touch-Geräten, wenn der Browser die Fullscreen-API freigibt.
 
-### Nächstes Produkttor: der dreiminütige Fantasy-Loop
+### Nächstes Produkttor: der vollständige Drei-Level-Run
 
-Die Terrainfrage ist entschieden: B bleibt Grundlage. Als Nächstes wird nicht
-die Welt verbreitert, sondern auf derselben kleinen Arena geprüft, ob daraus ein
-wiederholbarer Drei-Minuten-Run entsteht. Der kleinste zulässige Test ergänzt
-einen klaren Timer, zwei zeitlich getrennte 1-aus-3-Entscheidungen, genau eine
-sichtbare Wachstumsstufe, eine besondere Schlusskutsche und einen kurzen
-Ergebniszustand. Vorhandene Kutsche, Tier, Turm und Schrein werden dafür
-wiederverwendet.
+Die Terrainfrage ist entschieden: B bleibt Grundlage. Als Nächstes entsteht
+ein zusammenhängender Run aus drei höchstens dreiminütigen Levels. Ein Schrein
+in einer vorgefertigten Höhle liefert pro Level eine 1-aus-3-Upgradewahl;
+zwischen den Levels wächst der Wurm vom Keimling zum Gräber und schließlich
+zum Koloss. Kutsche, Tier, Turm und Schrein werden wiederverwendet und zu Jagd,
+gezielter Zerstörung und einer königlichen Schlusskutsche gesteigert.
 
 Neue Regionen, Gegnerfamilien, Meta-Fortschritt oder finale Assets bleiben
-gesperrt, bis dieser kurze Loop persönlich die Frage „noch eine Runde?“ positiv
-beantwortet. Der Weg ist in der [Burrow-Produktvision](BURROW_Produktvision_und_Entwicklungsplan.md)
-und im [Vertical Slice](docs/burrow/VERTICAL_SLICE.md) dokumentiert.
+gesperrt, bis dieser Run persönlich die Frage „noch eine Runde?“ positiv
+beantwortet. Der Weg ist in der [Burrow-Produktvision](BURROW_Produktvision_und_Entwicklungsplan.md),
+im [Drei-Level-Plan](docs/burrow/THREE_LEVEL_SLICE.md) und im
+[Vertical Slice](docs/burrow/VERTICAL_SLICE.md) dokumentiert.
 
 Steuerung:
 

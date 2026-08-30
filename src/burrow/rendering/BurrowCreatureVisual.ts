@@ -1,4 +1,6 @@
-export type BurrowGrowthStage = "sprout" | "burrower" | "colossus";
+import type { BurrowGrowthStage } from "../simulation/BurrowRun";
+
+export type { BurrowGrowthStage } from "../simulation/BurrowRun";
 
 export interface BurrowCreatureVisual {
   readonly stage: BurrowGrowthStage;
@@ -21,4 +23,8 @@ export function creatureVisualForBiomass(biomass: number): BurrowCreatureVisual 
   if (biomass >= 3) return VISUALS.colossus;
   if (biomass >= 1) return VISUALS.burrower;
   return VISUALS.sprout;
+}
+
+export function creatureVisualForStage(stage: BurrowGrowthStage): BurrowCreatureVisual {
+  return VISUALS[stage];
 }

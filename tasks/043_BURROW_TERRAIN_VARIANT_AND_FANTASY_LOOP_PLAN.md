@@ -361,18 +361,21 @@ werden.
 
 ## Freigabefolge nach Task 043
 
-Erst ein positives Terrainergebnis erlaubt einen neuen Task für den
-dreiminütigen Fantasy-Loop. Dieser Folgetask darf zunächst nur enthalten:
+Das positive Terrainergebnis hat D-063 konkretisiert. Der historische Vorschlag
+eines einzelnen Drei-Minuten-Tests wird durch den verbindlichen Drei-Level-Plan
+in `docs/burrow/THREE_LEVEL_SLICE.md` ersetzt. Der erste Folgetask darf zunächst
+nur enthalten:
 
-- die vorhandene Arena und vorhandenen Weltobjekte,
-- einen exakt dreiminütigen Runcontroller,
-- zwei zeitlich klar getrennte 1-aus-3-Upgradeentscheidungen,
-- eine sichtbare, fachlich kleine Wachstumsstufe,
+- gemeinsames rendererfreies Run- und Leveldefinitionsfundament,
+- ein vollständiges Level 1 mit höchstens 180 Sekunden aktiver Zeit,
+- einen Schrein in einer vorgefertigten Höhle und genau eine 1-aus-3-Wahl,
+- die drei Upgradepfade auf Rang 1,
 - eine besondere Schlusskutsche aus der vorhandenen Kutschenlogik,
-- einen kurzen Ergebniszustand und die Frage „noch eine Runde?“.
+- Scheitern, Levelabschluss und Wachstum vom Keimling zum Gräber.
 
-Neue Tierarten, Ritter, Magier, Regionen und Makrofortschritt bleiben auch dann
-gesperrt, bis dieser Loop persönlich wiederholenswert ist.
+Level 2 beginnt erst nach persönlicher Level-1-Abnahme, Level 3 erst nach
+Level 2. Ritter, Magier, weitere Regionen und Makrofortschritt bleiben auch
+danach bis zur positiven Drei-Level-Abnahme gesperrt.
 
 ## Verifikation
 

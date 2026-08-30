@@ -98,7 +98,59 @@ describe("BurrowMotion", () => {
     expect(motion.state.position.x).toBeLessThan(840);
     expect(motion.state.mode).not.toBe("airborne");
   });
+
+  it("gives Skystrider a higher deterministic vertical burst apex", () => {
+    const base = verticalBurstApex(1);
+    const skystrider = verticalBurstApex(1.12);
+
+    expect(skystrider).toBeLessThan(base - 20);
+  });
+
+  it("makes Ram impact actions larger while a B burst start still removes no terrain", () => {
+    const base = breachRemovedCells(1);
+    const ram = breachRemovedCells(1.2);
+    expect(ram).toBeGreaterThan(base);
+
+    const terrain = filledTerrain();
+    const motion = new BurrowMotion(terrain, { x: 160, y: 220 }, 0, "recovering", { impactRadiusMultiplier: 1.2 });
+    const version = terrain.version;
+    motion.step({ direction: null, burstPressed: true }, FIXED_STEP);
+    expect(terrain.version).toBe(version);
+  });
 });
+
+function verticalBurstApex(burstSpeedMultiplier: number): number {
+  const terrain = new BurrowTerrain({
+    worldWidth: 900,
+    worldHeight: 600,
+    cellSize: 4,
+    solidAt: (_x, y) => y >= 380,
+  });
+  const motion = new BurrowMotion(terrain, { x: 400, y: 300 }, -Math.PI / 2, "recovering", { burstSpeedMultiplier });
+  let apex = motion.state.position.y;
+  for (let step = 0; step < 150; step += 1) {
+    motion.step({ direction: { x: 0, y: -1 }, burstPressed: step === 0 }, FIXED_STEP);
+    apex = Math.min(apex, motion.state.position.y);
+  }
+  return apex;
+}
+
+function breachRemovedCells(impactRadiusMultiplier: number): number {
+  const terrain = new BurrowTerrain({
+    worldWidth: 900,
+    worldHeight: 600,
+    cellSize: 4,
+    solidAt: (_x, y) => y >= 260,
+  });
+  const motion = new BurrowMotion(terrain, { x: 400, y: 330 }, -Math.PI / 2, "recovering", { impactRadiusMultiplier });
+  let removed = 0;
+  for (let step = 0; step < 120; step += 1) {
+    const result = motion.step({ direction: { x: 0, y: -1 }, burstPressed: step === 0 }, FIXED_STEP);
+    removed += result.terrainMutation?.removedCells ?? 0;
+    if (result.events.some((event) => event.type === "breach")) break;
+  }
+  return removed;
+}
 
 function filledTerrain(): BurrowTerrain {
   return new BurrowTerrain({

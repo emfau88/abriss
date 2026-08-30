@@ -38,4 +38,14 @@ describe("BurrowWorldResponse", () => {
       .toEqual({ animalFledNow: false, shrineActivatedNow: false });
     expect(world.state.shrine.activated).toBe(true);
   });
+
+  it("keeps the shrine dormant until the run allows its contact and permits one animal devour", () => {
+    const world = createWorld();
+
+    expect(world.step({ headPosition: { x: 900, y: 700 }, breachOccurred: false, shrineEnabled: false, deltaSeconds: 1 / 60 }))
+      .toEqual({ animalFledNow: false, shrineActivatedNow: false });
+    expect(world.tryDevourAnimal({ headPosition: { x: 500, y: 297 }, speed: 225 })).toBe(true);
+    expect(world.tryDevourAnimal({ headPosition: { x: 500, y: 297 }, speed: 225 })).toBe(false);
+    expect(world.state.animal.active).toBe(false);
+  });
 });

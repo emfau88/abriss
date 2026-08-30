@@ -15,14 +15,22 @@ unverändert spielbar; Burrow verwendet ausschließlich `burrow.html`.
 > vorhandenen Tunneln Tempo aufzunehmen und mit Wucht an die Oberfläche zu
 > brechen?
 
-Nur ein positives Ergebnis rechtfertigt Beute, Zerstörung, Gegnerreaktion oder
-Meta-Progression.
+Das Bewegungs-Gate wurde persönlich positiv bewertet und hat die heutigen
+Beute-, Zerstörungs- und Weltreaktionstests gerechtfertigt. Meta-Progression
+bleibt bis zu einem positiven vollständigen Run gesperrt.
 
 Aktuelle Terraingrundlage nach persönlicher Nutzerwahl: B mit zehn Sekunden
 aktiver Schnellspur statt permanenten Tunneln durch normale Bewegung. Der
 Burstknopf allein stanzt kein Erdloch; Oberflächendurchbruch und schneller
 Einschlag dürfen Terrain dauerhaft verändern (D-062). Das bestätigt keine
 weiteren Produktgates und verändert die Abriss-Vision nicht.
+
+Der nächste bestätigte Produktscope ist ein zusammenhängender Drei-Level-Run
+aus ungefähr neun Minuten aktiver Spielzeit. Er verbindet den vorhandenen
+Schrein in einer festen Höhlenkammer mit drei 1-aus-3-Upgrades, zwei sichtbaren
+Wachstumsstufen, höheren Breaches, gezielter Strukturzerstörung und einer
+eskalierenden Schlusskutsche. Gebaut wird levelweise mit persönlichem Tor nach
+jedem Level; Details stehen in `THREE_LEVEL_SLICE.md` (D-063).
 
 ## Langfristige Richtung, noch nicht Scope
 
@@ -39,7 +47,8 @@ Monster-Arcade-Kopie abheben.
 - Wirkung entsteht aus Bewegung, Terrain und Konsequenz statt aus vielen
   Fähigkeiten,
 - klare Cartoon-Lesbarkeit ohne Gore,
-- kurze Beweisstufen statt vorgezogener Contentproduktion,
+- kurze, vollständige Levels mit Entscheidungstoren statt vorgezogener
+  Contentproduktion,
 - ein gescheitertes Gate stoppt Folgeproduktion.
 
 ## Nichtziele des Produktlabors

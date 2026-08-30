@@ -1,6 +1,6 @@
 # Burrow-Produktlabor: Entscheidungstore
 
-Stand: 25. August 2026
+Stand: 30. August 2026
 
 Jedes Gate wird separat implementiert, getestet und vom Nutzer beurteilt. Ein
 späteres Gate beginnt nicht automatisch.
@@ -182,3 +182,17 @@ quantitative A–B–B–A-Wertung. Burststart entfernt auf seinen Wunsch keine 
 mehr; Breach und schneller Einschlag behalten ihre Terrainwirkung. Damit
 entfällt das direkte Freistanzen von Stützen per Burstknopf. Neue Inhalte oder
 Folgegates sind durch diese Korrektur nicht freigegeben.
+
+## Nächster Slice – drei vollständige Levels
+
+Mit D-063 ist nach der Terrainwahl der nächste Produktscope freigegeben:
+ein gemeinsamer Run aus drei Levels zu höchstens 180 Sekunden aktiver Spielzeit.
+Jedes Level enthält Ziel, Biomasseschwelle, Schrein in einer vorgefertigten
+Höhle, genau eine 1-aus-3-Upgradeentscheidung und ein Finale. Nach Level 1 und
+2 wächst der Wurm sichtbar und fachlich; Level 3 endet an einer mehrphasigen
+Schlusskutsche und einem Ergebnisbildschirm.
+
+Die Freigabe gilt gestuft. Task 044 baut ausschließlich das gemeinsame
+Runfundament und ein vollständiges Level 1. Level 2 beginnt erst nach
+persönlicher Abnahme dieses Loops, Level 3 erst nach Level 2. Der vollständige
+Scope, Upgradepfade und Erfolgskriterien stehen in `THREE_LEVEL_SLICE.md`.

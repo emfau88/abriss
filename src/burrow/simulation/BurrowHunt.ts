@@ -16,6 +16,7 @@ export interface BurrowVehicleState {
   readonly active: boolean;
   readonly respawnRemaining: number;
   readonly surfaceStatus: SurfaceStatus;
+  readonly kind: "patrol" | "finale";
 }
 
 export interface BurrowHuntState {
@@ -28,6 +29,7 @@ export interface BiteAttempt {
   readonly headPosition: Point;
   readonly speed: number;
   readonly burstActive: boolean;
+  readonly damageBonus?: number;
 }
 
 export interface BiteResult {
@@ -40,6 +42,17 @@ export interface HuntStepResult {
   readonly respawned: boolean;
 }
 
+export interface BurrowHuntTuning {
+  readonly vehicleSpeed: number;
+  readonly vehicleContactRadius: number;
+  readonly minimumBiteSpeed: number;
+  readonly heavyBiteSpeed: number;
+  readonly biteCooldown: number;
+  readonly respawnSeconds: number;
+  readonly vehicleHitPoints: number;
+  readonly kind: "patrol" | "finale";
+}
+
 const VEHICLE_SPEED = 48;
 const VEHICLE_HEIGHT_ABOVE_SURFACE = 31;
 const VEHICLE_CONTACT_RADIUS = 64;
@@ -48,6 +61,16 @@ const HEAVY_BITE_SPEED = 300;
 const BITE_COOLDOWN = 0.58;
 const RESPAWN_SECONDS = 3.2;
 const VEHICLE_HIT_POINTS = 3;
+const DEFAULT_TUNING: BurrowHuntTuning = {
+  vehicleSpeed: VEHICLE_SPEED,
+  vehicleContactRadius: VEHICLE_CONTACT_RADIUS,
+  minimumBiteSpeed: MINIMUM_BITE_SPEED,
+  heavyBiteSpeed: HEAVY_BITE_SPEED,
+  biteCooldown: BITE_COOLDOWN,
+  respawnSeconds: RESPAWN_SECONDS,
+  vehicleHitPoints: VEHICLE_HIT_POINTS,
+  kind: "patrol",
+};
 
 /**
  * Rendererfreie Jagdschleife für Gate 2. Das Fahrzeug folgt bewusst nur einer
@@ -55,14 +78,20 @@ const VEHICLE_HIT_POINTS = 3;
  */
 export class BurrowHunt {
   private mutableState: BurrowHuntState;
+  private tuning: BurrowHuntTuning;
 
-  public constructor(private readonly route: VehicleRoute, private readonly surface?: BurrowSurfaceSupport) {
+  public constructor(
+    private readonly route: VehicleRoute,
+    private readonly surface?: BurrowSurfaceSupport,
+    tuning: Partial<BurrowHuntTuning> = {},
+  ) {
     if (route.minimumX >= route.maximumX) {
       throw new Error("A vehicle route needs a positive horizontal span.");
     }
     if (route.startX < route.minimumX || route.startX > route.maximumX) {
       throw new Error("The vehicle start must be inside its patrol route.");
     }
+    this.tuning = { ...DEFAULT_TUNING, ...tuning };
     this.mutableState = {
       vehicle: this.createVehicle(route.startX, 1),
       biomass: 0,
@@ -72,6 +101,20 @@ export class BurrowHunt {
 
   public get state(): BurrowHuntState {
     return this.mutableState;
+  }
+
+  public beginFinale(tuning: Pick<BurrowHuntTuning, "vehicleHitPoints">): void {
+    this.tuning = {
+      ...this.tuning,
+      ...tuning,
+      kind: "finale",
+      respawnSeconds: Number.POSITIVE_INFINITY,
+    };
+    this.mutableState = {
+      ...this.mutableState,
+      biteCooldown: 0,
+      vehicle: this.createVehicle(this.route.startX, 1),
+    };
   }
 
   public step(deltaSeconds: number): HuntStepResult {
@@ -102,7 +145,7 @@ export class BurrowHunt {
     const patrol = advancePatrol(
       vehicle.position.x,
       vehicle.direction,
-      VEHICLE_SPEED * deltaSeconds,
+      this.tuning.vehicleSpeed * deltaSeconds,
       this.route.minimumX,
       this.route.maximumX,
     );
@@ -125,25 +168,25 @@ export class BurrowHunt {
     if (
       !vehicle.active ||
       this.mutableState.biteCooldown > 0 ||
-      attempt.speed < MINIMUM_BITE_SPEED ||
-      distance(attempt.headPosition, vehicle.position) > VEHICLE_CONTACT_RADIUS
+      attempt.speed < this.tuning.minimumBiteSpeed ||
+      distance(attempt.headPosition, vehicle.position) > this.tuning.vehicleContactRadius
     ) {
       return null;
     }
 
-    const damage = attempt.burstActive || attempt.speed >= HEAVY_BITE_SPEED ? 2 : 1;
+    const damage = (attempt.burstActive || attempt.speed >= this.tuning.heavyBiteSpeed ? 2 : 1) + (attempt.damageBonus ?? 0);
     const remainingHitPoints = Math.max(0, vehicle.hitPoints - damage);
     const devoured = remainingHitPoints === 0;
     this.mutableState = {
       ...this.mutableState,
       biomass: this.mutableState.biomass + (devoured ? 1 : 0),
-      biteCooldown: BITE_COOLDOWN,
+      biteCooldown: this.tuning.biteCooldown,
       vehicle: devoured
         ? {
             ...vehicle,
             hitPoints: 0,
             active: false,
-            respawnRemaining: RESPAWN_SECONDS,
+            respawnRemaining: this.tuning.respawnSeconds,
           }
         : { ...vehicle, hitPoints: remainingHitPoints },
     };
@@ -154,11 +197,12 @@ export class BurrowHunt {
     return {
       position: this.vehiclePosition(x),
       direction,
-      hitPoints: VEHICLE_HIT_POINTS,
-      maximumHitPoints: VEHICLE_HIT_POINTS,
+      hitPoints: this.tuning.vehicleHitPoints,
+      maximumHitPoints: this.tuning.vehicleHitPoints,
       active: true,
       respawnRemaining: 0,
       surfaceStatus: "grounded",
+      kind: this.tuning.kind,
     };
   }
 

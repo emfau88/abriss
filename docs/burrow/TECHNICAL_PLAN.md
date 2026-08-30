@@ -1,6 +1,6 @@
 # Burrow-Produktlabor: technische Grenzen
 
-Stand: 25. August 2026
+Stand: 30. August 2026
 
 ## Isolation
 
@@ -79,6 +79,27 @@ Staub; es simuliert keine Gebäudeteile oder Starrkörper.
 - Gameplay bleibt mit zwei Daumen bedienbar.
 - Eingabe wird vor dem Simulationsschritt in einen normalisierten Richtungsvektor
   und ein Burst-Signal übersetzt.
+
+## Drei-Level-Run (D-063)
+
+Der nächste Slice verwendet eine gemeinsame Scene und rendererfreie,
+serialisierbare Zustände statt drei kopierter Implementierungen:
+
+- `BurrowRunState` für Level, aktive Ticks, Level- und Gesamtbiomasse,
+  Wachstum, Upgrade-Ränge, Score und Abschluss,
+- `BurrowLevelDefinition` für Terrain, Start, Schreinraum, Routen, Ziele,
+  Schwellen und Finale,
+- `BurrowRunBuild` als einzige berechnete Wahrheit für Bewegungs-, Biss- und
+  Impactwerte,
+- ein parametrisiertes Zielsystem für kleine Beute, Kutschen und Elitewagen,
+- vorhandene Stützenlogik für alle kuratierten Strukturen.
+
+Levelzeit läuft ausschließlich in festen Simulationsticks und pausiert bei
+Upgrade- und Übergangszuständen. Vor jedem Level wird ein serialisierbarer
+Einstiegscheckpoint gespeichert. Ein Fehlversuch stellt diesen Zustand wieder
+her und kann weder Biomasse noch Upgrades duplizieren. Wachstumsstufen ändern
+im ersten Slice nicht den Kollisionsradius. Der fachliche Umfang und die
+Baureihenfolge stehen in `THREE_LEVEL_SLICE.md`.
 
 ## Build
 

@@ -69,15 +69,17 @@ Reaktionsbeweis aus fliehendem Tier, sichtbarem Turmschaden und aktivierbarem
 Höhlenschrein. Nach persönlichem Terrainvergleich ist Variante B verbindliche
 Grundlage: normale Bewegung erzeugt eine zehn Sekunden aktive Schnellspur,
 Burststart kein Erdloch; lokale Krater bleiben Durchbruch und schnellem
-Wiedereintritt vorbehalten (D-062). Das nächste Produkttor ist ein isolierter
-dreiminütiger Fantasy-Loop, keine breite Contentproduktion. Verbindlich für
+Wiedereintritt vorbehalten (D-062). Das nächste Produkttor ist ein gestuft
+gebauter Drei-Level-Run mit Schrein-Upgrades, Wachstum, höheren Breaches und
+gezielter Zerstörung (D-063), keine breite Contentproduktion. Verbindlich für
 diesen abgegrenzten Bereich sind:
 
 - `burrow/VISION.md`,
 - `burrow/VERTICAL_SLICE.md`,
-- `burrow/TECHNICAL_PLAN.md`.
+- `burrow/TECHNICAL_PLAN.md`,
+- `burrow/THREE_LEVEL_SLICE.md`.
 
 Plan und aktueller Entscheidungsstand: `../BURROW_Produktvision_und_Entwicklungsplan.md`
-und `../tasks/043_BURROW_TERRAIN_VARIANT_AND_FANTASY_LOOP_PLAN.md`.
+und `../tasks/044_BURROW_LEVEL_1_RUN_FOUNDATION.md`.
 
 Der direkte Test läuft über `burrow.html`; Abriss bleibt unter `index.html`.

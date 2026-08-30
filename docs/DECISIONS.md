@@ -798,3 +798,48 @@ Krater. Es wird weder die Maske aufgefüllt noch bestehender Boden restauriert.
 Das direkte Freistanzen eines Stützenankers durch Burststart entfällt ebenfalls.
 Ein Ersatzangriff oder eine Anpassung der Stützen ist nicht Teil dieser
 Korrektur. Keine Freigabe neuer Inhalte, Progression oder weiterer Gates.
+
+## 2026-08-30 – D-063: Drei vollständige Levels als nächster Burrow-Slice
+
+**Entscheidung:** Der nächste Burrow-Beweis ist ein zusammenhängender Run aus
+genau drei höchstens dreiminütigen Levels statt weiterer isolierter
+Einzelmechaniktests. Der Run muss die Kernvision praktisch verbinden: Graben,
+Fressen, gezielte Zerstörung, drei Schrein-Upgrades, zwei sichtbare
+Wachstumsstufen, höhere Breaches und eine eskalierende Schlusskutsche.
+
+**Konsequenz:** Jedes Level besitzt einen Schrein in einer vorgefertigten
+Höhlenkammer. Biomasse weckt ihn; Kopfkontakt öffnet eine pausierte 1-aus-3-Wahl
+aus Himmelsstürmer, Vielfraß und Rammbock. Upgrades und Wachstum bleiben im Run,
+werden bei einem neuen Run aber vollständig zurückgesetzt. Keimling wächst nach
+Level 1 zum Gräber und nach Level 2 zum Koloss. Die Grundkollision bleibt trotz
+sichtbarer Größe stabil; Wachstum erhöht insbesondere Burst-, Biss- und
+Impactwirkung.
+
+Die Levels werden nacheinander freigegeben: zuerst ein vollständiges Level 1
+mit gemeinsamem Runfundament, danach Zerstörungslevel 2, zuletzt Machtfinale
+Level 3. Es entstehen weder drei kopierte Szenen noch vorgezogene Meta-,
+Gegnerkampf- oder Contentsysteme. Der verbindliche Umfang steht in
+`docs/burrow/THREE_LEVEL_SLICE.md`.
+
+## 2026-08-30 – D-064: Level 1 bindet die Runform an fünf Biomasse und eine Acht-HP-Schlusskutsche
+
+**Entscheidung:** Task 044 setzt Level 1 als `Wiesenrand` mit 10.800 aktiven
+60-Hz-Schritten, einer Schwelle von fünf Biomasse und einer Schlusskutsche mit
+acht HP um. Das vorhandene Bergtier ist einmalig fressbare, bei Breach
+fliehende Kleinbeute; die vorhandene Kutsche bleibt die wiederkehrende
+parametrisierte Jagdbeute. Erst nach Schreinwahl wird sie als nicht
+wiederkehrende Schlusskutsche neu eingesetzt.
+
+**Konsequenz:** `BurrowRunState`, `BurrowLevelDefinition` und
+`BurrowRunBuild` sind rendererfrei und serialisierbar. Auswahl und Ergebnisse
+pausieren die aktive Zeit. `levelBiomass` weckt allein den Schrein;
+`totalBiomass` übernimmt die Levelbiomasse erst mit erfolgreichem Abschluss.
+Rang 1 bleibt fest: Himmelsstürmer ×1,12 Bursttempo, Vielfraß +1
+Kopfbissschaden, Rammbock ×1,20 Breach-/Impactradius. Burststart in B bleibt
+bei allen drei Builds ohne permanente Terrainmutation. Der Gräber ist nach
+Level 1 sichtbar und Buildzustand, ohne den Kollisionsradius zu ändern.
+
+**Abnahme:** Typprüfung, 47 Burrow-Fachtests, Produktionsbuild und ein
+isolierter Desktop-/Touch-Browsersmoke sind grün. Die persönliche
+Level-1-Wiederholungswertung und ein echter Mobiltest sind weiterhin vor
+Level 2 erforderlich; das ist keine Level-2-Freigabe.

@@ -14,6 +14,7 @@ export interface BurrowAnimalState {
   readonly direction: -1 | 1;
   readonly fleeing: boolean;
   readonly surfaceStatus: SurfaceStatus;
+  readonly active: boolean;
 }
 
 export interface BurrowShrineState {
@@ -30,6 +31,7 @@ export interface WorldResponseInput {
   readonly headPosition: Point;
   readonly breachOccurred: boolean;
   readonly deltaSeconds: number;
+  readonly shrineEnabled?: boolean;
 }
 
 export interface WorldResponseResult {
@@ -37,9 +39,16 @@ export interface WorldResponseResult {
   readonly shrineActivatedNow: boolean;
 }
 
+export interface AnimalDevourAttempt {
+  readonly headPosition: Point;
+  readonly speed: number;
+}
+
 const ANIMAL_ALERT_RADIUS = 285;
 const ANIMAL_FLEE_SPEED = 128;
 const SHRINE_CONTACT_RADIUS = 68;
+const ANIMAL_CONTACT_RADIUS = 52;
+const ANIMAL_MINIMUM_BITE_SPEED = 170;
 
 /**
  * Kleine, rein fachliche Weltreaktionen. Sie kennen keine Phaser-Sprites und
@@ -55,6 +64,7 @@ export class BurrowWorldResponse {
         direction: 1,
         fleeing: false,
         surfaceStatus: "grounded",
+        active: true,
       },
       shrine: { position: { ...config.shrinePosition }, activated: false },
     };
@@ -69,9 +79,9 @@ export class BurrowWorldResponse {
       throw new Error("World response requires a positive fixed step up to 100 ms.");
     }
     const animal = this.mutableState.animal;
-    const shouldFlee = animal.fleeing || (
+    const shouldFlee = animal.active && (animal.fleeing || (
       input.breachOccurred && distance(input.headPosition, animal.position) <= ANIMAL_ALERT_RADIUS
-    );
+    ));
     const direction: -1 | 1 = input.headPosition.x <= animal.position.x ? 1 : -1;
     const nextX = shouldFlee
       ? clamp(animal.position.x + direction * ANIMAL_FLEE_SPEED * input.deltaSeconds, this.config.minimumX, this.config.maximumX)
@@ -82,14 +92,31 @@ export class BurrowWorldResponse {
       surfaceStatus: placement?.status ?? "grounded",
       direction: shouldFlee ? direction : animal.direction,
       fleeing: shouldFlee,
+      active: animal.active,
     };
     const shrine = this.mutableState.shrine;
-    const shrineActivatedNow = !shrine.activated && distance(input.headPosition, shrine.position) <= SHRINE_CONTACT_RADIUS;
+    const shrineActivatedNow = (input.shrineEnabled ?? true) && !shrine.activated && distance(input.headPosition, shrine.position) <= SHRINE_CONTACT_RADIUS;
     this.mutableState = {
       animal: nextAnimal,
       shrine: shrineActivatedNow ? { ...shrine, activated: true } : shrine,
     };
     return { animalFledNow: !animal.fleeing && nextAnimal.fleeing, shrineActivatedNow };
+  }
+
+  public tryDevourAnimal(attempt: AnimalDevourAttempt): boolean {
+    const animal = this.mutableState.animal;
+    if (
+      !animal.active ||
+      attempt.speed < ANIMAL_MINIMUM_BITE_SPEED ||
+      distance(attempt.headPosition, animal.position) > ANIMAL_CONTACT_RADIUS
+    ) {
+      return false;
+    }
+    this.mutableState = {
+      ...this.mutableState,
+      animal: { ...animal, active: false, fleeing: false },
+    };
+    return true;
   }
 }
 
@@ -97,6 +124,8 @@ export const BURROW_WORLD_RESPONSE_CONSTANTS = {
   animalAlertRadius: ANIMAL_ALERT_RADIUS,
   animalFleeSpeed: ANIMAL_FLEE_SPEED,
   shrineContactRadius: SHRINE_CONTACT_RADIUS,
+  animalContactRadius: ANIMAL_CONTACT_RADIUS,
+  animalMinimumBiteSpeed: ANIMAL_MINIMUM_BITE_SPEED,
 } as const;
 
 function distance(first: Point, second: Point): number {

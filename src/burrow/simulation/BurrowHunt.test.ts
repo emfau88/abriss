@@ -60,6 +60,39 @@ describe("BurrowHunt", () => {
     expect(hunt.state.vehicle.hitPoints).toBe(hunt.state.vehicle.maximumHitPoints);
     expect(hunt.state.biomass).toBe(1);
   });
+
+  it("turns the existing cart into a non-respawning multi-hit finale target", () => {
+    const hunt = createHunt();
+    hunt.beginFinale({ vehicleHitPoints: 5 });
+    const position = hunt.state.vehicle.position;
+
+    expect(hunt.state.vehicle).toMatchObject({ kind: "finale", hitPoints: 5, maximumHitPoints: 5 });
+    hunt.tryBite({ headPosition: position, speed: 370, burstActive: true });
+    advancePastBiteCooldown(hunt);
+    hunt.tryBite({ headPosition: hunt.state.vehicle.position, speed: 370, burstActive: true });
+    advancePastBiteCooldown(hunt);
+    hunt.tryBite({ headPosition: hunt.state.vehicle.position, speed: 370, burstActive: true });
+    expect(hunt.state.vehicle.active).toBe(false);
+    for (let step = 0; step < 240; step += 1) hunt.step(FIXED_STEP);
+    expect(hunt.state.vehicle.active).toBe(false);
+  });
+
+  it("lets Glutton reduce valid head contacts without widening the contact rule", () => {
+    const hunt = createHunt();
+    const position = hunt.state.vehicle.position;
+
+    const gluttonBite = hunt.tryBite({
+      headPosition: position,
+      speed: 370,
+      burstActive: true,
+      damageBonus: 1,
+    });
+
+    expect(gluttonBite).toEqual({ damage: 3, devoured: true, remainingHitPoints: 0 });
+    const distantHunt = createHunt();
+    const distantPosition = distantHunt.state.vehicle.position;
+    expect(distantHunt.tryBite({ headPosition: { x: distantPosition.x + 65, y: distantPosition.y }, speed: 370, burstActive: true, damageBonus: 1 })).toBeNull();
+  });
 });
 
 function createHunt(overrides: Partial<{ startX: number }> = {}): BurrowHunt {

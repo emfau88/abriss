@@ -6,8 +6,14 @@
 Normale Bewegung nutzt eine zehn Sekunden aktive Schnellspur ohne permanente
 Terrainzerstörung. Das Drücken von Burst allein stanzt kein Loch an der
 Kopfposition; nur Breach und schneller Wiedereintritt erzeugen derzeit lokale
-permanente Krater (D-062). Der nächste zulässige Schritt ist der kleine
-dreiminütige Fantasy-Loop aus Abschnitt 17, nicht die vollständige Langfristvision.
+permanente Krater (D-062). Der nächste zulässige Schritt ist der gestuft
+umzusetzende Drei-Level-Slice aus Abschnitt 17, nicht die vollständige
+Langfristvision.
+
+Der verbindliche Schnitt verbindet drei Schrein-Upgrades, zwei sichtbare
+Wachstumsstufen, höhere Breaches, gezielte Strukturzerstörung und eine
+eskalierende Schlusskutsche. Details und Entscheidungstore stehen in
+`docs/burrow/THREE_LEVEL_SLICE.md` (D-063).
 
 ## 1. Ausgangspunkt
 
@@ -35,6 +41,8 @@ Der aktuelle Prototyp besitzt bereits:
 - Terrainmaske
 - Mobile-Steuerung
 - erste Gebäudestützen / Kollapslogik
+- ein fliehendes Oberflächentier
+- einen aktivierbaren Schrein in einer kleinen Höhlenkammer
 
 Das Hauptproblem:
 
@@ -672,50 +680,46 @@ Biomasse kann dienen als:
 
 Keine neue Währung nötig.
 
-## Änderung 6 – neuer kleiner Produkt-Test
-Nur:
-- normale Bewegung
-- temporäre Grabspur
-- Burst
-- 3 Zieltypen
-- Biomasse
-- 2–3 Upgrades
-- sichtbares Wachstum
+## Änderung 6 – Drei-Level-Produkt-Test
+
+Der nächste Test verbindet:
+- normale Bewegung und temporäre Grabspur,
+- Burst und höhere Breaches,
+- wenige parametrisierte Zieltypen,
+- Level- und Gesamtbiomasse,
+- einen Schrein und ein Upgrade je Level,
+- zwei Wachstumsübergänge,
+- gezielte Strukturzerstörung und drei eskalierende Finalziele.
 
 Noch kein großes Meta.
 
+## Änderung 7 – vorhandene reaktive Welt weiterverwenden
+
+Das fliehende Tier, der stützengestützte Turm und der aktivierbare Schrein sind
+bereits technische Grundlagen. Im Drei-Level-Slice erhalten sie klare Rollen:
+Tier als kleine Beute und Weltreaktion, Turm als kuratiertes Zerstörungsziel,
+Schrein als Upgrade-Ort. Jeder Schrein steht in einer vorgefertigten Höhle;
+Variante B verhindert, dass normales Graben ihn störend freilegt.
+
 ---
 
-# 17. Empfohlener nächster Prototyp
+# 17. Nächster Prototyp: Drei-Level-Vertical-Slice
 
-## „Burrow Fantasy Loop Test“
+Der nächste Prototyp ist ein vollständiger Run aus drei Levels mit jeweils
+höchstens drei Minuten aktiver Spielzeit:
 
-Dauer:
+1. **Wiesenrand – Hunger:** Bewegung, Beute, Biomasse, erster Schrein und
+   Händlerkutsche; danach Wachstum zum Gräber.
+2. **Goblinmarkt – Zerstörung:** Stützen, Kollaps, zweiter Schrein und
+   gepanzerter Handelswagen; danach Wachstum zum Koloss.
+3. **Burgstraße – Macht:** höchste Breaches, frühere Beute als Machtvergleich,
+   dritter Schrein und mehrphasige königliche Schlusskutsche.
 
-**3 Minuten**
-
-Eine kleine Meadowvale-Karte.
-
-### Ziele
-- Hühner
-- Schafe
-- Händlerkarren
-- ein Ritter
-
-### Progression
-Nach ca. 60 Sekunden:
-Upgrade 1
-
-Nach ca. 120 Sekunden:
-Upgrade 2
-
-Nach ca. 150 Sekunden:
-sichtbare Wachstumsstufe
-
-### Abschluss
-Besondere Kutsche erscheint.
-
-Mehrere Treffer nötig.
+Ein Schrein pro Level bietet Himmelsstürmer, Vielfraß oder Rammbock. Upgrades
+und Wachstum bleiben innerhalb des Runs erhalten. Level 1 wird vollständig
+gebaut und persönlich bewertet, bevor Level 2 beginnt; dasselbe Tor gilt vor
+Level 3. Der technische und inhaltliche Detailplan steht in
+`docs/burrow/THREE_LEVEL_SLICE.md`.
 
 ---
 
@@ -727,10 +731,10 @@ Der Test ist erfolgreich, wenn:
 2. Breaches gut planbar sind.
 3. Mehrfaches Spielen zerstört die Oberfläche nicht.
 4. Ziele bleiben erreichbar.
-5. Upgrade 1 ist spürbar.
-6. Wachstum ist sichtbar.
-7. Kutsche fühlt sich deutlich befriedigender an als normales Ziel.
-8. Nach drei Minuten will man noch eine Runde.
+5. Jede gewählte Verbesserung ist in der folgenden Spielminute spürbar.
+6. Gräber und Koloss sind sichtbar mächtiger und erreichen höhere Breaches.
+7. Gezielte Zerstörung und Schlusskutschen eskalieren über die drei Levels.
+8. Nach dem vollständigen Run will man noch eine Runde.
 
 ---
 
@@ -827,9 +831,11 @@ Referenzideen:
 **Terrainentscheidung abgeschlossen:** B trägt den weiteren Test; die störende
 Burststart-Ausstanzung wurde entfernt und technisch geprüft.
 
-Der nächste Schritt sollte nur diese Frage beantworten:
+Der nächste Schritt beantwortet nur diese Frage:
 
-> **Macht ein dreiminütiger Fantasy-Burrow-Run Spaß, wenn normales Untergrundbewegen die Welt nicht dauerhaft zerstört, aber Breaches und bestimmte Aktionen weiterhin echte Zerstörung verursachen?**
+> **Trägt Bewegung B einen vollständigen Drei-Level-Run, in dem Schrein-Upgrades,
+> Wachstum, höhere Breaches und gezielte Zerstörung bis zu einer klaren
+> Machtfantasie eskalieren?**
 
 Wenn **ja**: ausbauen.
 

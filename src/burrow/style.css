@@ -134,8 +134,8 @@ body {
 .terrain-test-controls button {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border: 1px solid #a88160;
   border-radius: 12px;
   background: #211820e8;
@@ -177,10 +177,22 @@ body {
 
   .burrow-fullscreen {
     right: max(10px, env(safe-area-inset-right));
-    bottom: max(98px, calc(env(safe-area-inset-bottom) + 96px));
-    min-height: 42px;
+    bottom: max(154px, calc(env(safe-area-inset-bottom) + 146px));
+    min-height: 48px;
     padding: 0 12px;
-    line-height: 40px;
+    line-height: 46px;
+  }
+
+  .terrain-test-controls {
+    gap: 6px;
+  }
+
+  .terrain-test-controls a,
+  .terrain-test-controls button {
+    width: 52px;
+    height: 52px;
+    border-radius: 15px;
+    font-size: 16px;
   }
 }
 

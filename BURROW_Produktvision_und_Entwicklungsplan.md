@@ -1,6 +1,13 @@
 # BURROW – Produktvision, Referenzanalyse und nächster Entwicklungsplan
 
-**Stand:** 27. August 2026
+**Stand:** 30. August 2026
+
+**Entscheidungsstand:** Der persönliche Vergleich hat Variante B bestätigt.
+Normale Bewegung nutzt eine zehn Sekunden aktive Schnellspur ohne permanente
+Terrainzerstörung. Das Drücken von Burst allein stanzt kein Loch an der
+Kopfposition; nur Breach und schneller Wiedereintritt erzeugen derzeit lokale
+permanente Krater (D-062). Der nächste zulässige Schritt ist der kleine
+dreiminütige Fantasy-Loop aus Abschnitt 17, nicht die vollständige Langfristvision.
 
 ## 1. Ausgangspunkt
 
@@ -191,14 +198,15 @@ Diese Darstellung verschwindet schnell wieder bzw. „fällt zusammen“.
 
 ### Trennung:
 
-**Bewegung:**  
+**Bewegung:**
 Der Wurm bewegt sich durch Erde. Die Erde bleibt grundsätzlich erhalten.
 
-**Echte Zerstörung:**  
+**Echte Zerstörung:**
 Nur bestimmte Aktionen entfernen Terrain wirklich dauerhaft.
 
 Zum Beispiel:
-- Burst
+- Oberflächendurchbruch
+- schneller Wiedereintritt
 - Spezialangriff
 - Fundament untergraben
 - Schatz freilegen
@@ -223,7 +231,7 @@ Aber:
 Beispiel:
 Der Wurm bewegt sich normal unter einer Kutsche entlang. Noch passiert nichts.
 
-Dann Burst:
+Dann Burst mit tatsächlichem Oberflächendurchbruch:
 - Wurm schießt hoch
 - lokaler Boden reißt auf
 - Kutsche wird getroffen
@@ -269,7 +277,7 @@ Humor entsteht aus Reaktionen:
 ## 3. Kernsteuerung
 Mobile First.
 
-Links: **Richtung**  
+Links: **Richtung**
 Rechts: **Burst**
 
 Optional später eine einzige Spezialfähigkeit.
@@ -612,7 +620,11 @@ Eigenständigkeit entsteht durch:
 
 ---
 
-# 16. Was am aktuellen Burrow-Code geändert werden muss
+# 16. Technischer Umsetzungsstand
+
+Die Terraintrennung wurde mit Task 043 umgesetzt und B anschließend als
+Grundlage gewählt. Die folgenden Punkte beschreiben den erreichten Kern und
+die noch bewusst begrenzte Anschlussarbeit.
 
 ## Änderung 1 – normales `carveCapsule()` aus der Bewegung entfernen
 Normale Bewegung verändert nur die Position.
@@ -622,7 +634,7 @@ Keine permanente Terrainmutation.
 Die Terrainmaske bleibt für Spezialaktionen erhalten.
 
 ## Änderung 2 – temporäre Grabspur im Renderer
-Rein visuelle Ebene:
+Separates, zehn Sekunden aktives Spurfeld:
 - Staub
 - Risse
 - Erdverdrängung
@@ -634,12 +646,13 @@ Keine Änderung an der Kollisionsmaske.
 ## Änderung 3 – echte Terrainzerstörung an Aktionen koppeln
 `carveCapsule()` bleibt erhalten.
 
-Aufruf nur bei:
-- Burst-Breach
-- Impact
-- Spezialangriff
-- Strukturuntergrabung
-- Ressourcenkammer
+Derzeitiger Aufruf nur bei:
+- Breach
+- schnellem Wiedereintritt ab 300 Weltpixel/s
+
+Burststart allein und die unterirdische Burststrecke entfernen kein Terrain.
+Spezialangriffe, Strukturaktionen und Ressourcenkammern sind mögliche spätere
+Mechaniken, aber nicht implementiert oder freigegeben.
 
 ## Änderung 4 – Oberflächenziele müssen reale Bodenhöhe lesen
 Kutschen und Einheiten dürfen nicht auf einer alten `surfaceY` schweben.
@@ -769,10 +782,10 @@ Echte Zerstörung bleibt erhalten, wird aber zu einem gezielten Gameplay-Ereigni
 # 21. Referenzquellen
 
 ## Death Worm
-Google Play:  
+Google Play:
 https://play.google.com/store/apps/details?id=com.playcreek.DeathWorm_Free
 
-Apple App Store:  
+Apple App Store:
 https://apps.apple.com/us/app/death-worm/id408657000
 
 Öffentlich belegte Elemente:
@@ -789,13 +802,13 @@ https://apps.apple.com/us/app/death-worm/id408657000
 - viele unterschiedliche Ziele/Gegner
 
 ## Effing Worms
-Kongregate:  
+Kongregate:
 https://www.kongregate.com/en/games/effinggames/effing-worms
 
-Effing Games – Effing Worms 2:  
+Effing Games – Effing Worms 2:
 https://effinggames.com/play/effing-worms-2
 
-Newgrounds – Effing Worms 2:  
+Newgrounds – Effing Worms 2:
 https://www.newgrounds.com/portal/view/598901
 
 Referenzideen:
@@ -810,6 +823,9 @@ Referenzideen:
 ---
 
 # 22. Nächste konkrete Entscheidung
+
+**Terrainentscheidung abgeschlossen:** B trägt den weiteren Test; die störende
+Burststart-Ausstanzung wurde entfernt und technisch geprüft.
 
 Der nächste Schritt sollte nur diese Frage beantworten:
 

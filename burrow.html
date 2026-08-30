@@ -12,9 +12,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta
       name="description"
-      content="Burrow Gate 3 – isoliertes Mobile-First-Grab- und Jagdlabor."
+      content="Burrow – isolierter Terrain-A/B-Test mit Graben, Jagd und Weltreaktionen."
     />
-    <title>Burrow Lab · Gate 3</title>
+    <title>Burrow Lab · Terrain A/B</title>
   </head>
   <body>
     <main class="burrow-shell" aria-label="Burrow Bewegungslabor">
@@ -26,6 +26,11 @@
         Burrow wartet auf eine Richtung.
       </output>
       <div id="burrow-game" aria-describedby="burrow-description"></div>
+      <nav class="terrain-test-controls" aria-label="Terrain-Test starten">
+        <a href="?terrain=persistent" data-terrain="persistent" title="Frischer Test mit dauerhaften Tunneln">A</a>
+        <a href="?terrain=recovering" data-terrain="recovering" title="Frischer Test mit Zehn-Sekunden-Spur">B</a>
+        <button id="burrow-restart" type="button" title="Aktuelle Variante neu starten">↻</button>
+      </nav>
       <a class="abriss-link" href="./">← Projekt Abriss</a>
       <button id="burrow-fullscreen" class="burrow-fullscreen" type="button" hidden>
         ⛶ <span>Vollbild</span>

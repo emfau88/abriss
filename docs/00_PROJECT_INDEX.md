@@ -1,6 +1,6 @@
 # Projektindex
 
-Stand: 24. August 2026
+Stand: 30. August 2026
 
 Dieses Dokument ist der Einstiegspunkt und die Karte der verbindlichen Projektdokumentation. Die Dokumente sollen kompakt bleiben. Inhalte werden nicht in mehreren Dateien parallel gepflegt.
 
@@ -64,11 +64,20 @@ Burrow ist seit dem 25. August 2026 als separater Multi-Page-Einstieg im selben
 Repository vorhanden. Es ist kein bestätigter Pivot und verändert keine
 Abriss-Produktentscheidung. Gate 1 wurde persönlich positiv bewertet; Gate 2
 erhielt eine technische Feedback-Iteration und Gate 3 testet aktuell eine
-einzelne Untergraben-zu-Kollaps-Folge. Verbindlich für diesen abgegrenzten
-Bereich sind:
+einzelne Untergraben-zu-Kollaps-Folge. Gate 4 ergänzt einen schmalen
+Reaktionsbeweis aus fliehendem Tier, sichtbarem Turmschaden und aktivierbarem
+Höhlenschrein. Nach persönlichem Terrainvergleich ist Variante B verbindliche
+Grundlage: normale Bewegung erzeugt eine zehn Sekunden aktive Schnellspur,
+Burststart kein Erdloch; lokale Krater bleiben Durchbruch und schnellem
+Wiedereintritt vorbehalten (D-062). Das nächste Produkttor ist ein isolierter
+dreiminütiger Fantasy-Loop, keine breite Contentproduktion. Verbindlich für
+diesen abgegrenzten Bereich sind:
 
 - `burrow/VISION.md`,
 - `burrow/VERTICAL_SLICE.md`,
 - `burrow/TECHNICAL_PLAN.md`.
+
+Plan und aktueller Entscheidungsstand: `../BURROW_Produktvision_und_Entwicklungsplan.md`
+und `../tasks/043_BURROW_TERRAIN_VARIANT_AND_FANTASY_LOOP_PLAN.md`.
 
 Der direkte Test läuft über `burrow.html`; Abriss bleibt unter `index.html`.

@@ -1,6 +1,6 @@
 # Burrow-Produktlabor: Vision
 
-Stand: 25. August 2026
+Stand: 30. August 2026
 
 ## Status
 
@@ -17,6 +17,12 @@ unverändert spielbar; Burrow verwendet ausschließlich `burrow.html`.
 
 Nur ein positives Ergebnis rechtfertigt Beute, Zerstörung, Gegnerreaktion oder
 Meta-Progression.
+
+Aktuelle Terraingrundlage nach persönlicher Nutzerwahl: B mit zehn Sekunden
+aktiver Schnellspur statt permanenten Tunneln durch normale Bewegung. Der
+Burstknopf allein stanzt kein Erdloch; Oberflächendurchbruch und schneller
+Einschlag dürfen Terrain dauerhaft verändern (D-062). Das bestätigt keine
+weiteren Produktgates und verändert die Abriss-Vision nicht.
 
 ## Langfristige Richtung, noch nicht Scope
 

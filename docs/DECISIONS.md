@@ -740,3 +740,61 @@ Gate 4 bleibt ein eigenes Freigabetor.
 
 **Umsetzung:** Task 041, technisch abgeschlossen am 26. August 2026;
 visueller Spieltest auf Mobilgerät steht offen.
+
+## 2026-08-26 – D-060: Reaktive Weltobjekte vor Gegner-Response testen
+
+**Entscheidung:** Gate 4 beginnt mit einem schmalen, isolierten Reaktionsslice:
+ein Tier flieht deterministisch vor nahen Durchbrüchen, der vorhandene
+stützengestützte Außenposten dient als zerstörbarer Turm, und ein einzelner
+Höhlenschrein wird über Kopfkontakt einmalig aktiviert.
+
+**Grund:** Der gewünschte Beweis ist nicht dekorative Weltkunst, sondern eine
+sichtbar reagierende Oberfläche. Die vorhandene Stützen- und Terrainlogik
+liefert bereits den kleinsten belastbaren Turm-Kollapskern.
+
+**Konsequenz:** Die Reaktionszustände bleiben rendererfrei und deterministisch.
+Phaser animiert nur diese Zustände. Es entstehen weder allgemeine NPC-Navigation
+noch Starrkörpertrümmer, Gegnerbeschuss oder eine Gate-5-Ökonomie.
+
+**Umsetzung:** Task 042, in Umsetzung am 26. August 2026.
+
+## 2026-08-30 – D-061: Reversibler Terrainvergleich vor dem Fantasy-Loop
+
+**Entscheidung:** Auf Nutzerfreigabe wird Task 043 umgesetzt. A behält dauerhaftes
+Graben; B verwendet eine zehn Sekunden aktive Schnellspur neben der permanenten
+Maske. Der Startparameter ist explizit, A bleibt vorerst Standard. Das ist keine
+endgültige Änderung der Burrow-Vision und keine Freigabe von Progression.
+
+**Konsequenz:** Die Hauptmaske wird niemals aufgefüllt. B entfernt Terrain nur
+lokal bei unterirdischem Burststart, Breach und schnellem Wiedereintritt
+(mindestens 300 Weltpixel/s). Ein Burststart am Anker ist gezieltes Untergraben;
+kein dauerhaft fräsender Burst-Korridor. Spuren erneuern ihre Lebensdauer beim
+erneuten Durchfahren, nicht beim Stillstehen. Die echte Maske entscheidet über
+Flugraum und Stützen, die Spur ausschließlich über Untergrundtempo.
+
+Kutsche und Tier erhalten in beiden Varianten dieselbe maskenbasierte
+Bodenreaktion. Sie stoppen vor zu großen Stufen; bei unter ihnen entferntem
+Boden sinken sie deterministisch zum nächsten Boden und bleiben gestoppt.
+Das präzisiert den Plan, ohne schwebende Objekte oder allgemeine Physik zu bauen.
+Diese gemeinsame Fehlerkorrektur ist die einzige bewusste Änderung an A.
+
+**Abnahme:** Technische Prüfungen durch den Bearbeiter, persönliche A–B–B–A-
+Wertung und Wahl der Standardvariante durch den Nutzer. Keine fingierte Abnahme.
+
+## 2026-08-30 – D-062: B als Grundlage, kein Krater beim Burststart
+
+**Entscheidung:** Nach persönlichem Ausprobieren wählt der Nutzer ausdrücklich
+B als Grundlage, jedoch ohne das ausgestanzte Erdloch an der Kopfposition beim
+Drücken von Burst. Diese Wahl ersetzt den vorläufigen A-Standard und die
+Burststart-Zerstörung aus D-061. Eine quantitative A–B–B–A-Wertung liegt nicht vor.
+
+**Konsequenz:** Ohne Terrainparameter startet B (`recovering`); A bleibt explizit
+als Vergleich aufrufbar. Burststart beschleunigt und meldet weiterhin sein
+Aktionsereignis, verändert aber keine Terrainzellen. Normale Bewegung und die
+gesamte unterirdische Burststrecke hinterlassen nur die zehn Sekunden aktive
+Spur. Breach und schneller Wiedereintritt behalten ihre lokalen permanenten
+Krater. Es wird weder die Maske aufgefüllt noch bestehender Boden restauriert.
+
+Das direkte Freistanzen eines Stützenankers durch Burststart entfällt ebenfalls.
+Ein Ersatzangriff oder eine Anpassung der Stützen ist nicht Teil dieser
+Korrektur. Keine Freigabe neuer Inhalte, Progression oder weiterer Gates.

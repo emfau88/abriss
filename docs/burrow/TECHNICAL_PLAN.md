@@ -45,6 +45,24 @@ Dies ist noch kein Streaming-System. Auch die für Gate 3 moderat auf
 entfernte Kacheln werden nicht entladen. Eine Chunkwelt ist erst nach Gate 5
 zulässig.
 
+## Terraingrundlage (Task 043 / D-061, D-062)
+
+`recovering` ist der gewählte Standard; `persistent` bleibt explizit zum Vergleich.
+`recovering` legt normale Grabbewegungen in
+einem separaten 4-Pixel-Spurfeld mit Ablauf nach 600 festen 60-Hz-Schritten ab.
+Erneute Bewegung erneuert die Frist; Stillstand nicht. Nur aktive Zellen werden
+verwaltet, Änderungen und Ablauf melden lokale Kacheln. Ein Snapshot enthält
+Tick, Zellkoordinaten und Fristen als JSON-Daten.
+
+Die Spur verändert keine tragende Erde: echte Maske für Flugraum, Höhlen und
+Stützen, Spur für schnelleres Gleiten und Darstellung. Nur Breach und Impact
+ab 300 Weltpixel/s entfernen lokal Terrain. Burststart und unterirdische
+Burststrecke stanzen keine Löcher; der Start bleibt ein Feedbackereignis.
+Aufgefüllte Hauptmasken oder restaurierte Stützen gibt es nicht.
+Oberflächenobjekte verwenden in beiden Varianten eine maskenbasierte
+Bodenabfrage; zu hohe Stufen stoppen die Bewegung. Fehlt Boden unter dem Objekt,
+sinkt es in festen Schritten zum nächsten Boden, ohne allgemeine Physik.
+
 ## Strukturen
 
 Gate 3 modelliert genau eine kleine Stützenhütte als rendererfreie Daten:

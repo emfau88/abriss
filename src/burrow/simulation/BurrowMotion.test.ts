@@ -10,8 +10,8 @@ describe("BurrowMotion", () => {
     const solidTerrain = filledTerrain();
     const tunnelTerrain = filledTerrain();
     tunnelTerrain.carveCapsule({ x: 100, y: 220 }, { x: 700, y: 220 }, 40);
-    const digger = new BurrowMotion(solidTerrain, { x: 100, y: 220 });
-    const glider = new BurrowMotion(tunnelTerrain, { x: 100, y: 220 });
+    const digger = new BurrowMotion(solidTerrain, { x: 100, y: 220 }, 0, "persistent");
+    const glider = new BurrowMotion(tunnelTerrain, { x: 100, y: 220 }, 0, "persistent");
 
     for (let step = 0; step < 90; step += 1) {
       digger.step({ direction: { x: 1, y: 0 }, burstPressed: false }, FIXED_STEP);
@@ -23,9 +23,9 @@ describe("BurrowMotion", () => {
     expect(digger.state.mode).toBe("digging");
   });
 
-  it("keeps a burst tunnel continuous", () => {
+  it("keeps an explicit A burst tunnel continuous", () => {
     const terrain = filledTerrain();
-    const motion = new BurrowMotion(terrain, { x: 100, y: 220 });
+    const motion = new BurrowMotion(terrain, { x: 100, y: 220 }, 0, "persistent");
     motion.step({ direction: { x: 1, y: 0 }, burstPressed: true }, FIXED_STEP);
     for (let step = 0; step < 60; step += 1) {
       motion.step({ direction: { x: 1, y: 0 }, burstPressed: false }, FIXED_STEP);

@@ -101,7 +101,7 @@ internen Tuning, sondern über das [externe A/B/C-Playtest-Protokoll](docs/08_PL
 
 ## Burrow-Labor – separat von Projekt Abriss
 
-[Burrow Gate 3 direkt starten](https://emfau88.github.io/abriss/burrow.html)
+[Burrow direkt starten](https://emfau88.github.io/abriss/burrow.html)
 
 Burrow ist ein technisch und inhaltlich isolierter Mobile-First-Test innerhalb
 desselben Repositories. Er verwendet ausschließlich `burrow.html`,
@@ -117,31 +117,30 @@ Aktueller Teststand:
   Stopp bei losgelassener Richtung sowie breitere Jagdroute technisch geprüft,
 - Gate 3: einzelne Stützenhütte; zwei untergrabene Terrainanker führen zu
   einem sichtbaren Kollaps in einer moderat größeren 2.560×1.280-Arena,
+- Gate 4-Reaktionsslice: ein Oberflächentier flieht vor einem Durchbruch, der
+  Turm zeigt Stützenschaden, und ein Höhlenschrein reagiert auf Kontakt,
+- Terrain B ist nach persönlichem Vergleich die gewählte Grundlage: normales
+  Graben hinterlässt eine zehn Sekunden aktive Schnellspur, aber kein dauerhaftes
+  Loch. Der Burstknopf allein stanzt ebenfalls kein Erdloch; nur Durchbruch und
+  schneller Wiedereintritt erzeugen lokale permanente Krater,
 - Mobile-Politur: die Phaser-Fläche füllt im Querformat den verfügbaren
   Viewport ohne seitliche Letterbox-Balken. Ein Vollbildschalter erscheint auf
   Touch-Geräten, wenn der Browser die Fullscreen-API freigibt.
 
-### Offene Produktfrage: dauerhafte Tunnel und Spielfeldschwerpunkt
+### Nächstes Produkttor: der dreiminütige Fantasy-Loop
 
-Der aktuelle Test hat eine wichtige, noch **unentschiedene** Designfrage
-sichtbar gemacht: Das Monster braucht Erde nicht nur als zerstörbares
-Hindernis, sondern als kontrollierbares Bewegungsmedium. Werden wiederholt
-benutzte Tunnel zu breit, behandelt der bisherige Prototyp den leeren Raum zu
-leicht wie eine Flugphase; dadurch verlieren Kurven, Distanz und erneute
-Oberflächenangriffe an Präzision. Dauerhafte Zerstörung darf normales Spielen
-nicht in eine selbst erzeugte Sackgasse verwandeln.
+Die Terrainfrage ist entschieden: B bleibt Grundlage. Als Nächstes wird nicht
+die Welt verbreitert, sondern auf derselben kleinen Arena geprüft, ob daraus ein
+wiederholbarer Drei-Minuten-Run entsteht. Der kleinste zulässige Test ergänzt
+einen klaren Timer, zwei zeitlich getrennte 1-aus-3-Entscheidungen, genau eine
+sichtbare Wachstumsstufe, eine besondere Schlusskutsche und einen kurzen
+Ergebniszustand. Vorhandene Kutsche, Tier, Turm und Schrein werden dafür
+wiederverwendet.
 
-Eine zu prüfende Alternative ist deshalb ein überwiegend unterirdischer
-Kernloop: belebte Höhlen, unterirdische Siedlungen und Wesen wären die
-regelmäßigen Ziele; spektakuläre Oberflächendurchbrüche blieben seltene,
-frei gewählte Höhepunkte. Das wäre **keine beschlossene Richtungsänderung**.
-Vor weiterem Content wird geprüft, ob breite unterirdische Hohlräume einen
-eigenen, präzisen Kavernenmodus erhalten sollen, während ausschließlich
-tatsächliche Oberfläche Flugphysik verwendet.
-
-Der aktuelle Höhlenschrein ist ebenfalls als Präsentationsproblem markiert:
-Er braucht bei einer Wiederaufnahme eine natürlich verankerte Fundkammer
-statt einer leeren, schwebenden Dekoration.
+Neue Regionen, Gegnerfamilien, Meta-Fortschritt oder finale Assets bleiben
+gesperrt, bis dieser kurze Loop persönlich die Frage „noch eine Runde?“ positiv
+beantwortet. Der Weg ist in der [Burrow-Produktvision](BURROW_Produktvision_und_Entwicklungsplan.md)
+und im [Vertical Slice](docs/burrow/VERTICAL_SLICE.md) dokumentiert.
 
 Steuerung:
 

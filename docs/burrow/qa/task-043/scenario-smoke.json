@@ -1,0 +1,50 @@
+[
+  {
+    "variant": "persistent",
+    "active": {
+      "cells": 0,
+      "permanentVersion": 139,
+      "position": {
+        "x": 695.3314771065725,
+        "y": 1064.93426496114
+      }
+    },
+    "expired": {
+      "cells": 0,
+      "permanentVersion": 139,
+      "overlayTiles": 0
+    },
+    "structure": {
+      "arrived": true,
+      "arrivedSecond": true,
+      "before": 2,
+      "after": 1,
+      "collapsed": true
+    },
+    "errors": []
+  },
+  {
+    "variant": "recovering",
+    "active": {
+      "cells": 1693,
+      "permanentVersion": 6,
+      "position": {
+        "x": 695.3314771065725,
+        "y": 1068.8675982944735
+      }
+    },
+    "expired": {
+      "cells": 0,
+      "permanentVersion": 6,
+      "overlayTiles": 0
+    },
+    "structure": {
+      "arrived": true,
+      "arrivedSecond": true,
+      "before": 3,
+      "after": 2,
+      "collapsed": true
+    },
+    "errors": []
+  }
+]

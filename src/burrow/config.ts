@@ -1,11 +1,12 @@
 import Phaser from "phaser";
 
 import { BurrowGameScene } from "./scenes/BurrowGameScene";
+import { DEFAULT_TERRAIN_VARIANT, type BurrowTerrainVariant } from "./simulation/BurrowTerrainVariant";
 
 export const BURROW_LOGICAL_WIDTH = 1280;
 export const BURROW_LOGICAL_HEIGHT = 720;
 
-export function createBurrowGameConfig(): Phaser.Types.Core.GameConfig {
+export function createBurrowGameConfig(terrainVariant: BurrowTerrainVariant = DEFAULT_TERRAIN_VARIANT): Phaser.Types.Core.GameConfig {
   return {
     type: Phaser.AUTO,
     parent: "burrow-game",
@@ -27,6 +28,6 @@ export function createBurrowGameConfig(): Phaser.Types.Core.GameConfig {
       mode: Phaser.Scale.RESIZE,
       autoCenter: Phaser.Scale.NO_CENTER,
     },
-    scene: [BurrowGameScene],
+    scene: [new BurrowGameScene(terrainVariant)],
   };
 }

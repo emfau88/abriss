@@ -1,5 +1,5 @@
 # Burrow-Assets
 
 Dieser Ordner ist ausschließlich für Assets des isolierten Burrow-Produktlabors
-vorgesehen. Gate 1 verwendet bewusst nur codegezeichnete Platzhalter und lädt
-keine Bild-, Audio- oder Abriss-Assets.
+vorgesehen. Burrow lädt eigene Bildassets und keine Abriss-Gameplay- oder
+Abriss-Art-Module. Herkunft und Einsatz bleiben vom Hauptprodukt getrennt.

@@ -1,6 +1,8 @@
 import { BodyTrail } from "./BodyTrail";
 import type { Point, TerrainCarveResult } from "./BurrowTerrain";
 import { BurrowTerrain } from "./BurrowTerrain";
+import { BurrowTrailField } from "./BurrowTrailField";
+import { DEFAULT_TERRAIN_VARIANT, type BurrowTerrainVariant } from "./BurrowTerrainVariant";
 
 export type BurrowMovementMode = "digging" | "tunnel" | "airborne";
 
@@ -27,6 +29,16 @@ export interface BurrowStepResult {
   readonly modeChanged: boolean;
 }
 
+export interface BurrowActionEvent {
+  readonly type: "burst" | "breach" | "impact";
+  readonly position: Point;
+}
+
+export interface BurrowTerrainStepResult extends BurrowStepResult {
+  readonly trailDirtyTiles: readonly number[];
+  readonly events: readonly BurrowActionEvent[];
+}
+
 const HEAD_RADIUS = 23;
 const TUNNEL_RADIUS = 31;
 const DIG_SPEED = 145;
@@ -40,24 +52,27 @@ const BURST_COOLDOWN = 1.65;
 
 export class BurrowMotion {
   public readonly trail: BodyTrail;
+  public readonly trailField: BurrowTrailField;
   private mutableState: BurrowMotionState;
 
   public constructor(
     private readonly terrain: BurrowTerrain,
     start: Point,
     startAngle = 0,
+    public readonly terrainVariant: BurrowTerrainVariant = DEFAULT_TERRAIN_VARIANT,
   ) {
-    const initialMutation = terrain.carveCircle(start, TUNNEL_RADIUS + 8);
+    this.trailField = new BurrowTrailField(terrain);
+    const initialMutation = terrainVariant === "persistent" ? terrain.carveCircle(start, TUNNEL_RADIUS + 8) : null;
     this.mutableState = {
       position: { ...start },
       angle: startAngle,
       velocity: { x: Math.cos(startAngle) * TUNNEL_SPEED, y: Math.sin(startAngle) * TUNNEL_SPEED },
       speed: TUNNEL_SPEED,
-      mode: "tunnel",
+      mode: terrainVariant === "recovering" && terrain.isSolidWorld(start.x, start.y) ? "digging" : "tunnel",
       burstRemaining: 0,
       burstCooldown: 0,
       traveledDistance: 0,
-      excavatedCells: initialMutation.removedCells,
+      excavatedCells: initialMutation?.removedCells ?? 0,
     };
     this.trail = new BodyTrail(start, startAngle);
   }
@@ -66,7 +81,35 @@ export class BurrowMotion {
     return this.mutableState;
   }
 
-  public step(input: BurrowInput, deltaSeconds: number): BurrowStepResult {
+  public step(input: BurrowInput, deltaSeconds: number): BurrowTerrainStepResult {
+    if (!Number.isFinite(deltaSeconds) || Math.abs(deltaSeconds - 1 / 60) > 1e-10) {
+      throw new Error("Burrow motion requires a fixed 60-Hz step.");
+    }
+    const before = this.mutableState;
+    if (this.terrainVariant === "recovering") this.trailField.advance();
+    const result = this.stepMotion(input, deltaSeconds);
+    const events: BurrowActionEvent[] = [];
+    if (result.burstStarted) events.push({ type: "burst", position: before.position });
+    if (before.mode !== "airborne" && this.mutableState.mode === "airborne") {
+      events.push({ type: "breach", position: before.position });
+    }
+    if (before.mode === "airborne" && this.mutableState.mode !== "airborne" && this.mutableState.speed >= 300) {
+      events.push({ type: "impact", position: this.mutableState.position });
+    }
+    let mutation = result.terrainMutation;
+    if (this.terrainVariant === "recovering") {
+      for (const event of events) {
+        // Starting a burst accelerates the worm; only surface actions carve soil.
+        if (event.type === "burst") continue;
+        const carved = this.terrain.carveCircle(event.position, TUNNEL_RADIUS);
+        mutation = mergeTerrainMutations(mutation, carved);
+      }
+      this.mutableState = { ...this.mutableState, excavatedCells: before.excavatedCells + (mutation?.removedCells ?? 0) };
+    }
+    return { ...result, terrainMutation: mutation, events, trailDirtyTiles: this.trailField.takeDirtyTiles() };
+  }
+
+  private stepMotion(input: BurrowInput, deltaSeconds: number): BurrowStepResult {
     if (!Number.isFinite(deltaSeconds) || deltaSeconds <= 0 || deltaSeconds > 0.1) {
       throw new Error("Burrow motion requires a positive fixed step up to 100 ms.");
     }
@@ -135,7 +178,9 @@ export class BurrowMotion {
       TUNNEL_RADIUS * 2.1,
     );
 
-    if (!solidAhead && !surrounded) {
+    const recovering = this.terrainVariant === "recovering";
+    const centerInSoil = this.terrain.isSolidWorld(this.mutableState.position.x, this.mutableState.position.y);
+    if (!solidAhead && !surrounded && (!recovering || !centerInSoil)) {
       const launchSpeed = burstRemaining > 0 ? BURST_SPEED : this.mutableState.speed;
       this.mutableState = {
         ...this.mutableState,
@@ -157,9 +202,10 @@ export class BurrowMotion {
       );
     }
 
+    const fastTrail = recovering && this.trailField.isActiveWorld(probe.x, probe.y);
     const targetSpeed = burstRemaining > 0
       ? BURST_SPEED
-      : solidAhead
+      : solidAhead && !fastTrail
         ? DIG_SPEED
         : TUNNEL_SPEED;
     const speed = approach(this.mutableState.speed, targetSpeed, 780 * deltaSeconds);
@@ -174,7 +220,7 @@ export class BurrowMotion {
     );
     const next = constrained.position;
     const terrainMutation = solidAhead || this.terrain.isSolidWorld(next.x, next.y)
-      ? this.terrain.carveCapsule(this.mutableState.position, next, TUNNEL_RADIUS)
+      ? this.carveMovement(this.mutableState.position, next)
       : null;
     const traveledDistance = Math.hypot(
       next.x - this.mutableState.position.x,
@@ -188,7 +234,7 @@ export class BurrowMotion {
         y: Math.sin(constrained.angle) * speed,
       },
       speed,
-      mode: solidAhead ? "digging" : "tunnel",
+      mode: solidAhead && !fastTrail ? "digging" : "tunnel",
       burstRemaining,
       burstCooldown,
       traveledDistance: this.mutableState.traveledDistance + traveledDistance,
@@ -232,7 +278,9 @@ export class BurrowMotion {
     const next = keepInsideWorld(rawNext, this.terrain, HEAD_RADIUS);
     if (next.x !== rawNext.x) velocity.x *= -0.55;
     if (next.y !== rawNext.y) velocity.y *= -0.55;
-    const enteringTerrain =
+    const enteringTerrain = this.terrainVariant === "recovering"
+      ? this.terrain.isSolidWorld(next.x, next.y)
+      :
       this.terrain.isSolidWorld(next.x, next.y) ||
       this.terrain.isSolidWorld(
         next.x + normalize(velocity).x * HEAD_RADIUS,
@@ -244,10 +292,9 @@ export class BurrowMotion {
     let nextAngle = speed > 0.1 ? Math.atan2(velocity.y, velocity.x) : angle;
 
     if (enteringTerrain) {
-      terrainMutation = this.terrain.carveCapsule(
+      terrainMutation = this.carveMovement(
         this.mutableState.position,
         next,
-        TUNNEL_RADIUS,
       );
       mode = "digging";
       speed = Math.max(DIG_SPEED, Math.min(speed, BURST_SPEED));
@@ -278,6 +325,26 @@ export class BurrowMotion {
       modeChanged: previousMode !== mode,
     };
   }
+
+  private carveMovement(start: Point, end: Point): TerrainCarveResult | null {
+    if (this.terrainVariant === "persistent") return this.terrain.carveCapsule(start, end, TUNNEL_RADIUS);
+    if (start.x !== end.x || start.y !== end.y) this.trailField.markCapsule(start, end, TUNNEL_RADIUS);
+    return null;
+  }
+}
+
+function mergeTerrainMutations(first: TerrainCarveResult | null, second: TerrainCarveResult): TerrainCarveResult {
+  if (!first?.dirtyCells) return second;
+  if (!second.dirtyCells) return first;
+  const a = first.dirtyCells;
+  const b = second.dirtyCells;
+  const x = Math.min(a.x, b.x);
+  const y = Math.min(a.y, b.y);
+  return {
+    removedCells: first.removedCells + second.removedCells,
+    version: second.version,
+    dirtyCells: { x, y, width: Math.max(a.x + a.width, b.x + b.width) - x, height: Math.max(a.y + a.height, b.y + b.height) - y },
+  };
 }
 
 export const BURROW_MOTION_CONSTANTS = {

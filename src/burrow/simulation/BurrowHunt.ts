@@ -1,4 +1,5 @@
 import type { Point } from "./BurrowTerrain";
+import type { BurrowSurfaceSupport, SurfaceStatus } from "./BurrowSurfaceSupport";
 
 export interface VehicleRoute {
   readonly minimumX: number;
@@ -14,6 +15,7 @@ export interface BurrowVehicleState {
   readonly maximumHitPoints: number;
   readonly active: boolean;
   readonly respawnRemaining: number;
+  readonly surfaceStatus: SurfaceStatus;
 }
 
 export interface BurrowHuntState {
@@ -54,7 +56,7 @@ const VEHICLE_HIT_POINTS = 3;
 export class BurrowHunt {
   private mutableState: BurrowHuntState;
 
-  public constructor(private readonly route: VehicleRoute) {
+  public constructor(private readonly route: VehicleRoute, private readonly surface?: BurrowSurfaceSupport) {
     if (route.minimumX >= route.maximumX) {
       throw new Error("A vehicle route needs a positive horizontal span.");
     }
@@ -104,12 +106,14 @@ export class BurrowHunt {
       this.route.minimumX,
       this.route.maximumX,
     );
+    const placement = this.surface?.advance(vehicle.position, patrol.x, VEHICLE_HEIGHT_ABOVE_SURFACE, vehicle.surfaceStatus, deltaSeconds);
     this.mutableState = {
       ...this.mutableState,
       biteCooldown,
       vehicle: {
         ...vehicle,
-        position: this.vehiclePosition(patrol.x),
+        position: placement?.position ?? this.vehiclePosition(patrol.x),
+        surfaceStatus: placement?.status ?? "grounded",
         direction: patrol.direction,
       },
     };
@@ -154,6 +158,7 @@ export class BurrowHunt {
       maximumHitPoints: VEHICLE_HIT_POINTS,
       active: true,
       respawnRemaining: 0,
+      surfaceStatus: "grounded",
     };
   }
 

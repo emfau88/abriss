@@ -120,6 +120,38 @@ body {
   border: 0;
 }
 
+.terrain-test-controls {
+  position: fixed;
+  z-index: 10;
+  display: flex;
+  gap: 4px;
+  top: max(8px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.terrain-test-controls a,
+.terrain-test-controls button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #a88160;
+  border-radius: 12px;
+  background: #211820e8;
+  color: #fff2d1;
+  text-decoration: none;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.terrain-test-controls [aria-current="page"],
+.terrain-test-controls :focus-visible {
+  border: 2px solid #ffd66d;
+  background: #633c29;
+}
+
 @media (max-width: 900px), (max-height: 600px) {
   .burrow-shell {
     padding:

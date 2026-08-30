@@ -1,0 +1,60 @@
+[
+  {
+    "input": "desktop",
+    "before": {
+      "variant": "recovering",
+      "version": 6,
+      "head": {
+        "x": 695.3314771065725,
+        "y": 1068.8675982944735
+      },
+      "solid": true,
+      "button": {
+        "x": 1156.640625,
+        "y": 615.65625
+      }
+    },
+    "active": {
+      "started": true,
+      "speed": 370,
+      "version": 6,
+      "maskUnchanged": true
+    },
+    "expired": {
+      "version": 6,
+      "cells": 0,
+      "solidAtPress": true,
+      "maskUnchanged": true
+    },
+    "errors": []
+  },
+  {
+    "input": "touch",
+    "before": {
+      "variant": "recovering",
+      "version": 6,
+      "head": {
+        "x": 695.3314771065725,
+        "y": 1068.8675982944735
+      },
+      "solid": true,
+      "button": {
+        "x": 787.125,
+        "y": 332.5833333333333
+      }
+    },
+    "active": {
+      "started": true,
+      "speed": 370,
+      "version": 6,
+      "maskUnchanged": true
+    },
+    "expired": {
+      "version": 6,
+      "cells": 0,
+      "solidAtPress": true,
+      "maskUnchanged": true
+    },
+    "errors": []
+  }
+]

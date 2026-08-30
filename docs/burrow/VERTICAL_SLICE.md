@@ -162,6 +162,23 @@ Smoke bestätigten die Gate-3-Anzeige sowie die unveränderte Abriss-URL ohne
 Konsolenfehler. Das persönliche Spielgefühl des tatsächlichen Untergrabens und
 Kollapses wird nach der öffentlichen Veröffentlichung bewertet.
 
-- Gate 4: Response-Level, Sensorik, wenige Gegner und einfacher Hunter.
+- Gate 4 beginnt mit einem reaktiven Weltbeweis: fliehendes Oberflächentier,
+  sichtbare Turm-Schadenstufen und ein einziger aktivierbarer Fundort. Erst
+  nach persönlicher Bewertung folgen Response-Level, Sensorik, wenige Gegner
+  und ein einfacher Hunter.
 - Gate 5: kurzer Ergebnisbildschirm mit genau einer sichtbaren Mutation.
 - Danach: Entscheidung über Chunkwelt und echten 6–10-Minuten-Vertical-Slice.
+
+## Task 043 – Terrainvergleich vor weiteren Gates
+
+Am 30. August 2026 freigegeben: dieselbe Arena und vorhandene Objekte mit
+`?terrain=persistent` (A, Vergleich) oder `?terrain=recovering` (B, Standard, zehn Sekunden
+aktive Schnellspur). B erhält lokale permanente Aktionskrater, normales Graben
+entfernt dort keine tragende Erde. Beide Varianten korrigieren schwebende
+Oberflächenobjekte durch dieselbe begrenzte Bodenreaktion (D-061).
+Neustart setzt beide vollständig zurück. Keine neuen Ziele, Upgrades oder Meta.
+Der Nutzer hat B nach persönlichem Test als Grundlage gewählt (D-062), ohne
+quantitative A–B–B–A-Wertung. Burststart entfernt auf seinen Wunsch keine Erde
+mehr; Breach und schneller Einschlag behalten ihre Terrainwirkung. Damit
+entfällt das direkte Freistanzen von Stützen per Burstknopf. Neue Inhalte oder
+Folgegates sind durch diese Korrektur nicht freigegeben.

@@ -1,0 +1,46 @@
+[
+  {
+    "mobile": false,
+    "variant": "persistent",
+    "initial": "Burrow wartet auf eine Richtung. Terrain A dauerhaft.",
+    "afterMove": "Modus TUNNELGLEITEN, Tempo 0, Position 547 zu 825, Kutsche 3 von 3 HP, Biomasse 0, 3 Stützen aktiv. Terrain A dauerhaft.",
+    "breach": "Modus GRABEN, Tempo 0, Position 556 zu 444, Kutsche 3 von 3 HP, Biomasse 0, 3 Stützen aktiv. Terrain A dauerhaft.",
+    "restarted": "Burrow wartet auf eine Richtung. Terrain A dauerhaft.",
+    "switched": "Burrow wartet auf eine Richtung. Terrain B Spur 10 Sekunden.",
+    "errors": []
+  },
+  {
+    "mobile": false,
+    "variant": "recovering",
+    "initial": "Burrow wartet auf eine Richtung. Terrain B Spur 10 Sekunden.",
+    "afterMove": "Modus TUNNELGLEITEN, Tempo 0, Position 540 zu 825, Kutsche 3 von 3 HP, Biomasse 0, 3 Stützen aktiv. Terrain B Spur 10 Sekunden.",
+    "breach": "Modus FLUGPHASE, Tempo 5, Position 549 zu 240, Kutsche 3 von 3 HP, Biomasse 0, 3 Stützen aktiv. Terrain B Spur 10 Sekunden.",
+    "restarted": "Burrow wartet auf eine Richtung. Terrain B Spur 10 Sekunden.",
+    "switched": "Burrow wartet auf eine Richtung. Terrain A dauerhaft.",
+    "errors": []
+  },
+  {
+    "mobile": true,
+    "variant": "persistent",
+    "initial": "Burrow wartet auf eine Richtung. Terrain A dauerhaft.",
+    "afterMove": "Modus FLUGPHASE, Tempo 147, Position 721 zu 825, Kutsche 3 von 3 HP, Biomasse 0, 3 Stützen aktiv. Terrain A dauerhaft.",
+    "breach": "Modus GRABEN, Tempo 0, Position 831 zu 360, Kutsche 3 von 3 HP, Biomasse 0, 3 Stützen aktiv. Terrain A dauerhaft.",
+    "restarted": "Burrow wartet auf eine Richtung. Terrain A dauerhaft.",
+    "switched": "Burrow wartet auf eine Richtung. Terrain B Spur 10 Sekunden.",
+    "errors": []
+  },
+  {
+    "mobile": true,
+    "variant": "recovering",
+    "initial": "Burrow wartet auf eine Richtung. Terrain B Spur 10 Sekunden.",
+    "afterMove": "Modus TUNNELGLEITEN, Tempo 0, Position 687 zu 827, Kutsche 3 von 3 HP, Biomasse 0, 3 Stützen aktiv. Terrain B Spur 10 Sekunden.",
+    "breach": "Modus FLUGPHASE, Tempo 192, Position 834 zu 263, Kutsche 2 von 3 HP, Biomasse 0, 3 Stützen aktiv. Terrain B Spur 10 Sekunden.",
+    "restarted": "Burrow wartet auf eine Richtung. Terrain B Spur 10 Sekunden.",
+    "switched": "Burrow wartet auf eine Richtung. Terrain A dauerhaft.",
+    "errors": []
+  },
+  {
+    "abrissTitle": "Projekt Abriss",
+    "errors": []
+  }
+]

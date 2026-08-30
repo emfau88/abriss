@@ -13,6 +13,9 @@ import {
 import { OneShotInputBuffer } from "../input/OneShotInputBuffer";
 import { creatureVisualForBiomass } from "../rendering/BurrowCreatureVisual";
 import { TiledTerrainRenderer } from "../rendering/TiledTerrainRenderer";
+import { BurrowTrailRenderer } from "../rendering/BurrowTrailRenderer";
+import { BurrowSurfaceSupport } from "../simulation/BurrowSurfaceSupport";
+import { DEFAULT_TERRAIN_VARIANT, type BurrowTerrainVariant } from "../simulation/BurrowTerrainVariant";
 import { BurrowHunt, type BiteResult } from "../simulation/BurrowHunt";
 import {
   BURROW_MOTION_CONSTANTS,
@@ -20,6 +23,7 @@ import {
   type BurrowMovementMode,
 } from "../simulation/BurrowMotion";
 import { BurrowStructure } from "../simulation/BurrowStructure";
+import { BurrowWorldResponse } from "../simulation/BurrowWorldResponse";
 import type {
   CellRegion,
   Point,
@@ -30,6 +34,10 @@ const FIXED_STEP = 1 / 60;
 const MAX_ACCUMULATED_TIME = 0.1;
 const VIEW_WIDTH = 1280;
 const VIEW_HEIGHT = 720;
+// Liegt vollständig in der vorbereiteten Höhle; kein großflächiges
+// Hintergrundgebäude, das beim Graben ungewollt freigelegt wird.
+const SHRINE_POSITION = { x: 1115, y: 970 } as const;
+const ANIMAL_START_X = 1040;
 
 interface DustParticle {
   x: number;
@@ -43,8 +51,10 @@ interface DustParticle {
 export class BurrowGameScene extends Phaser.Scene {
   private motion!: BurrowMotion;
   private terrainRenderer!: TiledTerrainRenderer;
+  private trailRenderer: BurrowTrailRenderer | null = null;
   private hunt!: BurrowHunt;
   private structure!: BurrowStructure;
+  private worldResponse!: BurrowWorldResponse;
   private wormGraphics!: Phaser.GameObjects.Graphics;
   private wormHead!: Phaser.GameObjects.Image;
   private wormSegments: Phaser.GameObjects.Image[] = [];
@@ -65,6 +75,8 @@ export class BurrowGameScene extends Phaser.Scene {
   private vehicleLabel!: Phaser.GameObjects.Text;
   private structureGraphics!: Phaser.GameObjects.Graphics;
   private structureSprite!: Phaser.GameObjects.Image;
+  private animalSprite!: Phaser.GameObjects.Image;
+  private shrineSprite!: Phaser.GameObjects.Image;
   private structureLabel!: Phaser.GameObjects.Text;
   private vehicleHitFlash = 0;
   private started = false;
@@ -87,7 +99,7 @@ export class BurrowGameScene extends Phaser.Scene {
   private keyRestart?: Phaser.Input.Keyboard.Key;
   private liveStatus?: HTMLOutputElement | null;
 
-  public constructor() {
+  public constructor(private readonly terrainVariant: BurrowTerrainVariant = DEFAULT_TERRAIN_VARIANT) {
     super("BurrowGameScene");
   }
 
@@ -98,18 +110,33 @@ export class BurrowGameScene extends Phaser.Scene {
     this.load.image("burrow-cart", "burrow/burrow-cart-v1.png");
     this.load.image("burrow-outpost", "burrow/burrow-outpost-v1.png");
     this.load.image("burrow-goat", "burrow/burrow-goat-v1.png");
+    this.load.image("burrow-goat-run", "burrow/burrow-goat-run-v1.png");
     this.load.image("burrow-shrine", "burrow/burrow-shrine-v1.png");
   }
 
   public create(): void {
+    this.started = false;
+    this.accumulator = 0;
+    this.vehicleHitFlash = 0;
+    this.dustParticles = [];
     const terrain = createBurrowArena();
+    this.motion = new BurrowMotion(terrain, BURROW_START, -0.16, this.terrainVariant);
     this.createWorldBackdrop();
     this.terrainRenderer = new TiledTerrainRenderer(this, terrain, "burrow-terrain", "burrow-earth");
     this.createSurfaceDetails();
     this.createEnvironmentAssets();
-    this.motion = new BurrowMotion(terrain, BURROW_START, -0.16);
-    this.hunt = new BurrowHunt({ ...BURROW_VEHICLE_ROUTE, surfaceYAt });
+    this.trailRenderer = this.terrainVariant === "recovering"
+      ? new BurrowTrailRenderer(this, terrain, this.motion.trailField) : null;
+    const surface = new BurrowSurfaceSupport(terrain);
+    this.hunt = new BurrowHunt({ ...BURROW_VEHICLE_ROUTE, surfaceYAt }, surface);
     this.structure = new BurrowStructure(terrain, createHutSupportPoints());
+    this.worldResponse = new BurrowWorldResponse({
+      animalStart: { x: ANIMAL_START_X, y: surfaceYAt(ANIMAL_START_X) - 3 },
+      shrinePosition: SHRINE_POSITION,
+      surfaceYAt,
+      minimumX: 760,
+      maximumX: 1480,
+    }, surface);
     this.wormGraphics = this.add.graphics().setDepth(12);
     this.wormHead = this.add.image(BURROW_START.x, BURROW_START.y, "burrow-head").setDepth(13);
     this.wormSegments = Array.from(
@@ -131,6 +158,7 @@ export class BurrowGameScene extends Phaser.Scene {
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.terrainRenderer.destroy();
+      this.trailRenderer?.destroy();
       this.input.off("pointerdown", this.handlePointerDown, this);
       this.input.off("pointermove", this.handlePointerMove, this);
       this.input.off("pointerup", this.handlePointerUp, this);
@@ -157,6 +185,7 @@ export class BurrowGameScene extends Phaser.Scene {
       this.accumulator + deltaMilliseconds / 1000,
     );
     let combinedMutation: TerrainCarveResult | null = null;
+    const trailDirtyTiles = new Set<number>();
 
     while (this.accumulator >= FIXED_STEP) {
       const previousMode = this.motion.state.mode;
@@ -172,7 +201,13 @@ export class BurrowGameScene extends Phaser.Scene {
         burstActive: this.motion.state.burstRemaining > 0,
       });
       const structureResult = this.structure.step();
+      const worldResult = this.worldResponse.step({
+        headPosition: this.motion.state.position,
+        breachOccurred: result.modeChanged && this.motion.state.mode === "airborne",
+        deltaSeconds: FIXED_STEP,
+      });
       combinedMutation = mergeMutations(combinedMutation, result.terrainMutation);
+      for (const id of result.trailDirtyTiles) trailDirtyTiles.add(id);
       if (result.terrainMutation?.removedCells) {
         this.spawnDigDust(this.motion.state.position, this.motion.state.angle, 2);
       }
@@ -194,13 +229,21 @@ export class BurrowGameScene extends Phaser.Scene {
       } else if (structureResult.lostSupportIds.length > 0) {
         this.announceSupportLoss(structureResult.lostSupportIds.length);
       }
+      if (worldResult.animalFledNow) {
+        this.showEvent("DAS BERGTIER FLIEHT!", "#fff0a1");
+      }
+      if (worldResult.shrineActivatedNow) {
+        this.announceShrineActivation();
+      }
       this.accumulator -= FIXED_STEP;
     }
 
     this.terrainRenderer.applyMutation(combinedMutation);
+    this.trailRenderer?.apply(trailDirtyTiles, combinedMutation);
     this.vehicleHitFlash = Math.max(0, this.vehicleHitFlash - deltaMilliseconds / 1000);
     this.renderVehicle();
     this.renderStructure();
+    this.renderWorldResponse(deltaMilliseconds / 1000);
     this.updateDust(deltaMilliseconds / 1000);
     this.renderWorm();
     this.updateCamera();
@@ -264,11 +307,11 @@ export class BurrowGameScene extends Phaser.Scene {
   }
 
   private createEnvironmentAssets(): void {
-    this.add.image(1115, 885, "burrow-shrine")
-      .setOrigin(0.5, 1).setDisplaySize(165, 182).setDepth(1);
+    this.shrineSprite = this.add.image(SHRINE_POSITION.x, SHRINE_POSITION.y, "burrow-shrine")
+      .setOrigin(0.5, 1).setDisplaySize(92, 108).setDepth(4);
     this.structureSprite = this.add.image(BURROW_HUT.centerX, surfaceYAt(BURROW_HUT.centerX) + 5, "burrow-outpost")
       .setOrigin(0.5, 1).setDisplaySize(270, 250).setDepth(6);
-    this.add.image(1710, surfaceYAt(1710) + 3, "burrow-goat")
+    this.animalSprite = this.add.image(ANIMAL_START_X, surfaceYAt(ANIMAL_START_X) + 3, "burrow-goat")
       .setOrigin(0.5, 1).setDisplaySize(78, 70).setDepth(6);
   }
 
@@ -433,7 +476,8 @@ export class BurrowGameScene extends Phaser.Scene {
   }
 
   private configureInput(): void {
-    this.input.addPointer(2);
+    // Three configured pointers already cover the two-thumb controls. Do not
+    // grow the global pointer pool on every comparison restart.
     const keyboard = this.input.keyboard;
     if (keyboard) {
       this.keyW = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
@@ -599,7 +643,7 @@ export class BurrowGameScene extends Phaser.Scene {
     const hitPointsRatio = vehicle.hitPoints / vehicle.maximumHitPoints;
     graphics.fillStyle(0x1a2020, 0.94).fillRoundedRect(x - 39, y - 52, 78, 12, 4);
     graphics.fillStyle(0x86cf65, 1).fillRoundedRect(x - 37, y - 50, 74 * hitPointsRatio, 8, 3);
-    this.vehicleLabel.setPosition(x, y - 70).setText(`KUTSCHE · ${vehicle.hitPoints}/${vehicle.maximumHitPoints} HP`);
+    this.vehicleLabel.setPosition(x, y - 70).setText(`KUTSCHE · ${vehicle.hitPoints}/${vehicle.maximumHitPoints} HP${vehicle.surfaceStatus !== "grounded" ? " · STOPP" : ""}`);
   }
 
   private renderStructure(): void {
@@ -645,6 +689,11 @@ export class BurrowGameScene extends Phaser.Scene {
     }
 
     this.structureSprite.setVisible(true);
+    const damageRatio = (3 - activeSupports) / 3;
+    this.structureSprite
+      .setAlpha(1 - damageRatio * 0.32)
+      .setAngle(activeSupports < 3 ? (activeSupports === 2 ? -3 : 5) : 0)
+      .setY(surfaceYAt(BURROW_HUT.centerX) + 5 + damageRatio * 8);
 
     for (const support of structure.supports) {
       const topY = surfaceYAt(support.position.x) - 9;
@@ -672,6 +721,28 @@ export class BurrowGameScene extends Phaser.Scene {
     this.structureLabel
       .setPosition(BURROW_HUT.centerX, surfaceY - 190)
       .setText(`STÜTZENHÜTTE · ${activeSupports}/3`);
+  }
+
+  private renderWorldResponse(deltaSeconds: number): void {
+    const animal = this.worldResponse.state.animal;
+    const running = animal.fleeing && animal.surfaceStatus === "grounded";
+    this.animalSprite
+      .setTexture(running ? "burrow-goat-run" : "burrow-goat")
+      .setPosition(animal.position.x, animal.position.y + 3)
+      .setFlipX(animal.direction < 0)
+      .setDisplaySize(78, running ? 62 : 70)
+      .setAngle(running ? Math.sin(this.time.now * 0.028) * 4 : 0);
+
+    const shrine = this.worldResponse.state.shrine;
+    const pulse = shrine.activated ? 1 + Math.sin(this.time.now * 0.009) * 0.07 : 1;
+    this.shrineSprite
+      // setScale() would restore this 1280px source image to its raw size.
+      .setDisplaySize(92 * pulse, 108 * pulse)
+      .setAlpha(shrine.activated ? 1 : 0.92)
+      .setTint(shrine.activated ? 0xffe7a1 : 0xffffff);
+    if (running && deltaSeconds > 0) {
+      this.animalSprite.setY(this.animalSprite.y + Math.sin(this.time.now * 0.04) * 1.5);
+    }
   }
 
   private announceBite(bite: BiteResult): void {
@@ -704,6 +775,12 @@ export class BurrowGameScene extends Phaser.Scene {
     this.spawnDigDust({ x: BURROW_HUT.centerX, y: surfaceYAt(BURROW_HUT.centerX) }, Math.PI / 2, 44);
   }
 
+  private announceShrineActivation(): void {
+    this.showEvent("SCHREIN ERWACHT!", "#e7b8ff");
+    this.cameras.main.shake(160, 0.004);
+    this.spawnDigDust(SHRINE_POSITION, -Math.PI / 2, 18);
+  }
+
   private announceModeChange(
     previousMode: BurrowMovementMode,
     mode: BurrowMovementMode,
@@ -711,7 +788,6 @@ export class BurrowGameScene extends Phaser.Scene {
     if (mode === "airborne") {
       this.showEvent("DURCHBRUCH!", "#fff0a1");
       this.spawnDigDust(this.motion.state.position, this.motion.state.angle, 24);
-      this.cameras.main.shake(180, 0.006);
     } else if (previousMode === "airborne" && mode === "digging") {
       this.showEvent("WIEDER UNTER ERDE", "#e69a59");
       this.spawnDigDust(this.motion.state.position, this.motion.state.angle, 18);
@@ -797,10 +873,11 @@ export class BurrowGameScene extends Phaser.Scene {
       airborne: "FLUGPHASE",
     };
     const visual = creatureVisualForBiomass(this.hunt.state.biomass);
+    this.hudTitle.setText(this.terrainVariant === "persistent" ? "TERRAIN A · DAUERHAFT" : "TERRAIN B · SPUR 10 s");
     this.hudText.setText([
       `BIOMASSE  ${this.hunt.state.biomass} · ${visual.label}`,
       `BEUTE  ${this.hunt.state.vehicle.active ? `${this.hunt.state.vehicle.hitPoints}/${this.hunt.state.vehicle.maximumHitPoints} HP` : "VERDAUT"}   HÜTTE  ${this.structure.state.collapsed ? "KOLLAPS" : `${this.structure.state.supports.filter((support) => support.active).length}/3`}`,
-      `GEFAHR  RUHEPHASE   ·   ${modeLabel[state.mode]}`,
+      `WELT  ${this.worldResponse.state.animal.surfaceStatus !== "grounded" ? "TIER GESTOPPT" : this.worldResponse.state.animal.fleeing ? "TIER FLIEHT" : "TIER RUHIG"} · ${this.worldResponse.state.shrine.activated ? "SCHREIN AKTIV" : "SCHREIN TIEF"}`,
     ]);
     const vehicle = this.hunt.state.vehicle;
     const vehicleDistance = Math.round(
@@ -846,6 +923,7 @@ export class BurrowGameScene extends Phaser.Scene {
       this.liveStatus.textContent = this.started
         ? `Modus ${modeLabel[state.mode]}, Tempo ${Math.round(state.speed)}, Position ${Math.round(state.position.x)} zu ${Math.round(state.position.y)}, ${vehicle.active ? `Kutsche ${vehicle.hitPoints} von ${vehicle.maximumHitPoints} HP` : "Kutsche verschlungen"}, Biomasse ${this.hunt.state.biomass}, ${this.structure.state.collapsed ? "Hütte eingestürzt" : `${this.structure.state.supports.filter((support) => support.active).length} Stützen aktiv`}.`
         : "Burrow wartet auf eine Richtung.";
+      this.liveStatus.textContent += ` Terrain ${this.terrainVariant === "persistent" ? "A dauerhaft" : "B Spur 10 Sekunden"}.`;
     }
   }
 }

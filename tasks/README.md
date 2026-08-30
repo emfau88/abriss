@@ -48,6 +48,8 @@ andere Priorität bestätigt. Es darf höchstens ein Task als `in Arbeit` gelten
 | `039_BURROW_GATE_3_STRUCTURE.md` | abgeschlossen (technisch) | einzelne Stützenhütte, Untergraben und Kollaps |
 | `040_BURROW_MOBILE_DIRECT_CONTROL.md` | abgeschlossen | randlose Mobilansicht, Vollbild und direkte Steuerung |
 | `041_BURROW_VISUAL_FOUNDATION.md` | technisch abgeschlossen, visueller Spieltest offen | lesbarer Stil- und Kreaturenbaukasten vor Gate 4 |
+| `042_BURROW_REACTIVE_WORLD.md` | technisch abgeschlossen, persönlicher Spieltest offen | fliehendes Tier, reagierender Turm und aktivierbarer Höhlenschrein |
+| `043_BURROW_TERRAIN_VARIANT_AND_FANTASY_LOOP_PLAN.md` | B persönlich gewählt, Korrektur geprüft | B ohne Burststart-Loch; 167 Tests, Typprüfung, Build und Browser-Smoke grün (D-062) |
 
 Ein Status wird erst nach überprüfter Abnahme geändert. Scope-Erweiterungen
 gehören in einen neuen Task, nicht stillschweigend in einen bestehenden.

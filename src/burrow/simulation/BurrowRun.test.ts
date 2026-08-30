@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { BurrowRun, LEVEL_1 } from "./BurrowRun";
+import { BurrowRun, LEVEL_1, LEVEL_2 } from "./BurrowRun";
 
 describe("BurrowRun", () => {
   it("pauses the level clock outside active phases and awakens the shrine exactly once", () => {
@@ -31,7 +31,7 @@ describe("BurrowRun", () => {
     run.openUpgrade();
 
     expect(run.chooseUpgrade("skystrider")).toBe(true);
-    expect(run.state.build).toEqual({
+    expect(run.state.build).toMatchObject({
       stage: "sprout",
       burstSpeedMultiplier: 1.12,
       biteDamageBonus: 0,
@@ -42,6 +42,29 @@ describe("BurrowRun", () => {
     expect(run.state.phase).toBe("level-complete");
     expect(run.state.totalBiomass).toBe(LEVEL_1.shrineBiomass);
     expect(run.state.build.stage).toBe("burrower");
+  });
+
+  it("continues into Goblinmarkt with the Level-1 build and restores that level checkpoint", () => {
+    const run = new BurrowRun();
+    run.start();
+    run.collectBiomass(LEVEL_1.shrineBiomass);
+    run.openUpgrade();
+    run.chooseUpgrade("ram");
+    run.completeLevel();
+
+    expect(run.continueToLevel2()).toBe(true);
+    expect(run.state).toMatchObject({
+      level: LEVEL_2,
+      phase: "intro",
+      totalBiomass: LEVEL_1.shrineBiomass,
+      selectedUpgrade: "ram",
+      upgradeRanks: { ram: 1 },
+      build: { stage: "burrower", impactRadiusMultiplier: 1.32 },
+    });
+    run.start();
+    run.collectBiomass();
+    run.restartFromCheckpoint();
+    expect(run.state).toMatchObject({ level: LEVEL_2, phase: "intro", levelBiomass: 0, totalBiomass: LEVEL_1.shrineBiomass, upgradeRanks: { ram: 1 } });
   });
 
   it("fails after the fixed active-time limit and restores the entry checkpoint", () => {

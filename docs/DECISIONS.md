@@ -843,3 +843,15 @@ Level 1 sichtbar und Buildzustand, ohne den Kollisionsradius zu ändern.
 isolierter Desktop-/Touch-Browsersmoke sind grün. Die persönliche
 Level-1-Wiederholungswertung und ein echter Mobiltest sind weiterhin vor
 Level 2 erforderlich; das ist keine Level-2-Freigabe.
+
+## 2026-08-30 – D-065: Nutzer gibt Bulk 2 vor der persönlichen Level-1-Abnahme frei
+
+**Entscheidung:** Der Nutzer hat nach dem Commit von Bulk 1 ausdrücklich den
+nächsten Bulk angefordert. Deshalb beginnt Task 045 mit Level 2, obwohl der
+persönliche komplette Level-1- und Mobilspieltest weiterhin offen ist.
+
+**Konsequenz:** Die technische Reihenfolge ist bewusst vorgezogen, nicht die
+Produktabnahme fingiert. Level 2 bleibt auf Goblinmarkt, Rang 2, verpflichteten
+Marktturm und gepanzerten Handelswagen begrenzt; Level 3, Meta und Gegnerkampf
+bleiben gesperrt. Vor Level 3 ist ein persönlicher Test des zusammenhängenden
+Level-1→2-Abschnitts weiterhin erforderlich.

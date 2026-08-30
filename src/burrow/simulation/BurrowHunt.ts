@@ -48,6 +48,7 @@ export interface BurrowHuntTuning {
   readonly minimumBiteSpeed: number;
   readonly heavyBiteSpeed: number;
   readonly biteCooldown: number;
+  readonly biteCooldownMultiplier: number;
   readonly respawnSeconds: number;
   readonly vehicleHitPoints: number;
   readonly kind: "patrol" | "finale";
@@ -67,6 +68,7 @@ const DEFAULT_TUNING: BurrowHuntTuning = {
   minimumBiteSpeed: MINIMUM_BITE_SPEED,
   heavyBiteSpeed: HEAVY_BITE_SPEED,
   biteCooldown: BITE_COOLDOWN,
+  biteCooldownMultiplier: 1,
   respawnSeconds: RESPAWN_SECONDS,
   vehicleHitPoints: VEHICLE_HIT_POINTS,
   kind: "patrol",
@@ -180,7 +182,7 @@ export class BurrowHunt {
     this.mutableState = {
       ...this.mutableState,
       biomass: this.mutableState.biomass + (devoured ? 1 : 0),
-      biteCooldown: this.tuning.biteCooldown,
+      biteCooldown: this.tuning.biteCooldown * this.tuning.biteCooldownMultiplier,
       vehicle: devoured
         ? {
             ...vehicle,

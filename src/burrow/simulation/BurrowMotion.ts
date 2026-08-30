@@ -25,6 +25,7 @@ export interface BurrowInput {
 
 export interface BurrowMotionTuning {
   readonly burstSpeedMultiplier: number;
+  readonly burstCooldownMultiplier: number;
   readonly impactRadiusMultiplier: number;
 }
 
@@ -56,6 +57,7 @@ const BURST_DURATION = 0.68;
 const BURST_COOLDOWN = 1.65;
 const DEFAULT_TUNING: BurrowMotionTuning = {
   burstSpeedMultiplier: 1,
+  burstCooldownMultiplier: 1,
   impactRadiusMultiplier: 1,
 };
 
@@ -137,7 +139,7 @@ export class BurrowMotion {
     let burstStarted = false;
     if (input.burstPressed && burstCooldown === 0) {
       burstRemaining = BURST_DURATION;
-      burstCooldown = BURST_COOLDOWN;
+      burstCooldown = BURST_COOLDOWN * this.tuning.burstCooldownMultiplier;
       burstStarted = true;
     }
 

@@ -34,7 +34,7 @@ export function createHutSupportPoints(): readonly { readonly id: string; readon
   });
 }
 
-export function createBurrowArena(): BurrowTerrain {
+export function createBurrowArena(withShrineCave = true): BurrowTerrain {
   const terrain = new BurrowTerrain({
     worldWidth: BURROW_WORLD_WIDTH,
     worldHeight: BURROW_WORLD_HEIGHT,
@@ -53,7 +53,9 @@ export function createBurrowArena(): BurrowTerrain {
     terrain.carveCapsule(guideTunnel[index - 1]!, guideTunnel[index]!, 39);
   }
 
-  terrain.carveCircle({ x: 1090, y: 940 }, 145);
-  terrain.carveCircle({ x: 1195, y: 900 }, 105);
+  if (withShrineCave) {
+    terrain.carveCircle({ x: 1090, y: 940 }, 145);
+    terrain.carveCircle({ x: 1195, y: 900 }, 105);
+  }
   return terrain;
 }

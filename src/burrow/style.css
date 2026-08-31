@@ -45,6 +45,7 @@ body {
 }
 
 #burrow-game {
+  position: relative;
   display: grid;
   width: min(100%, 1280px);
   height: 100%;
@@ -84,18 +85,65 @@ body {
 }
 
 .abriss-link {
-  top: max(10px, env(safe-area-inset-top));
+  bottom: max(10px, env(safe-area-inset-bottom));
   right: max(10px, env(safe-area-inset-right));
   padding: 0 14px;
 }
 
 .burrow-restart {
   top: max(10px, env(safe-area-inset-top));
-  left: 50%;
+  right: max(10px, env(safe-area-inset-right));
   min-width: 48px;
   padding: 0 14px;
-  transform: translateX(-50%);
   cursor: pointer;
+}
+
+.burrow-overlay { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+.burrow-hud {
+  position: absolute; top: 10px; left: 12px; width: min(580px, calc(100% - 84px));
+  padding: 11px 14px 10px; border: 1px solid #d7be8750; border-radius: 13px;
+  background: #201c27ed; box-shadow: 0 5px 24px #0005;
+}
+.burrow-hud-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; }
+.burrow-hud-heading strong { color: #e7edbe; letter-spacing: .05em; }
+.burrow-hud-heading span { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.burrow-growth-track { height: 7px; background: #080b0d; border-radius: 6px; margin-top: 8px; overflow: hidden; }
+.burrow-growth-track i { display: block; height: 100%; background: linear-gradient(90deg, #94ce9d, #e4f6aa); transition: width .18s; }
+.burrow-hud p { margin: 7px 0 0; font-size: 12px; line-height: 1.4; color: #d6cfca; }
+.burrow-toast {
+  position: absolute; top: 112px; left: 50%; transform: translateX(-50%);
+  max-width: 85%; padding: 9px 14px; border-radius: 12px; background: #21192eed;
+  color: #e2f7ac; font-size: 14px; font-weight: 750; text-align: center;
+}
+.burrow-modal {
+  position: absolute; inset: 0; display: grid; place-items: center; padding: 18px;
+  pointer-events: auto; background: #100d19c9; backdrop-filter: blur(3px); overflow-y: auto;
+}
+.burrow-modal[hidden], .burrow-toast[hidden] { display: none; }
+.burrow-modal-panel { width: min(880px, 100%); padding: 26px; border: 1px solid #ccb5d369; border-radius: 22px; background: #252031; box-shadow: 0 20px 80px #0008; }
+.burrow-modal h1 { margin: 0; color: #f2e8cf; font-size: clamp(20px, 3vw, 30px); }
+.burrow-modal p { margin: 12px 0 22px; color: #c6bacd; line-height: 1.5; font-size: 14px; }
+.burrow-mutation-choices { display: flex; gap: 12px; }
+.burrow-mutation-choices button {
+  flex: 1; min-width: 0; min-height: 114px; padding: 18px 14px; cursor: pointer;
+  border: 1px solid var(--mutation-color, #cfdf9e); border-radius: 13px;
+  background: #322b40; color: #eee4d9; text-align: left; font: inherit;
+}
+.burrow-mutation-choices button strong { display: block; color: var(--mutation-color, #cfdf9e); font-size: 14px; }
+.burrow-mutation-choices button span { display: block; margin-top: 12px; white-space: pre-line; font-size: 13px; line-height: 1.5; }
+.burrow-mutation-choices button:hover, .burrow-mutation-choices button:focus-visible { outline: 3px solid #f7eccf; outline-offset: 3px; background: #443854; }
+@media (max-height: 500px) {
+  .burrow-hud { padding: 8px 11px; }
+  .burrow-toast { top: 100px; font-size: 12px; }
+  .burrow-modal-panel { padding: 20px; }
+  .burrow-modal p { margin: 8px 0 15px; }
+}
+@media (max-width: 600px) {
+  .burrow-hud-heading { font-size: 11px; }
+  .burrow-hud p { font-size: 11px; }
+  .burrow-mutation-choices { flex-direction: column; gap: 10px; }
+  .burrow-mutation-choices button { min-height: 80px; padding: 12px; }
+  .burrow-mutation-choices button span { margin-top: 6px; white-space: normal; }
 }
 
 .burrow-fullscreen {

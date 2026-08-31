@@ -1,6 +1,6 @@
 # Burrow-Produktlabor: technische Grenzen
 
-Stand: 30. August 2026
+Stand: 31. August 2026
 
 ## Isolation
 
@@ -81,7 +81,19 @@ Staub; es simuliert keine Gebäudeteile oder Starrkörper.
 - Eingabe wird vor dem Simulationsschritt in einen normalisierten Richtungsvektor
   und ein Burst-Signal übersetzt.
 
-## Drei-Level-Run (D-063)
+## Feed–Grow-Run (D-068)
+
+`BurrowRun` verwaltet Phasen, Biomasse, Beutezahlen, feste aktive Ticks und die
+einmalige Mutationswahl. Ein berechneter Build steuert Wachstum, Bewegungswerte
+und Beuteregeln. `BurrowFeeding` verwaltet handplatzierte Sporen und begrenzte
+Wurmbewegungen; Kopfkontakte werden entlang des Simulationssegments geprüft.
+Alle Nahrung/Beute-Belohnungen sind einmalig. Die Scene orchestriert nur feste
+Schritte und stellt ihre Ergebnisse dar. Auswahl und Abschluss stoppen alle
+fachlichen Schritte. Neustart rekonstruiert den gesamten Ausgangszustand.
+Terrain B und lokale Kachelupdates bleiben unverändert. Der stabile
+Kollisionsradius wächst nicht mit der visuellen Silhouette.
+
+## Historisch: Drei-Level-Run (D-063, durch D-068 abgelöst)
 
 Der nächste Slice verwendet eine gemeinsame Scene und rendererfreie,
 serialisierbare Zustände statt drei kopierter Implementierungen:

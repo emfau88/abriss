@@ -1,6 +1,6 @@
 # Burrow-Produktlabor: Vision
 
-Stand: 30. August 2026
+Stand: 31. August 2026
 
 ## Status
 
@@ -10,10 +10,9 @@ unverändert spielbar; Burrow verwendet ausschließlich `burrow.html`.
 
 ## Kernhypothese
 
-> Fühlt es sich bereits ohne Progression befriedigend an, ein schweres
-> unterirdisches Wesen direkt durch veränderbares Terrain zu steuern, in
-> vorhandenen Tunneln Tempo aufzunehmen und mit Wucht an die Oberfläche zu
-> brechen?
+> Trägt unterirdisches Sammeln und Jagen einen fließenden Loop, in dem das
+> Wesen unmittelbar sichtbar wächst, größere Beute bewältigt, seinen Jagdstil
+> durch eine Mutation verändert und schließlich mächtig zur Oberfläche bricht?
 
 Das Bewegungs-Gate wurde persönlich positiv bewertet und hat die heutigen
 Beute-, Zerstörungs- und Weltreaktionstests gerechtfertigt. Meta-Progression
@@ -25,12 +24,11 @@ Burstknopf allein stanzt kein Erdloch; Oberflächendurchbruch und schneller
 Einschlag dürfen Terrain dauerhaft verändern (D-062). Das bestätigt keine
 weiteren Produktgates und verändert die Abriss-Vision nicht.
 
-Der nächste bestätigte Produktscope ist ein zusammenhängender Drei-Level-Run
-aus ungefähr neun Minuten aktiver Spielzeit. Er verbindet den vorhandenen
-Schrein in einer festen Höhlenkammer mit drei 1-aus-3-Upgrades, zwei sichtbaren
-Wachstumsstufen, höheren Breaches, gezielter Strukturzerstörung und einer
-eskalierenden Schlusskutsche. Gebaut wird levelweise mit persönlichem Tor nach
-jedem Level; Details stehen in `THREE_LEVEL_SLICE.md` (D-063).
+Der bestätigte Scope ist jetzt ein kompakter Feed–Grow-Lebensraum: kontinuierliche
+Biomasse, laufendes Körperwachstum, zwei Machtanstiege, eine 1-aus-3-Mutation
+ohne Pflichtschrein und Oberflächenjagd. Kein Countdown oder Wurmleben im
+ersten Test. Details stehen in `FEED_GROW_SLICE.md` (D-068). Der frühere
+Drei-Level-Plan und Goblinmarkt sind bis zur persönlichen Abnahme pausiert.
 
 ## Langfristige Richtung, noch nicht Scope
 

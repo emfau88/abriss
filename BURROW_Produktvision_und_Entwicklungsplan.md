@@ -1,5 +1,9 @@
 # BURROW – Produktvision, Referenzanalyse und nächster Entwicklungsplan
 
+> Historische Referenzanalyse. Der aktuelle bestätigte Scope steht seit
+> D-068 in `docs/burrow/FEED_GROW_SLICE.md`; der Drei-Level-Schreinplan unten
+> ist keine weitere Produktionsfreigabe.
+
 **Stand:** 30. August 2026
 
 **Entscheidungsstand:** Der persönliche Vergleich hat Variante B bestätigt.

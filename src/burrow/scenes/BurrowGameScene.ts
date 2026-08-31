@@ -1,1262 +1,359 @@
 import Phaser from "phaser";
-
-import {
-  BURROW_HUT,
-  BURROW_SHRINE_POSITION,
-  BURROW_START,
-  BURROW_VEHICLE_ROUTE,
-  BURROW_WORLD_HEIGHT,
-  BURROW_WORLD_WIDTH,
-  createBurrowArena,
-  createHutSupportPoints,
-  surfaceYAt,
-} from "../content/arena";
+import { BURROW_WORLD_HEIGHT, BURROW_WORLD_WIDTH, surfaceYAt } from "../content/arena";
 import { OneShotInputBuffer } from "../input/OneShotInputBuffer";
-import { creatureVisualForStage } from "../rendering/BurrowCreatureVisual";
-import { TiledTerrainRenderer } from "../rendering/TiledTerrainRenderer";
+import { creatureVisualForBiomass } from "../rendering/BurrowCreatureVisual";
+import { BurrowHud } from "../rendering/BurrowHud";
 import { BurrowTrailRenderer } from "../rendering/BurrowTrailRenderer";
-import { BurrowSurfaceSupport } from "../simulation/BurrowSurfaceSupport";
-import { BurrowHunt, type BiteResult, type BurrowVehicleState } from "../simulation/BurrowHunt";
-import {
-  BURROW_MOTION_CONSTANTS,
-  BurrowMotion,
-  type BurrowMovementMode,
-} from "../simulation/BurrowMotion";
-import { BurrowStructure } from "../simulation/BurrowStructure";
-import { BurrowWorldResponse } from "../simulation/BurrowWorldResponse";
-import {
-  BURROW_UPGRADES,
-  BurrowRun,
-} from "../simulation/BurrowRun";
-import type {
-  CellRegion,
-  Point,
-  TerrainCarveResult,
-} from "../simulation/BurrowTerrain";
-
-const FIXED_STEP = 1 / 60;
-const MAX_ACCUMULATED_TIME = 0.1;
-const VIEW_WIDTH = 1280;
-const VIEW_HEIGHT = 720;
-// Liegt vollständig in der vorbereiteten Höhle; kein großflächiges
-// Hintergrundgebäude, das beim Graben ungewollt freigelegt wird.
-const ANIMAL_START_X = 1040;
-
-interface DustParticle {
-  x: number;
-  y: number;
-  velocityX: number;
-  velocityY: number;
-  life: number;
-  radius: number;
-}
+import { TiledTerrainRenderer } from "../rendering/TiledTerrainRenderer";
+import { BurrowFeedingSession } from "../simulation/BurrowFeedingSession";
+import { BURROW_MUTATIONS, type BurrowMutation } from "../simulation/BurrowRun";
+import type { Point } from "../simulation/BurrowTerrain";
 
 export class BurrowGameScene extends Phaser.Scene {
-  private motion!: BurrowMotion;
+  private session!: BurrowFeedingSession;
   private terrainRenderer!: TiledTerrainRenderer;
-  private trailRenderer: BurrowTrailRenderer | null = null;
-  private hunt!: BurrowHunt;
-  private structure!: BurrowStructure;
-  private worldResponse!: BurrowWorldResponse;
-  private run!: BurrowRun;
-  private wormGraphics!: Phaser.GameObjects.Graphics;
-  private wormHead!: Phaser.GameObjects.Image;
-  private wormSegments: Phaser.GameObjects.Image[] = [];
-  private dustGraphics!: Phaser.GameObjects.Graphics;
-  private hudText!: Phaser.GameObjects.Text;
-  private hudPanel!: Phaser.GameObjects.Rectangle;
-  private hudKicker!: Phaser.GameObjects.Text;
-  private hudTitle!: Phaser.GameObjects.Text;
-  private goalPanel!: Phaser.GameObjects.Rectangle;
-  private goalText!: Phaser.GameObjects.Text;
-  private eventPanel!: Phaser.GameObjects.Rectangle;
-  private eventText!: Phaser.GameObjects.Text;
-  private joystickBase!: Phaser.GameObjects.Arc;
-  private joystickNub!: Phaser.GameObjects.Arc;
-  private directionLabel!: Phaser.GameObjects.Text;
+  private trailRenderer!: BurrowTrailRenderer;
+  private hud!: BurrowHud;
+  private foodGraphics!: Phaser.GameObjects.Graphics;
+  private preyGraphics!: Phaser.GameObjects.Graphics;
+  private effects!: Phaser.GameObjects.Graphics;
+  private head!: Phaser.GameObjects.Image;
+  private segments: Phaser.GameObjects.Image[] = [];
+  private cart!: Phaser.GameObjects.Image;
+  private cartLabel!: Phaser.GameObjects.Text;
+  private preyLabels: Phaser.GameObjects.Text[] = [];
+  private guide!: Phaser.GameObjects.Text;
+  private joystick!: Phaser.GameObjects.Arc;
+  private stick!: Phaser.GameObjects.Arc;
   private burstButton!: Phaser.GameObjects.Arc;
   private burstLabel!: Phaser.GameObjects.Text;
   private controlsHint!: Phaser.GameObjects.Text;
-  private modalShade!: Phaser.GameObjects.Rectangle;
-  private modalPanel!: Phaser.GameObjects.Rectangle;
-  private modalAccent!: Phaser.GameObjects.Rectangle;
-  private modalTitle!: Phaser.GameObjects.Text;
-  private modalBody!: Phaser.GameObjects.Text;
-  private modalButtons: Phaser.GameObjects.Text[] = [];
-  private vehicleGraphics!: Phaser.GameObjects.Graphics;
-  private vehicleSprite!: Phaser.GameObjects.Image;
-  private vehicleLabel!: Phaser.GameObjects.Text;
-  private structureGraphics!: Phaser.GameObjects.Graphics;
-  private structureSprite!: Phaser.GameObjects.Image;
-  private animalSprite!: Phaser.GameObjects.Image;
-  private shrineSprite!: Phaser.GameObjects.Image;
-  private structureLabel!: Phaser.GameObjects.Text;
-  private vehicleHitFlash = 0;
-  private started = false;
-  private steeringPointerId: number | null = null;
+  private keys: Record<string, Phaser.Input.Keyboard.Key> = {};
+  private steeringPointer: number | null = null;
   private touchDirection: Point | null = null;
-  private readonly burstInput = new OneShotInputBuffer();
+  private readonly burst = new OneShotInputBuffer();
   private accumulator = 0;
-  private dustParticles: DustParticle[] = [];
-  private uiScale = 1;
-  private touchControlScale = 1;
-  private keyW?: Phaser.Input.Keyboard.Key;
-  private keyA?: Phaser.Input.Keyboard.Key;
-  private keyS?: Phaser.Input.Keyboard.Key;
-  private keyD?: Phaser.Input.Keyboard.Key;
-  private keyUp?: Phaser.Input.Keyboard.Key;
-  private keyDown?: Phaser.Input.Keyboard.Key;
-  private keyLeft?: Phaser.Input.Keyboard.Key;
-  private keyRight?: Phaser.Input.Keyboard.Key;
-  private keyBurst?: Phaser.Input.Keyboard.Key;
-  private keyBurstAlternative?: Phaser.Input.Keyboard.Key;
-  private keyRestart?: Phaser.Input.Keyboard.Key;
-  private keyOne?: Phaser.Input.Keyboard.Key;
-  private keyTwo?: Phaser.Input.Keyboard.Key;
-  private keyThree?: Phaser.Input.Keyboard.Key;
-  private liveStatus?: HTMLOutputElement | null;
+  private growthPulse = 0;
+  private blockedToastAt = -10000;
+  private now = 0;
 
-  public constructor() {
-    super("BurrowGameScene");
-  }
-
+  public constructor() { super("BurrowGameScene"); }
   public preload(): void {
     this.load.image("burrow-head", "burrow/burrow-head-v1.png");
     this.load.image("burrow-body-segment", "burrow/burrow-body-segment-v1.png");
     this.load.image("burrow-earth", "burrow/burrow-earth-v1.png");
     this.load.image("burrow-cart", "burrow/burrow-cart-v1.png");
-    this.load.image("burrow-outpost", "burrow/burrow-outpost-v1.png");
-    this.load.image("burrow-goat", "burrow/burrow-goat-v1.png");
-    this.load.image("burrow-goat-run", "burrow/burrow-goat-run-v1.png");
-    this.load.image("burrow-shrine", "burrow/burrow-shrine-v1.png");
   }
-
   public create(): void {
-    this.started = false;
+    this.session = new BurrowFeedingSession();
     this.accumulator = 0;
-    this.vehicleHitFlash = 0;
-    this.dustParticles = [];
-    const terrain = createBurrowArena();
-    this.run = new BurrowRun();
-    this.motion = new BurrowMotion(terrain, BURROW_START, -0.16, "recovering", this.run.state.build);
-    this.createWorldBackdrop();
-    this.terrainRenderer = new TiledTerrainRenderer(this, terrain, "burrow-terrain", "burrow-earth");
-    this.createSurfaceDetails();
-    this.createEnvironmentAssets();
-    this.trailRenderer = new BurrowTrailRenderer(this, terrain, this.motion.trailField);
-    const surface = new BurrowSurfaceSupport(terrain);
-    this.hunt = new BurrowHunt({ ...BURROW_VEHICLE_ROUTE, surfaceYAt }, surface);
-    this.structure = new BurrowStructure(terrain, createHutSupportPoints());
-    this.worldResponse = new BurrowWorldResponse({
-      animalStart: { x: ANIMAL_START_X, y: surfaceYAt(ANIMAL_START_X) - 3 },
-      shrinePosition: BURROW_SHRINE_POSITION,
-      surfaceYAt,
-      minimumX: 760,
-      maximumX: 1480,
-    }, surface);
-    this.wormGraphics = this.add.graphics().setDepth(12);
-    this.wormHead = this.add.image(BURROW_START.x, BURROW_START.y, "burrow-head").setDepth(13);
-    this.wormSegments = Array.from(
-      { length: 28 },
-      () => this.add.image(BURROW_START.x, BURROW_START.y, "burrow-body-segment").setDepth(12),
-    );
-    this.dustGraphics = this.add.graphics().setDepth(11);
-    this.createVehicle();
-    this.createStructure();
-    this.createHud();
-    this.resetTouchDirection();
+    this.growthPulse = 0;
+    this.blockedToastAt = -10000;
+    this.now = 0;
+    this.burst.clear();
+    this.createBackdrop();
+    this.terrainRenderer = new TiledTerrainRenderer(this, this.session.terrain, "burrow-terrain", "burrow-earth");
+    this.trailRenderer = new BurrowTrailRenderer(this, this.session.terrain, this.session.motion.trailField);
+    // Quiet earth behind bright edible objects; permanent holes and temporary trails remain distinct.
+    this.add.rectangle(0, 360, BURROW_WORLD_WIDTH, BURROW_WORLD_HEIGHT - 360, 0x171420, 0.24)
+      .setOrigin(0).setDepth(3.5);
+    this.foodGraphics = this.add.graphics().setDepth(5);
+    this.preyGraphics = this.add.graphics().setDepth(6);
+    this.effects = this.add.graphics().setDepth(11);
+    this.segments = Array.from({ length: 28 }, (_, index) =>
+      this.add.image(0, 0, "burrow-body-segment").setDepth(12 + (28 - index) * 0.01));
+    this.head = this.add.image(0, 0, "burrow-head").setDepth(13);
+    this.cart = this.add.image(0, 0, "burrow-cart").setDepth(8);
+    this.cartLabel = this.worldText("", 14).setDepth(9);
+    this.preyLabels = this.session.feeding.content.prey.map((prey) =>
+      this.worldText(prey.large ? "40 + BURST" : "+8", prey.large ? 13 : 11).setDepth(7));
+    this.guide = this.worldText("", 14).setScrollFactor(0).setDepth(20);
+    this.createControls();
     this.configureInput();
-    this.configureCamera();
-    this.burstInput.clear();
-    this.liveStatus = document.querySelector<HTMLOutputElement>("#burrow-live-status");
+    this.cameras.main.setBounds(0, 0, BURROW_WORLD_WIDTH, BURROW_WORLD_HEIGHT);
     this.game.canvas.tabIndex = 0;
-    this.game.canvas.setAttribute("aria-label", "Burrow Bewegungslabor");
+    this.hud = new BurrowHud(this.game.canvas, (mutation) => this.chooseMutation(mutation), () => this.scene.restart());
+    this.layout();
+    this.resetInput();
     this.game.canvas.focus();
-
+    this.renderWorld(0);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.terrainRenderer.destroy();
-      this.trailRenderer?.destroy();
-      this.input.off("pointerdown", this.handlePointerDown, this);
-      this.input.off("pointermove", this.handlePointerMove, this);
-      this.input.off("pointerup", this.handlePointerUp, this);
-      this.input.off("pointerupoutside", this.handlePointerUp, this);
-      this.scale.off(Phaser.Scale.Events.RESIZE, this.layoutHud, this);
+      this.trailRenderer.destroy();
+      this.hud.destroy();
+      this.input.off("pointerdown", this.pointerDown, this);
+      this.input.off("pointermove", this.pointerMove, this);
+      this.input.off("pointerup", this.pointerUp, this);
+      this.input.off("pointerupoutside", this.pointerUp, this);
+      this.game.events.off(Phaser.Core.Events.BLUR, this.resetInput, this);
+      this.scale.off(Phaser.Scale.Events.RESIZE, this.layout, this);
     });
   }
-
-  public override update(_time: number, deltaMilliseconds: number): void {
-    const direction = this.readDirection();
-    this.captureBurstInput();
-    this.captureModalInput();
-    if (this.keyRestart && Phaser.Input.Keyboard.JustDown(this.keyRestart)) {
-      this.scene.restart();
+  public override update(time: number, delta: number): void {
+    this.now = time;
+    if (this.justDown("R")) { this.scene.restart(); return; }
+    if (this.session.run.state.phase === "mutation") {
+      for (let index = 0; index < 3; index += 1) {
+        if (this.justDown(["ONE", "TWO", "THREE"][index]!)) this.chooseMutation(BURROW_MUTATIONS[index]!.id);
+      }
+    }
+    const run = this.session.run;
+    if (!run.active && run.state.phase !== "intro") {
+      this.resetInput();
+      this.renderWorld(delta);
       return;
     }
-    if (!this.started) {
-      if (!direction && !this.burstInput.hasPending) {
-        this.renderWorm();
-        this.updateCamera();
-        this.updateHud();
-        return;
+    if (this.justDown("SPACE") || this.justDown("SHIFT")) this.burst.queue();
+    this.accumulator = Math.min(0.1, this.accumulator + delta / 1000);
+    while (this.accumulator >= 1 / 60) {
+      this.accumulator -= 1 / 60;
+      const oldPower = run.build.power;
+      const result = this.session.step({ direction: this.readDirection(), burstPressed: this.burst.consume() });
+      if (!result) break;
+      this.terrainRenderer.applyMutation(result.movement.terrainMutation);
+      this.trailRenderer.apply(new Set(result.movement.trailDirtyTiles), result.movement.terrainMutation);
+      if (result.meal.biomass > 0 || result.bite?.devoured) this.growthPulse = 1;
+      if (run.build.power > oldPower) {
+        this.hud.showToast(run.build.power === 1 ? "JÄGER! Schneller. Große Würmer mit Burst fressbar." :
+          "GRÄBER! Noch schneller. Große Würmer jetzt auch ohne Burst.", time);
+      } else if (result.meal.largePreyEaten > 0) this.hud.showToast("+20! Folge seiner Nahrungsspur.", time);
+      else if (result.meal.preyEaten > 0) this.hud.showToast("+8 · WURM GEFRESSEN", time);
+      if (result.meal.blockedPrey && time - this.blockedToastAt > 3500) {
+        this.blockedToastAt = time;
+        this.hud.showToast(run.build.power === 0 ? "Noch zu groß. Wachse auf 40 Biomasse." : "Den großen Wurm im Burst treffen!", time);
       }
-      this.started = true;
-      this.run.start();
-      this.showEvent("LOS!", "#fff0a1");
+      if (!run.active) { this.resetInput(); break; }
     }
-    if (!this.isSimulationActive()) {
-      this.accumulator = 0;
-      this.renderVehicle();
-      this.renderStructure();
-      this.renderWorldResponse(deltaMilliseconds / 1000);
-      this.renderWorm();
-      this.updateCamera();
-      this.updateHud();
-      return;
-    }
-    this.accumulator = Math.min(
-      MAX_ACCUMULATED_TIME,
-      this.accumulator + deltaMilliseconds / 1000,
-    );
-    let combinedMutation: TerrainCarveResult | null = null;
-    const trailDirtyTiles = new Set<number>();
-
-    while (this.accumulator >= FIXED_STEP) {
-      const previousMode = this.motion.state.mode;
-      const burstPressed = this.burstInput.consume();
-      const result = this.motion.step(
-        { direction, burstPressed },
-        FIXED_STEP,
-      );
-      const huntResult = this.hunt.step(FIXED_STEP);
-      const bite = this.hunt.tryBite({
-        headPosition: this.motion.state.position,
-        speed: this.motion.state.speed,
-        burstActive: this.motion.state.burstRemaining > 0,
-        damageBonus: this.run.state.build.biteDamageBonus,
-      });
-      const structureResult = this.structure.step();
-      const worldResult = this.worldResponse.step({
-        headPosition: this.motion.state.position,
-        breachOccurred: result.modeChanged && this.motion.state.mode === "airborne",
-        deltaSeconds: FIXED_STEP,
-        shrineEnabled: this.run.state.phase === "shrine-ready",
-      });
-      const animalDevoured = this.worldResponse.tryDevourAnimal({
-        headPosition: this.motion.state.position,
-        speed: this.motion.state.speed,
-      });
-      this.run.advanceActiveStep();
-      combinedMutation = mergeMutations(combinedMutation, result.terrainMutation);
-      for (const id of result.trailDirtyTiles) trailDirtyTiles.add(id);
-      if (result.terrainMutation?.removedCells) {
-        this.spawnDigDust(this.motion.state.position, this.motion.state.angle, 2);
-      }
-      if (result.modeChanged) {
-        this.announceModeChange(previousMode, this.motion.state.mode);
-      }
-      if (result.burstStarted) {
-        this.spawnDigDust(this.motion.state.position, this.motion.state.angle, 14);
-        this.cameras.main.shake(100, 0.0028);
-      }
-      if (bite) {
-        this.announceBite(bite);
-        if (bite.devoured) {
-          if (this.run.state.phase === "finale") {
-            this.run.completeLevel();
-            this.showEvent("SCHLUSSKUTSCHE VERSCHLUNGEN! · LEVEL GESCHAFFT!", "#c7f279");
-          } else if (this.run.collectBiomass()) {
-            this.announceShrineReady();
-          }
-        }
-      }
-      if (animalDevoured) {
-        this.spawnDigDust(this.motion.state.position, this.motion.state.angle, 20);
-        if (this.run.collectBiomass()) this.announceShrineReady();
-        this.showEvent("BERGTIER VERSCHLUNGEN! +1 BIOMASSE", "#c7f279");
-      }
-      if (huntResult.respawned) {
-        this.showEvent("NEUE KUTSCHE!", "#c7f279");
-      }
-      if (structureResult.collapsedNow) {
-        this.announceStructureCollapse();
-      } else if (structureResult.lostSupportIds.length > 0) {
-        this.announceSupportLoss(structureResult.lostSupportIds.length);
-      }
-      if (worldResult.animalFledNow) {
-        this.showEvent("DAS BERGTIER FLIEHT!", "#fff0a1");
-      }
-      if (worldResult.shrineActivatedNow) {
-        this.announceShrineActivation();
-        this.run.openUpgrade();
-      }
-      this.accumulator -= FIXED_STEP;
-      if (!this.isSimulationActive()) {
-        this.accumulator = 0;
-        break;
-      }
-    }
-
-    this.terrainRenderer.applyMutation(combinedMutation);
-    this.trailRenderer?.apply(trailDirtyTiles, combinedMutation);
-    this.vehicleHitFlash = Math.max(0, this.vehicleHitFlash - deltaMilliseconds / 1000);
-    this.renderVehicle();
-    this.renderStructure();
-    this.renderWorldResponse(deltaMilliseconds / 1000);
-    this.updateDust(deltaMilliseconds / 1000);
-    this.renderWorm();
-    this.updateCamera();
-    this.updateHud();
-
+    this.renderWorld(delta);
   }
-
-  private createWorldBackdrop(): void {
-    const graphics = this.add.graphics().setDepth(0);
-    graphics.fillStyle(0x5b90bd).fillRect(0, 0, BURROW_WORLD_WIDTH, 390);
-    graphics.fillStyle(0x86c8d3).fillCircle(220, 105, 74);
-    graphics.fillCircle(300, 92, 52);
-    graphics.fillStyle(0xa6d5d0).fillCircle(1640, 116, 62);
-    graphics.fillCircle(1720, 104, 46);
-    graphics.fillStyle(0x1d1828).fillRect(0, 300, BURROW_WORLD_WIDTH, BURROW_WORLD_HEIGHT - 300);
-    graphics.fillStyle(0x28203a).fillCircle(1090, 940, 190);
-    graphics.fillStyle(0x332545).fillCircle(1210, 900, 150);
-
-    const routeMarker = this.add.graphics().setDepth(1);
-    routeMarker.lineStyle(5, 0x9fd064, 0.24);
-    routeMarker.lineBetween(
-      BURROW_VEHICLE_ROUTE.minimumX,
-      surfaceYAt(BURROW_VEHICLE_ROUTE.minimumX) - 12,
-      BURROW_VEHICLE_ROUTE.maximumX,
-      surfaceYAt(BURROW_VEHICLE_ROUTE.maximumX) - 12,
-    );
-    routeMarker.fillStyle(0x9fd064, 0.14).fillCircle(BURROW_VEHICLE_ROUTE.startX, 800, 70);
-
-    const structureMarker = this.add.graphics().setDepth(1);
-    structureMarker.lineStyle(5, 0xffb95e, 0.26);
-    structureMarker.lineBetween(
-      BURROW_HUT.centerX,
-      surfaceYAt(BURROW_HUT.centerX) - 210,
-      BURROW_HUT.centerX,
-      1040,
-    );
-    structureMarker.fillStyle(0xffb95e, 0.13).fillCircle(BURROW_HUT.centerX, 870, 80);
-  }
-
-  private createSurfaceDetails(): void {
-    const details = this.add.graphics().setDepth(3);
-    for (let x = 0; x < BURROW_WORLD_WIDTH; x += 32) {
+  private createBackdrop(): void {
+    const g = this.add.graphics().setDepth(0);
+    g.fillStyle(0x80bac4).fillRect(0, 0, BURROW_WORLD_WIDTH, BURROW_WORLD_HEIGHT);
+    g.fillStyle(0xc4ddd1).fillCircle(200, 105, 70).fillCircle(280, 95, 54).fillCircle(1670, 105, 65);
+    g.fillStyle(0x211b2d).fillRect(0, 350, BURROW_WORLD_WIDTH, BURROW_WORLD_HEIGHT);
+    const grass = this.add.graphics().setDepth(4);
+    for (let x = 0; x < BURROW_WORLD_WIDTH; x += 28) {
       const y = surfaceYAt(x);
-      details.lineStyle(3, x % 64 === 0 ? 0x9fbf45 : 0x728e38, 0.95);
-      details.lineBetween(x, y + 2, x + 4, y - 11 - (x % 7));
-      details.lineBetween(x + 6, y + 2, x + 12, y - 8);
-    }
-
-    details.fillStyle(0x34455e).fillRect(1320, surfaceYAt(1320) - 13, 160, 13);
-    details.fillStyle(0xf0c868).fillRect(1328, surfaceYAt(1320) - 20, 30, 7);
-    details.fillRect(1415, surfaceYAt(1320) - 20, 56, 7);
-
-    for (const x of [260, 760, 1180, 1780, 2220]) {
-      const y = surfaceYAt(x);
-      details.fillStyle(0x6c4b6d, 0.8).fillCircle(x, y + 140, 14);
-      details.fillStyle(0x9e6e9a, 0.9).fillTriangle(x, y + 128, x - 10, y + 156, x + 10, y + 156);
+      grass.lineStyle(3, 0x9db65a, 0.9).lineBetween(x, y + 2, x + 4, y - 9);
     }
   }
-
-  private createEnvironmentAssets(): void {
-    this.shrineSprite = this.add.image(BURROW_SHRINE_POSITION.x, BURROW_SHRINE_POSITION.y, "burrow-shrine")
-      .setOrigin(0.5, 1).setDisplaySize(92, 108).setDepth(4);
-    this.structureSprite = this.add.image(BURROW_HUT.centerX, surfaceYAt(BURROW_HUT.centerX) + 5, "burrow-outpost")
-      .setOrigin(0.5, 1).setDisplaySize(270, 250).setDepth(6);
-    this.animalSprite = this.add.image(ANIMAL_START_X, surfaceYAt(ANIMAL_START_X) + 3, "burrow-goat")
-      .setOrigin(0.5, 1).setDisplaySize(78, 70).setDepth(6);
+  private worldText(text: string, size: number): Phaser.GameObjects.Text {
+    return this.add.text(0, 0, text, { fontFamily: "Arial, sans-serif", fontSize: size + "px",
+      fontStyle: "bold", color: "#fff4da", stroke: "#211a25", strokeThickness: 4, align: "center" }).setOrigin(0.5);
   }
-
-  private createVehicle(): void {
-    this.vehicleGraphics = this.add.graphics().setDepth(8);
-    this.vehicleSprite = this.add.image(0, 0, "burrow-cart").setDepth(8);
-    this.vehicleLabel = this.add
-      .text(0, 0, "", {
-        fontFamily: "Arial Black, sans-serif",
-        fontSize: "16px",
-        color: "#e8f7bb",
-        stroke: "#25331e",
-        strokeThickness: 5,
-      })
-      .setOrigin(0.5)
-      .setDepth(9);
-    this.renderVehicle();
-  }
-
-  private createStructure(): void {
-    this.structureGraphics = this.add.graphics().setDepth(7);
-    this.structureLabel = this.add
-      .text(0, 0, "", {
-        align: "center",
-        fontFamily: "Arial Black, sans-serif",
-        fontSize: "16px",
-        color: "#ffd88a",
-        stroke: "#35241f",
-        strokeThickness: 5,
-      })
-      .setOrigin(0.5)
-      .setDepth(8);
-    this.renderStructure();
-  }
-
-  private createHud(): void {
-    this.hudPanel = this.add
-      .rectangle(18, 18, 500, 142, 0x151627, 0.94)
-      .setOrigin(0)
-      .setScrollFactor(0)
-      .setDepth(100)
-      .setStrokeStyle(2, 0x7e79b8, 0.86);
-    this.hudKicker = this.add
-      .text(38, 30, "LEVEL 1 · WIESENRAND", {
-        fontFamily: "Arial Black, sans-serif",
-        fontSize: "12px",
-        color: "#aee37d",
-        letterSpacing: 1.4,
-      })
-      .setScrollFactor(0)
-      .setDepth(101);
-    this.hudTitle = this.add
-      .text(38, 45, "BURROW", {
-        fontFamily: "Arial Black, sans-serif",
-        fontSize: "26px",
-        color: "#ffd66d",
-        stroke: "#27203a",
-        strokeThickness: 4,
-      })
-      .setScrollFactor(0)
-      .setDepth(101);
-    this.hudText = this.add
-      .text(38, 78, "", {
-        fontFamily: "Arial Black, sans-serif",
-        fontSize: "15px",
-        color: "#f8f2df",
-        lineSpacing: 6,
-      })
-      .setScrollFactor(0)
-      .setDepth(101);
-    this.goalPanel = this.add
-      .rectangle(VIEW_WIDTH - 18, 18, 350, 78, 0x17182a, 0.94)
-      .setOrigin(1, 0)
-      .setScrollFactor(0)
-      .setDepth(100)
-      .setStrokeStyle(2, 0xd5a65e, 0.82);
-    this.goalText = this.add
-      .text(VIEW_WIDTH - 36, 35, "", {
-        align: "right",
-        fontFamily: "Arial Black, sans-serif",
-        fontSize: "17px",
-        color: "#fff0b0",
-        stroke: "#1f1d2d",
-        strokeThickness: 4,
-      })
-      .setOrigin(1, 0)
-      .setScrollFactor(0)
-      .setDepth(101);
-    this.eventPanel = this.add
-      .rectangle(VIEW_WIDTH / 2, 142, 720, 66, 0x211b31, 0.92)
-      .setScrollFactor(0)
-      .setDepth(109)
-      .setStrokeStyle(2, 0xffd66d, 0.8)
-      .setAlpha(0);
-    this.eventText = this.add
-      .text(VIEW_WIDTH / 2, 142, "", {
-        fontFamily: "Arial Black, sans-serif",
-        fontSize: "27px",
-        color: "#fff0a1",
-        stroke: "#211b31",
-        strokeThickness: 6,
-      })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(110)
-      .setAlpha(0);
-
-    this.joystickBase = this.add
-      .circle(116, VIEW_HEIGHT - 108, 66, 0x10151c, 0.48)
-      .setScrollFactor(0)
-      .setDepth(100)
-      .setStrokeStyle(3, 0xf7e2b0, 0.52);
-    this.joystickNub = this.add
-      .circle(116, VIEW_HEIGHT - 108, 29, 0xd78843, 0.8)
-      .setScrollFactor(0)
-      .setDepth(101);
-    this.directionLabel = this.add
-      .text(116, VIEW_HEIGHT - 23, "RICHTUNG", {
-        fontFamily: "Arial Black, sans-serif",
-        fontSize: "13px",
-        color: "#f7e2b0",
-      })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(101);
-
-    this.burstButton = this.add
-      .circle(VIEW_WIDTH - 105, VIEW_HEIGHT - 106, 62, 0xb9472e, 0.84)
-      .setScrollFactor(0)
-      .setDepth(100)
-      .setStrokeStyle(4, 0xffd66d, 0.78)
-      .setInteractive({ useHandCursor: true });
-    this.burstLabel = this.add
-      .text(this.burstButton.x, this.burstButton.y, "BURST", {
-        fontFamily: "Arial Black, sans-serif",
-        fontSize: "21px",
-        color: "#fff2c6",
-      })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(101);
-    this.controlsHint = this.add
-      .text(VIEW_WIDTH / 2, VIEW_HEIGHT - 33, "WASD / PFEILE · SHIFT / LEERTASTE · R NEUSTART", {
-        fontFamily: "Consolas, monospace",
-        fontSize: "14px",
-        color: "#efe5cd",
-        backgroundColor: "#10151ccc",
-        padding: { x: 10, y: 6 },
-      })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(101);
-
-    this.modalShade = this.add
-      .rectangle(VIEW_WIDTH / 2, VIEW_HEIGHT / 2, VIEW_WIDTH, VIEW_HEIGHT, 0x0a0c18, 0.6)
-      .setScrollFactor(0)
-      .setDepth(138)
-      .setVisible(false);
-    this.modalPanel = this.add
-      .rectangle(VIEW_WIDTH / 2, VIEW_HEIGHT / 2, 860, 390, 0x17182a, 0.98)
-      .setScrollFactor(0)
-      .setDepth(140)
-      .setStrokeStyle(3, 0xffd66d, 0.92)
-      .setVisible(false);
-    this.modalAccent = this.add
-      .rectangle(VIEW_WIDTH / 2, 184, 760, 7, 0xaee37d, 1)
-      .setScrollFactor(0)
-      .setDepth(141)
-      .setVisible(false);
-    this.modalTitle = this.add
-      .text(VIEW_WIDTH / 2, 245, "", {
-        align: "center",
-        fontFamily: "Arial Black, sans-serif",
-        fontSize: "30px",
-        color: "#ffe084",
-        stroke: "#201b1f",
-        strokeThickness: 7,
-      })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(142)
-      .setVisible(false);
-    this.modalBody = this.add
-      .text(VIEW_WIDTH / 2, 292, "", {
-        align: "center",
-        fontFamily: "Arial Black, sans-serif",
-        fontSize: "16px",
-        color: "#f6edda",
-        lineSpacing: 7,
-      })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(142)
-      .setVisible(false);
-    this.modalButtons = Array.from({ length: 3 }, () => this.add
-      .text(0, 0, "", {
-        align: "center",
-        fontFamily: "Arial Black, sans-serif",
-        fontSize: "15px",
-        color: "#fff9df",
-        backgroundColor: "#355b91",
-        padding: { x: 16, y: 14 },
-        wordWrap: { width: 210, useAdvancedWrap: true },
-      })
-      .setOrigin(0.5)
-      .setFixedSize(232, 104)
-      .setScrollFactor(0)
-      .setDepth(143)
-      .setInteractive({ useHandCursor: true })
-      .setVisible(false));
-    this.modalButtons.forEach((button, index) => {
-      button.on("pointerdown", () => this.handleModalAction(index));
-    });
-
+  private createControls(): void {
+    this.joystick = this.add.circle(0, 0, 48, 0x241c2c, 0.58).setStrokeStyle(2, 0xf2dab1, 0.45).setScrollFactor(0).setDepth(20);
+    this.stick = this.add.circle(0, 0, 19, 0xf5d991, 0.72).setScrollFactor(0).setDepth(21);
+    this.burstButton = this.add.circle(0, 0, 44, 0x76519e, 0.9)
+      .setStrokeStyle(3, 0xe7c9ff, 0.9).setScrollFactor(0).setDepth(20).setInteractive();
+    this.burstLabel = this.worldText("BURST", 14).setScrollFactor(0).setDepth(21);
+    this.controlsHint = this.worldText("WASD / Pfeile · Leertaste: Burst", 12).setScrollFactor(0).setDepth(20);
     this.burstButton.on("pointerdown", () => {
-      this.burstInput.queue();
+      if (this.session.run.active || this.session.run.state.phase === "intro") this.burst.queue();
     });
-    this.scale.on(Phaser.Scale.Events.RESIZE, this.layoutHud, this);
-    this.layoutHud();
+    this.scale.on(Phaser.Scale.Events.RESIZE, this.layout, this);
   }
-
-  private layoutHud(): void {
-    const width = this.scale.width;
-    const height = this.scale.height;
-    const scale = Math.min(1, width / VIEW_WIDTH, height / VIEW_HEIGHT);
-    const compactViewport = width <= 900 || height <= 600;
-    const hudScale = compactViewport
-      ? Math.max(scale, Math.min(1, width / 520, height / 520))
-      : scale;
-    // The world may scale down, but thumb controls need a useful minimum size
-    // on narrow portrait and short landscape screens.
-    const touchControlScale = compactViewport
-      ? Math.max(scale, Math.min(0.72, width / 520, height / 460))
-      : scale;
-    const at = (value: number): number => value * hudScale;
-    const controlAt = (value: number): number => value * touchControlScale;
-    this.uiScale = hudScale;
-    this.touchControlScale = touchControlScale;
-
-    this.hudPanel.setPosition(at(18), at(18)).setSize(at(500), at(142));
-    this.hudKicker.setPosition(at(38), at(30)).setScale(hudScale);
-    this.hudTitle.setPosition(at(38), at(45)).setScale(hudScale);
-    this.hudText.setPosition(at(38), at(78)).setScale(hudScale);
-    if (compactViewport) {
-      this.goalPanel.setPosition(at(18), at(172)).setOrigin(0, 0).setSize(at(500), at(68));
-      this.goalText.setPosition(at(38), at(184)).setOrigin(0, 0).setAlign("left");
-    } else {
-      this.goalPanel.setPosition(width - at(18), at(18)).setOrigin(1, 0).setSize(at(350), at(78));
-      this.goalText.setPosition(width - at(36), at(35)).setOrigin(1, 0).setAlign("right");
-    }
-    this.goalText.setScale(hudScale);
-    const eventY = compactViewport ? at(270) : at(142);
-    this.eventPanel.setPosition(width / 2, eventY).setSize(Math.min(width - at(24), at(720)), at(66));
-    this.eventText.setPosition(width / 2, eventY).setScale(hudScale);
-
-    const joystickX = controlAt(116);
-    const joystickY = height - controlAt(108);
-    this.joystickBase.setPosition(joystickX, joystickY).setRadius(controlAt(66));
-    this.joystickNub.setPosition(joystickX, joystickY).setRadius(controlAt(29));
-    this.directionLabel.setPosition(joystickX, height - controlAt(23)).setScale(touchControlScale);
-
-    const burstX = width - controlAt(105);
-    const burstY = height - controlAt(106);
-    this.burstButton.setPosition(burstX, burstY).setRadius(controlAt(62));
-    this.burstLabel.setPosition(burstX, burstY).setScale(touchControlScale);
-    this.controlsHint
-      .setVisible(!compactViewport)
-      .setPosition(width / 2, height - at(33))
-      .setScale(hudScale);
-    this.layoutModal(hudScale, width, height);
-  }
-
   private configureInput(): void {
-    // Three configured pointers already cover the two-thumb controls. Do not
-    // grow the global pointer pool on every comparison restart.
     const keyboard = this.input.keyboard;
-    if (keyboard) {
-      this.keyW = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
-      this.keyA = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
-      this.keyS = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
-      this.keyD = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
-      this.keyUp = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
-      this.keyDown = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
-      this.keyLeft = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
-      this.keyRight = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
-      this.keyBurst = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
-      this.keyBurstAlternative = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-      this.keyRestart = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
-      this.keyOne = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE);
-      this.keyTwo = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO);
-      this.keyThree = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.THREE);
+    this.keys = {};
+    for (const name of ["W", "A", "S", "D", "UP", "DOWN", "LEFT", "RIGHT", "SHIFT", "SPACE", "R", "ONE", "TWO", "THREE"]) {
+      if (keyboard) this.keys[name] = keyboard.addKey(name);
     }
-    this.input.on("pointerdown", this.handlePointerDown, this);
-    this.input.on("pointermove", this.handlePointerMove, this);
-    this.input.on("pointerup", this.handlePointerUp, this);
-    this.input.on("pointerupoutside", this.handlePointerUp, this);
+    this.input.on("pointerdown", this.pointerDown, this);
+    this.input.on("pointermove", this.pointerMove, this);
+    this.input.on("pointerup", this.pointerUp, this);
+    this.input.on("pointerupoutside", this.pointerUp, this);
+    this.game.events.on(Phaser.Core.Events.BLUR, this.resetInput, this);
   }
-
-  private configureCamera(): void {
-    const camera = this.cameras.main;
-    camera.setBounds(0, 0, BURROW_WORLD_WIDTH, BURROW_WORLD_HEIGHT);
-    camera.centerOn(BURROW_START.x, BURROW_START.y);
-    camera.setBackgroundColor(0x17151c);
+  private layout(): void {
+    const { width, height } = this.scale;
+    const compact = height < 500 || width < 700;
+    const radius = compact ? 40 : 48;
+    this.joystick.setRadius(radius).setPosition(compact ? 68 : 92, height - (compact ? 67 : 90));
+    this.stick.setPosition(this.joystick.x, this.joystick.y);
+    this.burstButton.setRadius(compact ? 36 : 44).setPosition(width - (compact ? 65 : 88), this.joystick.y);
+    this.burstLabel.setPosition(this.burstButton.x, this.burstButton.y);
+    this.controlsHint.setPosition(width / 2, height - 20).setVisible(width >= 700 && height >= 500);
+    this.resetInput();
+    this.updateCamera();
   }
-
-  private handlePointerDown(pointer: Phaser.Input.Pointer): void {
-    const joystickReach = 132 * this.touchControlScale;
-    if (
-      pointer.x > this.joystickBase.x + joystickReach ||
-      pointer.y < this.joystickBase.y - joystickReach
-    ) {
-      return;
-    }
-    this.steeringPointerId = pointer.id;
-    this.updateTouchDirection(pointer);
+  private justDown(name: string): boolean {
+    const key = this.keys[name];
+    return key ? Phaser.Input.Keyboard.JustDown(key) : false;
   }
-
-  private handlePointerMove(pointer: Phaser.Input.Pointer): void {
-    if (pointer.id !== this.steeringPointerId || !pointer.isDown) {
-      return;
-    }
-    this.updateTouchDirection(pointer);
+  private pointerDown(pointer: Phaser.Input.Pointer): void {
+    if ((!this.session.run.active && this.session.run.state.phase !== "intro") || this.steeringPointer !== null) return;
+    if (pointer.x > this.joystick.x + 110 || pointer.y < this.joystick.y - 110) return;
+    this.steeringPointer = pointer.id;
+    this.pointerMove(pointer);
   }
-
-  private handlePointerUp(pointer: Phaser.Input.Pointer): void {
-    if (pointer.id !== this.steeringPointerId) {
-      return;
-    }
-    this.steeringPointerId = null;
-    this.resetTouchDirection();
+  private pointerMove(pointer: Phaser.Input.Pointer): void {
+    if (pointer.id !== this.steeringPointer || !pointer.isDown) return;
+    const x = pointer.x - this.joystick.x;
+    const y = pointer.y - this.joystick.y;
+    const length = Math.hypot(x, y);
+    this.touchDirection = length > 5 ? { x: x / length, y: y / length } : null;
+    const distance = Math.min(34, length);
+    this.stick.setPosition(this.joystick.x + (this.touchDirection?.x ?? 0) * distance,
+      this.joystick.y + (this.touchDirection?.y ?? 0) * distance);
   }
-
-  private updateTouchDirection(pointer: Phaser.Input.Pointer): void {
-    const deltaX = pointer.x - this.joystickBase.x;
-    const deltaY = pointer.y - this.joystickBase.y;
-    const distance = Math.hypot(deltaX, deltaY);
-    if (distance < 2 * this.touchControlScale) {
-      this.touchDirection = null;
-      return;
-    }
-    this.touchDirection = { x: deltaX / distance, y: deltaY / distance };
-    const visualDistance = Math.min(40 * this.touchControlScale, distance);
-    this.joystickNub.setPosition(
-      this.joystickBase.x + (deltaX / distance) * visualDistance,
-      this.joystickBase.y + (deltaY / distance) * visualDistance,
-    );
-  }
-
-  private resetTouchDirection(): void {
-    this.steeringPointerId = null;
+  private pointerUp(pointer: Phaser.Input.Pointer): void {
+    if (pointer.id !== this.steeringPointer) return;
+    this.steeringPointer = null;
     this.touchDirection = null;
-    if (this.joystickNub && this.joystickBase) {
-      this.joystickNub.setPosition(this.joystickBase.x, this.joystickBase.y);
-    }
+    this.stick.setPosition(this.joystick.x, this.joystick.y);
   }
-
+  private resetInput(): void {
+    this.steeringPointer = null;
+    this.touchDirection = null;
+    this.burst.clear();
+    this.accumulator = 0;
+    this.input.keyboard?.resetKeys();
+    if (this.stick) this.stick.setPosition(this.joystick.x, this.joystick.y);
+  }
   private readDirection(): Point | null {
-    let x = 0;
-    let y = 0;
-    if (this.keyA?.isDown || this.keyLeft?.isDown) x -= 1;
-    if (this.keyD?.isDown || this.keyRight?.isDown) x += 1;
-    if (this.keyW?.isDown || this.keyUp?.isDown) y -= 1;
-    if (this.keyS?.isDown || this.keyDown?.isDown) y += 1;
-    if (x !== 0 || y !== 0) {
-      const length = Math.hypot(x, y);
-      return { x: x / length, y: y / length };
-    }
-    return this.touchDirection;
+    const down = (a: string, b: string): number => this.keys[a]?.isDown || this.keys[b]?.isDown ? 1 : 0;
+    const x = down("D", "RIGHT") - down("A", "LEFT");
+    const y = down("S", "DOWN") - down("W", "UP");
+    return x || y ? { x, y } : this.touchDirection;
   }
-
-  private captureBurstInput(): void {
-    const keyboardBurst =
-      (this.keyBurst ? Phaser.Input.Keyboard.JustDown(this.keyBurst) : false) ||
-      (this.keyBurstAlternative
-        ? Phaser.Input.Keyboard.JustDown(this.keyBurstAlternative)
-        : false);
-    if (keyboardBurst) {
-      this.burstInput.queue();
-    }
+  private chooseMutation(mutation: BurrowMutation): void {
+    if (!this.session.chooseMutation(mutation)) return;
+    this.resetInput();
+    this.game.canvas.focus();
+    const name = BURROW_MUTATIONS.find((entry) => entry.id === mutation)!.name;
+    this.hud.showToast(name + " · Jage weiter!", this.now);
   }
-
-  private captureModalInput(): void {
-    if (this.run?.state.phase !== "upgrade") return;
-    if (this.keyOne && Phaser.Input.Keyboard.JustDown(this.keyOne)) this.handleModalAction(0);
-    if (this.keyTwo && Phaser.Input.Keyboard.JustDown(this.keyTwo)) this.handleModalAction(1);
-    if (this.keyThree && Phaser.Input.Keyboard.JustDown(this.keyThree)) this.handleModalAction(2);
-  }
-
-  private handleModalAction(index: number): void {
-    const phase = this.run.state.phase;
-    if (phase === "upgrade") {
-      const upgrade = BURROW_UPGRADES[index];
-      if (!upgrade || !this.run.chooseUpgrade(upgrade.id)) return;
-      this.motion.setTuning(this.run.state.build);
-      this.hunt.beginFinale({ vehicleHitPoints: this.run.state.level.finaleHitPoints });
-      this.showEvent(`${upgrade.name} · SCHLUSSKUTSCHE KOMMT!`, "#e7b8ff");
-      return;
+  private renderWorld(delta: number): void {
+    const { run, motion, feeding, hunt } = this.session;
+    this.updateCamera();
+    const view = this.cameras.main.worldView;
+    const visible = (p: Point): boolean => p.x >= view.x - 140 && p.x <= view.right + 140 &&
+      p.y >= view.y - 140 && p.y <= view.bottom + 140;
+    const food = this.foodGraphics;
+    food.clear();
+    for (const item of feeding.foods) {
+      if (!item.active || !visible(item.position)) continue;
+      const { x, y } = item.position;
+      food.fillStyle(0xc5fa8b, 0.11).fillCircle(x, y, 14);
+      food.fillStyle(0x283121, 1).fillCircle(x, y, 7);
+      food.fillStyle(0xd3f697, 1).fillCircle(x, y, 5);
+      food.fillStyle(0xffffff, 0.9).fillCircle(x - 1.5, y - 1.5, 1.8);
     }
-    if (phase === "failed") {
-      this.scene.restart();
-      return;
-    }
-    if (phase === "level-complete") {
-      this.scene.restart();
-    }
-  }
-
-  private isSimulationActive(): boolean {
-    const phase = this.run.state.phase;
-    return phase === "hunt" || phase === "shrine-ready" || phase === "finale";
-  }
-
-  private layoutModal(scale: number, width: number, height: number): void {
-    if (!this.modalPanel) return;
-    const stacked = width < 620;
-    const modalScale = stacked
-      ? Math.min(0.72, Math.max(0.56, width / 560))
-      : Math.max(scale, Math.min(1, width / 980, height / 620));
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const phase = this.run?.state.phase;
-    const buttonCount = phase === "upgrade" ? 3 : 1;
-    const modalWidth = stacked ? width - 24 : 860 * modalScale;
-    const modalHeight = stacked ? (buttonCount === 3 ? 560 : 360) * modalScale : 390 * modalScale;
-    this.modalShade.setPosition(centerX, centerY).setSize(width, height);
-    this.modalPanel.setPosition(centerX, centerY).setSize(modalWidth, modalHeight);
-    this.modalAccent
-      .setPosition(centerX, centerY - modalHeight / 2 + 23 * modalScale)
-      .setSize(Math.max(90, modalWidth - 74 * modalScale), 7 * modalScale);
-    const stackedUpgrade = stacked && buttonCount === 3;
-    this.modalTitle.setPosition(centerX, centerY - modalHeight * (stackedUpgrade ? 0.34 : 0.31)).setScale(modalScale);
-    this.modalBody.setPosition(centerX, centerY - modalHeight * (stackedUpgrade ? 0.24 : 0.13)).setScale(modalScale);
-    this.modalButtons.forEach((button, index) => {
-      const visible = index < buttonCount;
-      button.setVisible(visible);
-      if (!visible) return;
-      if (stackedUpgrade) {
-        button.setPosition(centerX, centerY - modalHeight * 0.07 + index * modalHeight * 0.21).setScale(modalScale);
-      } else {
-        const gap = 270 * modalScale;
-        button.setPosition(centerX + (index - (buttonCount - 1) / 2) * gap, centerY + modalHeight * 0.28).setScale(modalScale);
+    const preyGraphics = this.preyGraphics;
+    preyGraphics.clear();
+    feeding.content.prey.forEach((prey, index) => {
+      const p = feeding.positionOf(prey);
+      const show = !feeding.isEaten(prey.id) && visible(p);
+      const label = this.preyLabels[index]!;
+      label.setVisible(show);
+      if (!show) return;
+      const large = prey.large;
+      const color = large ? 0xf3ba71 : 0x93d6ba;
+      const radius = large ? 22 : 11;
+      const edible = feeding.canEat(prey, run.build.power, motion.state.burstRemaining > 0);
+      for (let segment = large ? 9 : 4; segment >= 0; segment -= 1) {
+        const point = feeding.positionOf(prey, feeding.elapsedTicks - segment * (large ? 26 : 23));
+        const size = radius * (1 - segment * 0.055);
+        preyGraphics.fillStyle(0x342730, 1).fillCircle(point.x, point.y, size + 2);
+        preyGraphics.fillStyle(color, 1).fillCircle(point.x, point.y, size);
       }
+      const previous = feeding.positionOf(prey, feeding.elapsedTicks - 1);
+      const angle = Math.atan2(p.y - previous.y, p.x - previous.x);
+      for (const side of [-1, 1]) {
+        const eyeX = p.x + Math.cos(angle) * radius * 0.4 + Math.sin(angle) * side * radius * 0.45;
+        const eyeY = p.y + Math.sin(angle) * radius * 0.4 - Math.cos(angle) * side * radius * 0.45;
+        preyGraphics.fillStyle(0xfff8de).fillCircle(eyeX, eyeY, large ? 5 : 4);
+        preyGraphics.fillStyle(0x282032).fillCircle(eyeX + Math.cos(angle) * 1.5, eyeY + Math.sin(angle) * 1.5, 2);
+      }
+      if (large) {
+        preyGraphics.lineStyle(2, edible ? 0xe3ffbc : 0xf3ba71, 0.85).strokeCircle(p.x, p.y, radius + 7);
+        label.setText(run.build.power === 0 ? "40 + BURST" : run.build.power === 1 ? "BURST → +20" : "FRESSBAR · +20");
+      }
+      label.setPosition(p.x, p.y - radius - 17);
     });
-  }
-
-  private renderWorm(): void {
-    const state = this.motion.state;
-    const visual = creatureVisualForStage(this.run.state.build.stage);
-    const samples = this.motion.trail.sample(visual.sampleCount, visual.segmentSpacing);
-    const graphics = this.wormGraphics;
-    graphics.clear();
-
-    const segmentCount = Math.min(samples.length - 1, this.wormSegments.length);
-    for (let index = 0; index < segmentCount; index += 1) {
-      const sampleIndex = index + 1;
-      const point = samples[sampleIndex]!;
-      const nextPoint = samples[Math.max(0, sampleIndex - 1)]!;
-      const bodyRatio = 1 - sampleIndex / samples.length;
-      const size = (46 + bodyRatio * 15) * visual.bodyRadiusMultiplier;
-      this.wormSegments[index]!
-        .setVisible(true)
-        .setPosition(point.x, point.y)
-        .setRotation(Phaser.Math.Angle.Between(point.x, point.y, nextPoint.x, nextPoint.y))
-        .setDisplaySize(size, size * 0.88)
-        .setAlpha(0.98);
+    const vehicle = hunt.state.vehicle;
+    this.cart.setVisible(vehicle.active).setPosition(vehicle.position.x, vehicle.position.y + 3)
+      .setDisplaySize(100, 74).setFlipX(vehicle.direction < 0);
+    this.cartLabel.setVisible(vehicle.active).setPosition(vehicle.position.x, vehicle.position.y - 57)
+      .setText(vehicle.kind === "finale" ? "★ SCHLUSSKUTSCHE" : "OBERFLÄCHENBEUTE · +12");
+    this.cart.setTint(vehicle.kind === "finale" ? 0xffe3a0 : 0xffffff);
+    const visual = creatureVisualForBiomass(run.state.biomass);
+    const samples = motion.trail.sample(visual.sampleCount + 1, visual.segmentSpacing);
+    this.growthPulse = Math.max(0, this.growthPulse - delta / 650);
+    for (let index = 0; index < this.segments.length; index += 1) {
+      const sprite = this.segments[index]!;
+      const p = samples[index + 1];
+      if (!p || index >= visual.sampleCount) { sprite.setVisible(false); continue; }
+      const next = samples[index]!;
+      const ratio = 1 - (index + 1) / samples.length;
+      const size = (46 + ratio * 15) * visual.bodyRadiusMultiplier;
+      sprite.setVisible(true).setPosition(p.x, p.y).setRotation(Math.atan2(next.y - p.y, next.x - p.x))
+        .setDisplaySize(size, size * 0.88).setTint(this.growthPulse > 0.2 ? 0xe1ffab : 0xffffff);
     }
-    for (let index = segmentCount; index < this.wormSegments.length; index += 1) {
-      this.wormSegments[index]!.setVisible(false);
-    }
-
-    /* Keep only the short burst halo in Graphics; the creature itself uses assets. */
-    const head = state.position;
-    const headRadius = visual.headRadius;
-    this.wormHead
-      .setPosition(head.x, head.y)
-      .setRotation(state.angle)
-      .setDisplaySize(headRadius * 3.25, headRadius * 2.7)
-      .setAlpha(state.burstRemaining > 0 ? 1 : 0.98);
-    graphics.fillStyle(0xaa73d7, state.burstRemaining > 0 ? 0.34 : 0).fillCircle(
-      head.x,
-      head.y,
-      headRadius * 1.65,
-    );
-  }
-
-  private renderVehicle(): void {
-    const vehicle = this.hunt.state.vehicle;
-    const graphics = this.vehicleGraphics;
-    graphics.clear();
-    this.vehicleLabel.setVisible(vehicle.active);
-    this.vehicleSprite.setVisible(vehicle.active);
-    if (!vehicle.active) {
-      return;
-    }
-
-    const { x, y } = vehicle.position;
-    const facing = vehicle.direction;
-    const flash = this.vehicleHitFlash > 0;
-    const hitPointsRatio = vehicle.hitPoints / vehicle.maximumHitPoints;
-    this.vehicleSprite
-      .setPosition(x, y + 3)
-      .setDisplaySize(92, 68)
-      .setFlipX(facing < 0)
-      .setAngle(vehicle.kind === "finale" && hitPointsRatio <= 0.4 ? facing * 7 : 0)
-      .setAlpha(flash ? 0.72 : 1);
-
-    graphics.fillStyle(0x1a2020, 0.94).fillRoundedRect(x - 39, y - 52, 78, 12, 4);
-    graphics.fillStyle(0x86cf65, 1).fillRoundedRect(x - 37, y - 50, 74 * hitPointsRatio, 8, 3);
-    if (vehicle.kind === "finale" && hitPointsRatio <= 0.72) {
-      graphics.lineStyle(4, 0x2b1d28, 0.95).lineBetween(x - 18, y - 24, x + 3, y - 4);
-      graphics.lineBetween(x + 14, y - 26, x + 25, y - 9);
-      graphics.fillStyle(0x49333b, 0.8).fillCircle(x - 18, y - 40, 8);
-    }
-    if (vehicle.kind === "finale" && hitPointsRatio <= 0.4) {
-      graphics.fillStyle(0x241b25, 0.92).fillCircle(x - 34, y + 23, 10).fillCircle(x + 33, y + 24, 8);
-      graphics.lineStyle(5, 0x251820, 1).lineBetween(x - 31, y - 20, x + 20, y + 17);
-      graphics.fillStyle(0xd26b3b, 0.92).fillTriangle(x - 3, y - 50, x + 8, y - 21, x - 14, y - 20);
-    }
-    const damageLabel = vehicle.kind === "finale"
-      ? hitPointsRatio <= 0.4 ? " · ZERFETZT" : hitPointsRatio <= 0.72 ? " · RAMMSTELLEN" : " · GEWAPPNET"
-      : "";
-    this.vehicleLabel.setPosition(x, y - 70).setText(`${vehicle.kind === "finale" ? "SCHLUSSKUTSCHE" : "KUTSCHE"} · ${vehicle.hitPoints}/${vehicle.maximumHitPoints} HP${damageLabel}${vehicle.surfaceStatus !== "grounded" ? " · STOPP" : ""}`);
-  }
-
-  private renderStructure(): void {
-    const structure = this.structure.state;
-    const graphics = this.structureGraphics;
-    const surfaceY = surfaceYAt(BURROW_HUT.centerX);
-    const activeSupports = structure.supports.filter((support) => support.active).length;
-    graphics.clear();
-
-    if (structure.collapsed) {
-      this.structureSprite.setVisible(false);
-      graphics.fillStyle(0x4e3027, 1).fillTriangle(
-        BURROW_HUT.centerX - 118,
-        surfaceY + 6,
-        BURROW_HUT.centerX + 96,
-        surfaceY + 6,
-        BURROW_HUT.centerX + 38,
-        surfaceY - 66,
-      );
-      graphics.fillStyle(0x96613d, 1).fillTriangle(
-        BURROW_HUT.centerX - 88,
-        surfaceY - 1,
-        BURROW_HUT.centerX + 64,
-        surfaceY - 1,
-        BURROW_HUT.centerX + 22,
-        surfaceY - 50,
-      );
-      graphics.lineStyle(5, 0x2f2422, 1).strokeTriangle(
-        BURROW_HUT.centerX - 88,
-        surfaceY - 1,
-        BURROW_HUT.centerX + 64,
-        surfaceY - 1,
-        BURROW_HUT.centerX + 22,
-        surfaceY - 50,
-      );
-      for (const offset of [-102, -68, 72, 108]) {
-        graphics.fillStyle(0x745039, 1).fillCircle(BURROW_HUT.centerX + offset, surfaceY + 3, 9);
-      }
-      this.structureLabel
-        .setPosition(BURROW_HUT.centerX, surfaceY - 104)
-        .setText("HÜTTE EINGESTÜRZT!");
-      return;
-    }
-
-    this.structureSprite.setVisible(true);
-    const damageRatio = (3 - activeSupports) / 3;
-    this.structureSprite
-      .setAlpha(1 - damageRatio * 0.32)
-      .setAngle(activeSupports < 3 ? (activeSupports === 2 ? -3 : 5) : 0)
-      .setY(surfaceYAt(BURROW_HUT.centerX) + 5 + damageRatio * 8);
-
-    for (const support of structure.supports) {
-      const topY = surfaceYAt(support.position.x) - 9;
-      graphics.lineStyle(13, support.active ? 0xc98242 : 0x4f3940, 1).lineBetween(
-        support.position.x,
-        topY,
-        support.position.x,
-        support.position.y,
-      );
-      graphics.lineStyle(4, 0x3b2925, 1).lineBetween(
-        support.position.x,
-        topY,
-        support.position.x,
-        support.position.y,
-      );
-      if (!support.active) {
-        graphics.lineStyle(5, 0xf0b24d, 1).lineBetween(
-          support.position.x - 12,
-          support.position.y - 12,
-          support.position.x + 12,
-          support.position.y + 12,
-        );
+    const head = motion.state;
+    this.head.setPosition(head.position.x, head.position.y).setRotation(head.angle)
+      .setDisplaySize(visual.headRadius * 3.25, visual.headRadius * 2.7);
+    this.effects.clear();
+    if (head.burstRemaining > 0) {
+      const color = run.state.mutation === "trailrunner" && motion.onFastTrail ? 0x7fdbff : 0xd8a2ff;
+      this.effects.lineStyle(3, color, 0.65).strokeCircle(head.position.x, head.position.y, visual.headRadius * 1.4);
+      if (run.state.mutation === "vacuum") {
+        this.effects.lineStyle(2, 0xd7a1ff, 0.6);
+        this.effects.beginPath().arc(head.position.x, head.position.y, 100, head.angle - Math.PI / 3, head.angle + Math.PI / 3).strokePath();
       }
     }
-    this.structureLabel
-      .setPosition(BURROW_HUT.centerX, surfaceY - 190)
-      .setText(`STÜTZENHÜTTE · ${activeSupports}/3`);
+    const cooldown = head.burstCooldown;
+    this.burstLabel.setText(cooldown > 0 ? cooldown.toFixed(1) : "BURST");
+    this.burstButton.setFillStyle(cooldown > 0 ? 0x3e304f : 0x76519e, 0.9);
+    this.renderGuide();
+    this.hud.update(run, motion, this.now);
   }
-
-  private renderWorldResponse(deltaSeconds: number): void {
-    const animal = this.worldResponse.state.animal;
-    const running = animal.fleeing && animal.surfaceStatus === "grounded";
-    this.animalSprite
-      .setVisible(animal.active)
-      .setTexture(running ? "burrow-goat-run" : "burrow-goat")
-      .setPosition(animal.position.x, animal.position.y + 3)
-      .setFlipX(animal.direction < 0)
-      .setDisplaySize(78, running ? 62 : 70)
-      .setAngle(running ? Math.sin(this.time.now * 0.028) * 4 : 0);
-
-    const shrine = this.worldResponse.state.shrine;
-    const shrineAwake = this.run.state.shrineAwakened || shrine.activated;
-    const pulse = shrineAwake ? 1 + Math.sin(this.time.now * 0.009) * 0.07 : 1;
-    this.shrineSprite
-      // setScale() would restore this 1280px source image to its raw size.
-      .setDisplaySize(92 * pulse, 108 * pulse)
-      .setAlpha(shrineAwake ? 1 : 0.92)
-      .setTint(shrineAwake ? 0xffe7a1 : 0xffffff);
-    if (running && deltaSeconds > 0) {
-      this.animalSprite.setY(this.animalSprite.y + Math.sin(this.time.now * 0.04) * 1.5);
-    }
-  }
-
-  private announceBite(bite: BiteResult): void {
-    this.vehicleHitFlash = 0.18;
-    this.spawnDigDust(this.motion.state.position, this.motion.state.angle, bite.devoured ? 32 : 16);
-    this.cameras.main.shake(bite.devoured ? 230 : 120, bite.devoured ? 0.008 : 0.004);
-    if (bite.devoured) {
-      this.showEvent("VERSCHLUNGEN! +1 BIOMASSE", "#c7f279");
-      return;
-    }
-    this.showEvent(
-      bite.damage > 1 ? "BURST-BITE! −2 HP" : "BITE! −1 HP",
-      bite.damage > 1 ? "#ffdf82" : "#fff0a1",
-    );
-  }
-
-  private announceSupportLoss(count: number): void {
-    this.showEvent(count > 1 ? "STÜTZEN WEG!" : "STÜTZE WEG!", "#ffd67a");
-    this.cameras.main.shake(140, 0.004);
-    for (const support of this.structure.state.supports) {
-      if (!support.active) {
-        this.spawnDigDust(support.position, Math.PI / 2, 10);
-      }
-    }
-  }
-
-  private announceStructureCollapse(): void {
-    this.showEvent("HÜTTE EINGESTÜRZT!", "#ffcb71");
-    this.cameras.main.shake(380, 0.011);
-    this.spawnDigDust({ x: BURROW_HUT.centerX, y: surfaceYAt(BURROW_HUT.centerX) }, Math.PI / 2, 44);
-  }
-
-  private announceShrineActivation(): void {
-    this.showEvent("SCHREIN · WÄHLE DEINE MACHT!", "#e7b8ff");
-    this.cameras.main.shake(160, 0.004);
-    this.spawnDigDust(BURROW_SHRINE_POSITION, -Math.PI / 2, 18);
-  }
-
-  private announceShrineReady(): void {
-    this.showEvent("DER SCHREIN ERWACHT · FOLGE DEM GLANZ!", "#e7b8ff");
-    this.cameras.main.shake(160, 0.004);
-  }
-
-  private announceModeChange(
-    previousMode: BurrowMovementMode,
-    mode: BurrowMovementMode,
-  ): void {
-    if (mode === "airborne") {
-      this.showEvent("DURCHBRUCH!", "#fff0a1");
-      this.spawnDigDust(this.motion.state.position, this.motion.state.angle, 24);
-    } else if (previousMode === "airborne" && mode === "digging") {
-      this.showEvent("WIEDER UNTER ERDE", "#e69a59");
-      this.spawnDigDust(this.motion.state.position, this.motion.state.angle, 18);
-    }
-  }
-
-  private showEvent(message: string, color: string): void {
-    const baseScale = this.uiScale;
-    const eventY = this.eventPanel.y;
-    this.eventText
-      .setText(message)
-      .setColor(color)
-      .setAlpha(1)
-      .setScale(baseScale * 0.82);
-    this.eventPanel.setAlpha(0.96);
-    this.tweens.killTweensOf([this.eventText, this.eventPanel]);
-    this.tweens.add({
-      targets: [this.eventText, this.eventPanel],
-      alpha: 0,
-      duration: 950,
-      ease: "Quad.easeOut",
-    });
-    this.tweens.add({
-      targets: this.eventText,
-      scale: baseScale * 1.08,
-      y: eventY - 16 * baseScale,
-      duration: 950,
-      ease: "Quad.easeOut",
-      onComplete: () => this.eventText.setY(eventY),
-    });
-  }
-
-  private spawnDigDust(position: Point, angle: number, count: number): void {
-    const backward = angle + Math.PI;
-    for (let index = 0; index < count; index += 1) {
-      const spread = (Math.random() - 0.5) * 1.6;
-      const speed = 25 + Math.random() * 75;
-      this.dustParticles.push({
-        x: position.x + (Math.random() - 0.5) * 24,
-        y: position.y + (Math.random() - 0.5) * 24,
-        velocityX: Math.cos(backward + spread) * speed,
-        velocityY: Math.sin(backward + spread) * speed - 20,
-        life: 0.35 + Math.random() * 0.4,
-        radius: 2 + Math.random() * 5,
-      });
-    }
-    if (this.dustParticles.length > 150) {
-      this.dustParticles.splice(0, this.dustParticles.length - 150);
-    }
-  }
-
-  private updateDust(deltaSeconds: number): void {
-    const graphics = this.dustGraphics;
-    graphics.clear();
-    for (const particle of this.dustParticles) {
-      particle.life -= deltaSeconds;
-      particle.x += particle.velocityX * deltaSeconds;
-      particle.y += particle.velocityY * deltaSeconds;
-      particle.velocityY += 80 * deltaSeconds;
-      if (particle.life <= 0) {
-        continue;
-      }
-      graphics.fillStyle(0xd09357, Math.min(0.72, particle.life * 1.4));
-      graphics.fillCircle(particle.x, particle.y, particle.radius);
-    }
-    this.dustParticles = this.dustParticles.filter((particle) => particle.life > 0);
-  }
-
   private updateCamera(): void {
     const camera = this.cameras.main;
-    const desiredScrollX = Phaser.Math.Clamp(
-      this.motion.state.position.x - camera.width / 2,
-      0,
-      BURROW_WORLD_WIDTH - camera.width,
-    );
-    const desiredScrollY = Phaser.Math.Clamp(
-      this.motion.state.position.y - camera.height / 2,
-      0,
-      BURROW_WORLD_HEIGHT - camera.height,
-    );
-    camera.scrollX = Phaser.Math.Linear(camera.scrollX, desiredScrollX, 0.075);
-    camera.scrollY = Phaser.Math.Linear(camera.scrollY, desiredScrollY, 0.075);
+    // Fixed zoom preserves perceptible growth; framing depends on viewport, not biomass.
+    camera.setZoom(1);
+    camera.centerOn(this.session.motion.state.position.x, this.session.motion.state.position.y);
   }
-
-  private updateHud(): void {
-    const state = this.motion.state;
-    const modeLabel: Record<BurrowMovementMode, string> = {
-      digging: "GRABEN",
-      tunnel: "TUNNELGLEITEN",
-      airborne: "FLUGPHASE",
-    };
-    const run = this.run.state;
-    const visual = creatureVisualForStage(run.build.stage);
-    const activeSeconds = Math.max(0, Math.ceil((run.level.activeStepLimit - run.activeSteps) / 60));
-    this.hudText.setText([
-      `ZEIT  ${Math.floor(activeSeconds / 60)}:${String(activeSeconds % 60).padStart(2, "0")} · ${visual.label}`,
-      `BIOMASSE  ${run.levelBiomass}/${run.level.shrineBiomass} · GESAMT ${run.totalBiomass}`,
-      `BEUTE  ${this.hunt.state.vehicle.active ? `${this.hunt.state.vehicle.hitPoints}/${this.hunt.state.vehicle.maximumHitPoints} HP` : "VERDAUT"} · ${run.selectedUpgrade ? BURROW_UPGRADES.find((upgrade) => upgrade.id === run.selectedUpgrade)?.name : "SCHREIN SUCHEN"}`,
-    ]);
-    const vehicle = this.hunt.state.vehicle;
-    const vehicleDistance = Math.round(
-      Phaser.Math.Distance.Between(
-        state.position.x,
-        state.position.y,
-        vehicle.position.x,
-        vehicle.position.y,
-      ) / 10,
-    );
-    const structureDistance = Math.round(
-      Phaser.Math.Distance.Between(
-        state.position.x,
-        state.position.y,
-        BURROW_HUT.centerX,
-        surfaceYAt(BURROW_HUT.centerX),
-      ) / 10,
-    );
-    this.goalText.setText(this.goalLabel(vehicle, vehicleDistance, structureDistance));
-    const cooldownRatio = Phaser.Math.Clamp(
-      state.burstCooldown / BURROW_MOTION_CONSTANTS.burstCooldown,
-      0,
-      1,
-    );
-    this.burstButton.setFillStyle(
-      state.burstRemaining > 0 ? 0xf28a38 : cooldownRatio > 0 ? 0x6b4e49 : 0xb9472e,
-      0.88,
-    );
-    this.burstLabel.setText(
-      cooldownRatio > 0 && state.burstRemaining === 0
-        ? `${Math.ceil(state.burstCooldown * 10) / 10}s`
-        : "BURST",
-    );
-    if (this.liveStatus) {
-      this.liveStatus.textContent = this.started
-        ? `Modus ${modeLabel[state.mode]}, Tempo ${Math.round(state.speed)}, Position ${Math.round(state.position.x)} zu ${Math.round(state.position.y)}, ${vehicle.active ? `Kutsche ${vehicle.hitPoints} von ${vehicle.maximumHitPoints} HP` : "Kutsche verschlungen"}, Biomasse ${run.levelBiomass}, Phase ${run.phase}.`
-        : "Burrow wartet auf eine Richtung.";
-    }
-    this.updateModal();
-  }
-
-  private goalLabel(vehicle: BurrowVehicleState, vehicleDistance: number, structureDistance: number): string {
-    const phase = this.run.state.phase;
-    if (!this.started) return "RICHTUNG HALTEN\nZUM STARTEN";
-    if (phase === "shrine-ready") return "SCHREIN ERWACHT\nFOLGE DEM VIOLETTEN GLANZ";
-    if (phase === "upgrade") return "ZEIT PAUSIERT\nWÄHLE DEINE MACHT";
-    if (phase === "finale") return vehicle.active
-      ? `SCHLUSSKUTSCHE ${vehicleDistance} m\nZERSTÖRE · VERSCHLINGE`
-      : "SCHLUSSKUTSCHE\nVERSCHLUNGEN";
-    if (phase === "failed") return "ZEIT ABGELAUFEN\nNEUSTART VON KEIMLING";
-    if (phase === "level-complete") return "LEVEL 1 GESCHAFFT\nGRÄBER BEREIT";
-    if (this.structure.state.collapsed) return "HÜTTE EINGESTÜRZT\nJAGD WEITER";
-    if (!vehicle.active) return `BEUTE VERDAUT\nNEUE KUTSCHE IN ${Math.ceil(vehicle.respawnRemaining)} s`;
-    return `KUTSCHE ${vehicleDistance} m\nHÜTTE ${structureDistance} m`;
-  }
-
-  private updateModal(): void {
-    const phase = this.run.state.phase;
-    const visible = phase === "upgrade" || phase === "failed" || phase === "level-complete";
-    this.modalShade.setVisible(visible);
-    this.modalPanel.setVisible(visible);
-    this.modalAccent.setVisible(visible);
-    this.modalTitle.setVisible(visible);
-    this.modalBody.setVisible(visible);
-    if (!visible) {
-      this.modalButtons.forEach((button) => button.setVisible(false));
-      return;
-    }
-    if (phase === "upgrade") {
-      this.modalTitle.setText("DER SCHREIN HÖRT DICH");
-      this.modalBody.setText("Wähle eine Macht. Die Zeit steht still.");
-      this.modalButtons.forEach((button, index) => {
-        const upgrade = BURROW_UPGRADES[index]!;
-        const colors = ["#355b91", "#367153", "#8c4a36"];
-        button
-          .setText(`${index + 1} · ${upgrade.name}\n${upgrade.description}`)
-          .setBackgroundColor(colors[index]!)
-          .setVisible(true);
-      });
-    } else if (phase === "failed") {
-      this.modalTitle.setText("DIE WIESE HAT DICH VERSCHLUCKT");
-      this.modalBody.setText(`Levelzeit abgelaufen · Biomasse ${this.run.state.levelBiomass} · Keimling startet frisch.`);
-      this.modalButtons[0]!.setText("NEUSTART\nR").setBackgroundColor("#8c4a36").setVisible(true);
-      this.modalButtons.slice(1).forEach((button) => button.setVisible(false));
+  private renderGuide(): void {
+    const { run, motion, feeding, hunt } = this.session;
+    if (!run.active && run.state.phase !== "intro") { this.guide.setVisible(false); return; }
+    let target: Point | null = null;
+    let label = "NAHRUNG";
+    const origin = motion.state.position;
+    if (run.state.phase === "surface") {
+      target = hunt.state.vehicle.position;
+      label = "SCHLUSSKUTSCHE";
     } else {
-      this.modalTitle.setText("LEVEL 1 · GESCHAFFT");
-      const upgrade = this.run.state.selectedUpgrade
-        ? BURROW_UPGRADES.find((entry) => entry.id === this.run.state.selectedUpgrade)?.name
-        : "KEINE";
-      this.modalBody.setText(`Zeit ${Math.floor(this.run.state.activeSteps / 3600)}:${String(Math.floor(this.run.state.activeSteps / 60) % 60).padStart(2, "0")} · Biomasse ${this.run.state.levelBiomass}/${this.run.state.totalBiomass}\nUpgrade ${upgrade} · Wachstum: GRÄBER`);
-      this.modalButtons[0]!
-        .setText("NEUER RUN\nKEIMLING")
-        .setBackgroundColor("#355b91")
-        .setVisible(true);
-      this.modalButtons.slice(1).forEach((button) => button.setVisible(false));
+      let distance = Number.POSITIVE_INFINITY;
+      const consider = (p: Point, text: string): void => {
+        const d = Math.hypot(p.x - origin.x, p.y - origin.y);
+        if (d < distance) { target = p; distance = d; label = text; }
+      };
+      const seekLarge = run.build.power >= 1 && (run.state.largePreyEaten === 0 || run.state.biomass >= 180);
+      if (run.build.power === 0) {
+        for (const item of feeding.foods) if (item.active) consider(item.position, "NAHRUNG");
+      }
+      for (const prey of feeding.content.prey) {
+        if (feeding.isEaten(prey.id) || (seekLarge ? !prey.large : prey.large)) continue;
+        consider(feeding.positionOf(prey), prey.large ? (run.build.power >= 2 ? "GROSSER WURM" : "GROSSER WURM · BURST") : "KLEINER WURM");
+      }
+      if (!target) for (const item of feeding.foods) if (item.active) consider(item.position, "NAHRUNG");
     }
-    this.layoutModal(this.uiScale, this.scale.width, this.scale.height);
+    const camera = this.cameras.main;
+    const selected = target as Point | null;
+    if (!selected) { this.guide.setVisible(false); return; }
+    const sx = (selected.x - camera.scrollX - camera.width / 2) * camera.zoom + camera.width / 2;
+    const sy = (selected.y - camera.scrollY - camera.height / 2) * camera.zoom + camera.height / 2;
+    if (sx > 30 && sx < camera.width - 30 && sy > 110 && sy < camera.height - 20) {
+      this.guide.setVisible(false); return;
+    }
+    const dx = selected.x - origin.x;
+    const dy = selected.y - origin.y;
+    const angle = Math.atan2(dy, dx);
+    const arrow = ["→", "↘", "↓", "↙", "←", "↖", "↑", "↗"][(Math.round(angle / (Math.PI / 4)) + 8) % 8];
+    this.guide.setVisible(true).setText(arrow + " " + label)
+      .setPosition(Phaser.Math.Clamp(sx, 135, Math.max(135, camera.width - 135)),
+        Phaser.Math.Clamp(sy, 132, Math.max(132, camera.height - 135)));
   }
-}
-
-function mergeMutations(
-  first: TerrainCarveResult | null,
-  second: TerrainCarveResult | null,
-): TerrainCarveResult | null {
-  if (!first) return second;
-  if (!second) return first;
-  return {
-    removedCells: first.removedCells + second.removedCells,
-    dirtyCells: mergeRegions(first.dirtyCells, second.dirtyCells),
-    version: Math.max(first.version, second.version),
-  };
-}
-
-function mergeRegions(first: CellRegion | null, second: CellRegion | null): CellRegion | null {
-  if (!first) return second;
-  if (!second) return first;
-  const x = Math.min(first.x, second.x);
-  const y = Math.min(first.y, second.y);
-  const right = Math.max(first.x + first.width, second.x + second.width);
-  const bottom = Math.max(first.y + first.height, second.y + second.height);
-  return { x, y, width: right - x, height: bottom - y };
 }

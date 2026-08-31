@@ -2,7 +2,7 @@
 
 ## Status
 
-`technisch abgeschlossen – persönlicher Level-1- und Mobiltest offen`
+`historisch technisch abgeschlossen – Gameplay durch D-068 / Task 046 abgelöst`
 
 ## Ziel
 

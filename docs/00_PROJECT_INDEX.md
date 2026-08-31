@@ -62,24 +62,24 @@ Diese Entscheidungen blockieren den technischen Vertical Slice nicht.
 
 Burrow ist seit dem 25. August 2026 als separater Multi-Page-Einstieg im selben
 Repository vorhanden. Es ist kein bestätigter Pivot und verändert keine
-Abriss-Produktentscheidung. Gate 1 wurde persönlich positiv bewertet; Gate 2
-erhielt eine technische Feedback-Iteration und Gate 3 testet aktuell eine
-einzelne Untergraben-zu-Kollaps-Folge. Gate 4 ergänzt einen schmalen
-Reaktionsbeweis aus fliehendem Tier, sichtbarem Turmschaden und aktivierbarem
-Höhlenschrein. Nach persönlichem Terrainvergleich ist Variante B verbindliche
+Abriss-Produktentscheidung. Die früheren Gates 1 bis 4 lieferten Bewegung,
+Jagd, Untergraben und Weltreaktion als technische Grundlagen. Nach
+persönlichem Terrainvergleich ist Variante B verbindliche
 Grundlage: normale Bewegung erzeugt eine zehn Sekunden aktive Schnellspur,
 Burststart kein Erdloch; lokale Krater bleiben Durchbruch und schnellem
 Wiedereintritt vorbehalten (D-062). Das nächste Produkttor ist ein gestuft
-gebauter Drei-Level-Run mit Schrein-Upgrades, Wachstum, höheren Breaches und
-gezielter Zerstörung (D-063), keine breite Contentproduktion. Verbindlich für
+gebauter Feed–Grow-Lebensraum mit unterirdischer Nahrung und Jagd, laufendem
+Wachstum, einer Mutation und Oberflächenjagd (D-068), keine breite
+Contentproduktion. Der Drei-Level-Schreinplan ist abgelöst. Verbindlich für
 diesen abgegrenzten Bereich sind:
 
 - `burrow/VISION.md`,
 - `burrow/VERTICAL_SLICE.md`,
 - `burrow/TECHNICAL_PLAN.md`,
-- `burrow/THREE_LEVEL_SLICE.md`.
+- `burrow/FEED_GROW_SLICE.md`,
+- `burrow/FEED_GROW_VALIDATION.md` (Prüfstand und offene Produktabnahme).
 
-Plan und aktueller Entscheidungsstand: `../BURROW_Produktvision_und_Entwicklungsplan.md`
-und `../tasks/044_BURROW_LEVEL_1_RUN_FOUNDATION.md`.
+Aktueller Umsetzungsauftrag: `../tasks/046_BURROW_FEED_GROW_SLICE.md`.
+Die ältere Referenzanalyse und `burrow/THREE_LEVEL_SLICE.md` sind historisch.
 
 Der direkte Test läuft über `burrow.html`; Abriss bleibt unter `index.html`.

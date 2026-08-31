@@ -1,5 +1,8 @@
 # Burrow: Drei-Level-Vertical-Slice
 
+> Historischer Plan. Seit D-068 durch `FEED_GROW_SLICE.md` abgelöst.
+> Keine Freigabe weiterer Levels aus diesem Dokument ableiten.
+
 Stand: 30. August 2026
 Status: Level 1 / Task 044 technisch umgesetzt; persönliche Level-1-Abnahme offen
 

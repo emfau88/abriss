@@ -892,3 +892,26 @@ behalten ihre übrigen Werte, erzeugen aber keinen Pflicht-Mehrfachangriff.
 Der Schrein steht mit seinem Spritefuß auf dem Boden seiner vorbereiteten
 Höhle. Level 2 kann erst als tatsächlich sichtbare Fortsetzung statt über
 einen Platzhalter erreichbar werden.
+
+## 2026-08-31 – D-068: Feed–Grow ersetzt den verpflichtenden Drei-Level-Schreinbogen
+
+**Entscheidung:** Der Nutzer bestätigt nach Referenzanalyse zu Slither.io,
+Effing Worms und Death Worm ausdrücklich die unterirdische Sammel-, Jagd- und
+Wachstumsrichtung zur Umsetzung. Task 046 baut zunächst einen zusammenhängenden
+Lebensraum mit laufendem Körperwachstum, Machtstufen, einer Mutationswahl und
+anschließender Oberflächenjagd. `docs/burrow/FEED_GROW_SLICE.md` ist der Scope.
+
+**Grund:** Spätes Wachstum nach dem Abschluss, wirkungsarme Schadensupgrades
+gegen 1-HP-Beute und die Pflichtfolge aus Jagd, Schrein und Finale erfüllen
+die gewünschte unmittelbare Wachstumsfantasie nicht.
+
+**Konsequenz:** D-063/064/065 und Task 045 werden hinsichtlich Runform,
+Progression und Folgeproduktion abgelöst bzw. pausiert. Wachstum geschieht im
+Spiel, nicht nur nach Levels. Normales Grabtempo steigt moderat mit. Kein
+Pflichtschrein, Countdown oder Wurmleben im ersten neuen Test. Eine Mutation
+aus Spurflitzer, Sogmaul, Kettenfresser; zweite Wahl und weitere Levels bleiben
+Folgearbeit. D-066 (Terrain B) und D-067 (Ein-Kontakt-Kutschen) bleiben erhalten.
+Kein Multiplayer oder Slither-Körperkampf. Abriss bleibt vollständig isoliert.
+
+**Abnahme:** technische Prüfungen plus persönlicher Spieltest; Nutzerfreigabe
+der Richtung ist keine vorweggenommene positive Wertung des neuen Builds.

@@ -19,14 +19,17 @@
   <body>
     <main class="burrow-shell" aria-label="Burrow">
       <p class="sr-only" id="burrow-description">
-        Grabe durch den Wiesenrand, jage Kutschen und wähle am Schrein eine
-        Macht. Links Richtung steuern, rechts Burst auslösen.
+        Folge Nahrungsspuren, friss kleine Würmer und wachse. Große Würmer
+        werden als Jäger im Burst und als Gräber auch normal fressbar.
+        Bei 80 Biomasse wählst du eine Mutation. Links Richtung steuern,
+        rechts Burst auslösen. Tastatur: WASD oder Pfeile, Leertaste oder
+        Umschalt für Burst, 1 bis 3 für die Mutation, R für Neustart.
       </p>
       <output id="burrow-live-status" class="sr-only" aria-live="polite">
         Burrow wartet auf eine Richtung.
       </output>
       <div id="burrow-game" aria-describedby="burrow-description"></div>
-      <button id="burrow-restart" class="burrow-restart" type="button" title="Run neu starten">
+      <button id="burrow-restart" class="burrow-restart" type="button" title="Run neu starten" aria-label="Run neu starten">
         ↻ <span>Neu starten</span>
       </button>
       <a class="abriss-link" href="./">← Projekt Abriss</a>

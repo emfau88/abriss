@@ -50,7 +50,9 @@ andere Priorität bestätigt. Es darf höchstens ein Task als `in Arbeit` gelten
 | `041_BURROW_VISUAL_FOUNDATION.md` | technisch abgeschlossen, visueller Spieltest offen | lesbarer Stil- und Kreaturenbaukasten vor Gate 4 |
 | `042_BURROW_REACTIVE_WORLD.md` | technisch abgeschlossen, persönlicher Spieltest offen | fliehendes Tier, reagierender Turm und aktivierbarer Höhlenschrein |
 | `043_BURROW_TERRAIN_VARIANT_AND_FANTASY_LOOP_PLAN.md` | B persönlich gewählt, Korrektur geprüft | B ohne Burststart-Loch; 167 Tests, Typprüfung, Build und Browser-Smoke grün (D-062) |
-| `044_BURROW_LEVEL_1_RUN_FOUNDATION.md` | bereit | vollständiges Level 1 mit Runzustand, Schrein-Upgrade, Schlusskutsche und Wachstum (D-063) |
+| `044_BURROW_LEVEL_1_RUN_FOUNDATION.md` | historisch, durch 046 abgelöst | früherer Schrein-/Run-Bogen (D-063) |
+| `045_BURROW_LEVEL_2_DESTRUCTION.md` | pausiert | Goblinmarkt erst nach positiver Feed–Grow-Abnahme |
+| `046_BURROW_FEED_GROW_SLICE.md` | technisch geprüft, Produktabnahme offen | Nahrung, Wurmjagd, laufendes Wachstum und eine Mutation (D-068) |
 
 Ein Status wird erst nach überprüfter Abnahme geändert. Scope-Erweiterungen
 gehören in einen neuen Task, nicht stillschweigend in einen bestehenden.

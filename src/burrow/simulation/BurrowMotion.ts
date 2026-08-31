@@ -24,6 +24,9 @@ export interface BurrowInput {
 }
 
 export interface BurrowMotionTuning {
+  readonly movementSpeedMultiplier: number;
+  readonly trailBurstMultiplier: number;
+  readonly trailTurnMultiplier: number;
   readonly burstSpeedMultiplier: number;
   readonly burstCooldownMultiplier: number;
   readonly impactRadiusMultiplier: number;
@@ -56,6 +59,9 @@ const GRAVITY = 520;
 const BURST_DURATION = 0.68;
 const BURST_COOLDOWN = 1.65;
 const DEFAULT_TUNING: BurrowMotionTuning = {
+  movementSpeedMultiplier: 1,
+  trailBurstMultiplier: 1,
+  trailTurnMultiplier: 1,
   burstSpeedMultiplier: 1,
   burstCooldownMultiplier: 1,
   impactRadiusMultiplier: 1,
@@ -98,6 +104,19 @@ export class BurrowMotion {
 
   public setTuning(tuning: Partial<BurrowMotionTuning>): void {
     this.tuning = { ...this.tuning, ...tuning };
+  }
+
+  public get onFastTrail(): boolean {
+    const { position, angle, mode } = this.state;
+    // Look beyond the freshly painted capsule; new soil must not grant the bonus.
+    return mode !== "airborne" && this.trailField.isActiveWorld(
+      position.x + Math.cos(angle) * 45, position.y + Math.sin(angle) * 45,
+    );
+  }
+
+  public rewardPrey(count: number): void {
+    if (!Number.isSafeInteger(count) || count <= 0) return;
+    this.mutableState = { ...this.state, burstCooldown: Math.max(0, this.state.burstCooldown - count * 0.7) };
   }
 
   public step(input: BurrowInput, deltaSeconds: number): BurrowTerrainStepResult {
@@ -144,7 +163,8 @@ export class BurrowMotion {
     }
 
     const normalizedInput = normalizeOrNull(input.direction);
-    const turnRate = this.mutableState.mode === "airborne" ? AIR_TURN_RATE : TURN_RATE;
+    const turnRate = this.mutableState.mode === "airborne" ? AIR_TURN_RATE :
+      TURN_RATE * this.tuning.movementSpeedMultiplier * (this.onFastTrail ? this.tuning.trailTurnMultiplier : 1);
     const angle = normalizedInput
       ? turnTowards(
           this.mutableState.angle,
@@ -221,12 +241,16 @@ export class BurrowMotion {
       );
     }
 
-    const fastTrail = recovering && this.trailField.isActiveWorld(probe.x, probe.y);
+    // Keep the speed probe beyond the 31px freshly painted capsule plus cell rounding.
+    const fastTrail = recovering && this.trailField.isActiveWorld(
+      this.mutableState.position.x + direction.x * 45,
+      this.mutableState.position.y + direction.y * 45,
+    );
     const targetSpeed = burstRemaining > 0
       ? this.burstSpeed
       : solidAhead && !fastTrail
-        ? DIG_SPEED
-        : TUNNEL_SPEED;
+        ? DIG_SPEED * this.tuning.movementSpeedMultiplier
+        : TUNNEL_SPEED * this.tuning.movementSpeedMultiplier;
     const speed = approach(this.mutableState.speed, targetSpeed, 780 * deltaSeconds);
     const constrained = constrainUndergroundMovement(
       {
@@ -352,7 +376,7 @@ export class BurrowMotion {
   }
 
   private get burstSpeed(): number {
-    return BURST_SPEED * this.tuning.burstSpeedMultiplier;
+    return BURST_SPEED * this.tuning.burstSpeedMultiplier * (this.onFastTrail ? this.tuning.trailBurstMultiplier : 1);
   }
 }
 

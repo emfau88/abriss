@@ -1,16 +1,18 @@
 import { describe, expect, it } from "vitest";
-
 import { creatureVisualForBiomass } from "./BurrowCreatureVisual";
+import { BURROW_MOTION_CONSTANTS } from "../simulation/BurrowMotion";
 
-describe("Burrow creature visual", () => {
-  it("uses three visual-only growth silhouettes without changing gameplay data", () => {
-    const sprout = creatureVisualForBiomass(0);
-    const burrower = creatureVisualForBiomass(1);
-    const colossus = creatureVisualForBiomass(3);
-
-    expect([sprout.stage, burrower.stage, colossus.stage]).toEqual(["sprout", "burrower", "colossus"]);
-    expect(burrower.headRadius).toBeGreaterThan(sprout.headRadius);
-    expect(colossus.sampleCount).toBeGreaterThan(burrower.sampleCount);
-    expect(colossus.plateEvery).toBeLessThan(burrower.plateEvery);
+describe("Burrow creature growth visual", () => {
+  it("grows length and width immediately, without enlarging the collision head", () => {
+    const start = creatureVisualForBiomass(0);
+    const snack = creatureVisualForBiomass(8);
+    const grown = creatureVisualForBiomass(240);
+    expect(snack.headRadius).toBeGreaterThan(start.headRadius);
+    expect(snack.bodyRadiusMultiplier).toBeGreaterThan(start.bodyRadiusMultiplier);
+    expect(start.sampleCount).toBe(10);
+    expect(grown.sampleCount).toBe(28);
+    expect(grown.headRadius / start.headRadius).toBeLessThan(1.5);
+    expect(BURROW_MOTION_CONSTANTS.headRadius).toBe(23);
+    expect(creatureVisualForBiomass(999).sampleCount).toBe(28);
   });
 });

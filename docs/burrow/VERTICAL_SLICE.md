@@ -1,6 +1,13 @@
 # Burrow-Produktlabor: Entscheidungstore
 
-Stand: 30. August 2026
+Stand: 31. August 2026
+
+## Aktueller Scope – Feed–Grow (D-068)
+
+Verbindlich ist jetzt `FEED_GROW_SLICE.md`, umgesetzt durch Task 046.
+Die folgenden Gates dokumentieren die Entstehung des technischen Fundaments;
+der frühere Drei-Level-Schreinbogen ist abgelöst. Normale B-Bewegung,
+Burststart ohne Krater, Ein-Kontakt-Kutsche und Abriss-Isolation bleiben gültig.
 
 Jedes Gate wird separat implementiert, getestet und vom Nutzer beurteilt. Ein
 späteres Gate beginnt nicht automatisch.
@@ -181,9 +188,13 @@ wird weder per URL noch im HUD angeboten (D-066). Die maskenbasierte
 Bodenreaktion verhindert schwebende Oberflächenobjekte. Neue Inhalte oder
 Folgegates sind durch diese Korrektur nicht freigegeben.
 
-## Nächster Slice – drei vollständige Levels
+## Historisch: geplanter Drei-Level-Slice (D-063, durch D-068 abgelöst)
 
-Mit D-063 ist nach der Terrainwahl der nächste Produktscope freigegeben:
+Der folgende Abschnitt dokumentiert nur den damals mit D-063 freigegebenen,
+inzwischen abgelösten Produktscope. Er ist keine Arbeitsanweisung für Task 046
+und gibt weder Level 2 noch Schreinproduktion frei.
+
+Mit D-063 war nach der Terrainwahl der nächste Produktscope freigegeben:
 ein gemeinsamer Run aus drei Levels zu höchstens 180 Sekunden aktiver Spielzeit.
 Jedes Level enthält Ziel, Biomasseschwelle, Schrein in einer vorgefertigten
 Höhle, genau eine 1-aus-3-Upgradeentscheidung und ein Finale. Nach Level 1 und

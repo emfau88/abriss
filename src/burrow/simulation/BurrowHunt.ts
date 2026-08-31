@@ -110,7 +110,7 @@ export class BurrowHunt {
       ...this.tuning,
       ...tuning,
       kind: "finale",
-      respawnSeconds: Number.POSITIVE_INFINITY,
+      respawnSeconds: 0,
     };
     this.mutableState = {
       ...this.mutableState,
@@ -127,6 +127,8 @@ export class BurrowHunt {
     const biteCooldown = Math.max(0, this.mutableState.biteCooldown - deltaSeconds);
     const vehicle = this.mutableState.vehicle;
     if (!vehicle.active) {
+      // Explicit terminal state, not Infinity: completed hunt state stays JSON-serializable.
+      if (vehicle.kind === "finale") return { respawned: false };
       const respawnRemaining = Math.max(0, vehicle.respawnRemaining - deltaSeconds);
       if (respawnRemaining > 0) {
         this.mutableState = {

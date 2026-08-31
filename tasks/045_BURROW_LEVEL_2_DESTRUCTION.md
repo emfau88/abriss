@@ -2,7 +2,7 @@
 
 ## Status
 
-`in Umsetzung – ausdrücklich durch Nutzer freigegeben`
+`pausiert – durch D-068 und Task 046 abgelöst; keine weitere Levelproduktion`
 
 ## Ziel
 

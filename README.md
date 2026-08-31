@@ -109,39 +109,31 @@ desselben Repositories. Er verwendet ausschließlich `burrow.html`,
 `index.html` und seine eigenen Module. Gemeinsam sind nur Build, Tests und
 Hosting.
 
-Aktueller Teststand:
+### Aktueller Arbeitsstand: Sammeln, Jagen, Wachsen
 
-- Gate 1: direktes Graben, Tunnelgleiten, Burst, Oberflächendurchbruch und
-  Wiedereintauchen – persönlich positiv bewertet,
-- Gate 2: Kutsche, automatische Bites, HP, Devour und Biomasse; Burst-Puffer,
-  Stopp bei losgelassener Richtung sowie breitere Jagdroute technisch geprüft,
-- Gate 3: einzelne Stützenhütte; zwei untergrabene Terrainanker führen zu
-  einem sichtbaren Kollaps in einer moderat größeren 2.560×1.280-Arena,
-- Gate 4-Reaktionsslice: ein Oberflächentier flieht vor einem Durchbruch, der
-  Turm zeigt Stützenschaden, und ein Höhlenschrein reagiert auf Kontakt,
-- Terrain B ist nach persönlichem Vergleich die gewählte Grundlage: normales
-  Graben hinterlässt eine zehn Sekunden aktive Schnellspur, aber kein dauerhaftes
-  Loch. Der Burstknopf allein stanzt ebenfalls kein Erdloch; nur Durchbruch und
-  schneller Wiedereintritt erzeugen lokale permanente Krater,
-- Mobile-Politur: die Phaser-Fläche füllt im Querformat den verfügbaren
-  Viewport ohne seitliche Letterbox-Balken. Ein Vollbildschalter erscheint auf
-  Touch-Geräten, wenn der Browser die Fullscreen-API freigibt.
+Task 046 ersetzt den bisherigen Pflichtbogen aus Kutsche, Schrein und Finale:
 
-### Nächstes Produkttor: der vollständige Drei-Level-Run
+- Verbundene Nahrungsspuren und zwei Größenklassen unterirdischer Wurmbeute.
+- Biomasse wächst sofort in Körperlänge und Breite hinein; ab 40 und 180
+  steigen Tempo und Macht. Große Würmer brauchen erst einen Burst und sind
+  später auch normal fressbar.
+- Eine pausierte Mutationswahl bei 80: Spurflitzer, Sogmaul oder Kettenfresser.
+- Kein Countdown, Wurmleben oder Pflichtschrein. Die Oberfläche bleibt frei
+  erreichbar; bei 240 Biomasse plus großer Beute erscheint die Schlusskutsche.
+- Ein echter Abschluss und vollständiger Neustart, kein Platzhalter-Level 2.
+- Terrain B bleibt erhalten: zehn Sekunden aktive Schnellspur, keine permanente
+  Grabspur und kein Erdloch allein durch Burststart. Oberflächenaktionen erzeugen
+  weiterhin lokale Krater.
 
-Die Terrainfrage ist entschieden: B bleibt Grundlage. Als Nächstes entsteht
-ein zusammenhängender Run aus drei höchstens dreiminütigen Levels. Ein Schrein
-in einer vorgefertigten Höhle liefert pro Level eine 1-aus-3-Upgradewahl;
-zwischen den Levels wächst der Wurm vom Keimling zum Gräber und schließlich
-zum Koloss. Kutsche, Tier, Turm und Schrein werden wiederverwendet und zu Jagd,
-gezielter Zerstörung und einer königlichen Schlusskutsche gesteigert.
+Der aktuelle Umfang steht im [Feed–Grow-Slice](docs/burrow/FEED_GROW_SLICE.md).
+Der [Drei-Level-Plan](docs/burrow/THREE_LEVEL_SLICE.md) ist bis zur persönlichen
+Abnahme pausiert. Frühere Hütten-, Tier- und Schreinmodule bleiben als isolierte
+Grundlagen erhalten, sind aber keine konkurrierenden Ziele dieser Spielfläche.
+Die veröffentlichte GitHub-Pages-Version ändert sich erst nach einem Deployment.
 
-Neue Regionen, Gegnerfamilien, Meta-Fortschritt oder finale Assets bleiben
-gesperrt, bis dieser Run persönlich die Frage „noch eine Runde?“ positiv
-beantwortet. Der Weg ist in der [Burrow-Produktvision](BURROW_Produktvision_und_Entwicklungsplan.md),
-im [Drei-Level-Plan](docs/burrow/THREE_LEVEL_SLICE.md) und im
-[Vertical Slice](docs/burrow/VERTICAL_SLICE.md) dokumentiert.
-
+Das Produkttor bleibt „noch eine Runde?“: erster großer Fang, spürbare Mutation,
+Wachstum und Spielfluss müssen persönlich überzeugen. Drei bis fünf Minuten sind
+ein Playtest-Ziel, kein Zeitlimit. Echter Smartphone-Test steht gesondert aus.
 Steuerung:
 
 - Desktop: `WASD` oder Pfeiltasten gedrückt halten für einen direkten, schnellen

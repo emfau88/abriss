@@ -1,89 +1,61 @@
 import { describe, expect, it } from "vitest";
+import { BurrowRun, buildForBiomass } from "./BurrowRun";
 
-import { BurrowRun, LEVEL_1, LEVEL_2 } from "./BurrowRun";
-
-describe("BurrowRun", () => {
-  it("pauses the level clock outside active phases and awakens the shrine exactly once", () => {
-    const run = new BurrowRun();
-
-    run.advanceActiveStep();
-    expect(run.state.activeSteps).toBe(0);
-    run.start();
-    run.advanceActiveStep();
-    expect(run.state.activeSteps).toBe(1);
-    expect(run.collectBiomass(4)).toBe(false);
-    expect(run.collectBiomass()).toBe(true);
-    expect(run.state.phase).toBe("shrine-ready");
-    expect(run.state.totalBiomass).toBe(0);
-    expect(run.collectBiomass()).toBe(false);
-    expect(run.state.phase).toBe("shrine-ready");
-
-    const beforePause = run.state.activeSteps;
-    run.openUpgrade();
-    run.advanceActiveStep();
-    expect(run.state.activeSteps).toBe(beforePause);
+describe("Burrow feed–grow run", () => {
+  it("grows continuously before the first stage and has exact power thresholds", () => {
+    expect(buildForBiomass(14).bodyCount).toBeGreaterThan(buildForBiomass(0).bodyCount);
+    expect([0, 39, 40, 179, 180].map((mass) => buildForBiomass(mass).power)).toEqual([0, 0, 1, 1, 2]);
+    const final = buildForBiomass(240);
+    expect(final).toMatchObject({ bodyCount: 28, movementSpeedMultiplier: 1.15,
+      burstSpeedMultiplier: 1.22, impactRadiusMultiplier: 1.2 });
+    expect(buildForBiomass(999).bodyCount).toBe(28);
   });
-
-  it("applies exactly one documented rank-1 build and completes only after the finale", () => {
+  it("pauses for exactly one mutation, retaining threshold overshoot", () => {
     const run = new BurrowRun();
+    expect(run.feed(1)).toBe(false);
+    expect(run.chooseMutation("chain")).toBe(false);
     run.start();
-    run.collectBiomass(LEVEL_1.shrineBiomass);
-    run.openUpgrade();
-
-    expect(run.chooseUpgrade("skystrider")).toBe(true);
-    expect(run.state.build).toMatchObject({
-      stage: "sprout",
-      burstSpeedMultiplier: 1.12,
-      biteDamageBonus: 0,
-      impactRadiusMultiplier: 1,
-    });
-    expect(run.chooseUpgrade("ram")).toBe(false);
-    expect(run.completeLevel()).toBe(true);
-    expect(run.state.phase).toBe("level-complete");
-    expect(run.state.totalBiomass).toBe(LEVEL_1.shrineBiomass);
-    expect(run.state.build.stage).toBe("burrower");
+    run.feed(79);
+    run.feed(20, 1, 1);
+    expect(run.state).toMatchObject({ phase: "mutation", biomass: 99, preyEaten: 1 });
+    const paused = run.snapshot();
+    run.advanceActiveStep();
+    expect(run.feed(8, 1)).toBe(false);
+    expect(run.snapshot()).toEqual(paused);
+    expect(run.chooseMutation("chain")).toBe(true);
+    expect(run.chooseMutation("vacuum")).toBe(false);
+    expect(run.state).toMatchObject({ phase: "feeding", biomass: 99, mutation: "chain" });
   });
-
-  it("continues into Goblinmarkt with the Level-1 build and restores that level checkpoint", () => {
+  it("requires mass AND a large prey AND mutation before a real final contact can complete", () => {
     const run = new BurrowRun();
     run.start();
-    run.collectBiomass(LEVEL_1.shrineBiomass);
-    run.openUpgrade();
-    run.chooseUpgrade("ram");
-    run.completeLevel();
-
-    expect(run.continueToLevel2()).toBe(true);
-    expect(run.state).toMatchObject({
-      level: LEVEL_2,
-      phase: "intro",
-      totalBiomass: LEVEL_1.shrineBiomass,
-      selectedUpgrade: "ram",
-      upgradeRanks: { ram: 1 },
-      build: { stage: "burrower", impactRadiusMultiplier: 1.32 },
-    });
-    run.start();
-    run.collectBiomass();
-    run.restartFromCheckpoint();
-    expect(run.state).toMatchObject({ level: LEVEL_2, phase: "intro", levelBiomass: 0, totalBiomass: LEVEL_1.shrineBiomass, upgradeRanks: { ram: 1 } });
+    run.feed(240);
+    expect(run.complete()).toBe(false);
+    run.chooseMutation("vacuum");
+    expect(run.state.phase).toBe("feeding");
+    expect(run.complete()).toBe(false);
+    run.feed(20, 1, 1);
+    expect(run.state.phase).toBe("surface");
+    expect(run.complete()).toBe(true);
+    const result = run.snapshot();
+    run.advanceActiveStep();
+    expect(run.feed(10)).toBe(false);
+    expect(run.complete()).toBe(false);
+    expect(run.snapshot()).toEqual(result);
   });
-
-  it("fails after the fixed active-time limit and restores the entry checkpoint", () => {
-    const run = new BurrowRun({ ...LEVEL_1, activeStepLimit: 2 });
+  it("rejects invalid rewards, has no timeout, and snapshots round-trip", () => {
+    const run = new BurrowRun();
     run.start();
-    run.collectBiomass();
-    run.advanceActiveStep();
-    run.advanceActiveStep();
-
-    expect(run.state.phase).toBe("failed");
-    run.restartFromCheckpoint();
-    expect(run.state).toMatchObject({
-      phase: "intro",
-      activeSteps: 0,
-      levelBiomass: 0,
-      totalBiomass: 0,
-      shrineAwakened: false,
-      selectedUpgrade: null,
-      build: { stage: "sprout" },
-    });
+    for (const amount of [0, -1, 0.5, Infinity, NaN]) expect(run.feed(amount)).toBe(false);
+    expect(run.feed(8, 0, 1)).toBe(false);
+    for (let i = 0; i < 36000; i += 1) run.advanceActiveStep();
+    expect(run.state.phase).toBe("feeding");
+    const snapshot = run.snapshot();
+    expect(new BurrowRun(JSON.parse(JSON.stringify(snapshot))).snapshot()).toEqual(snapshot);
+  });
+  it.each(["trailrunner", "vacuum", "chain"] as const)("keeps %s independent of automatic power growth", (mutation) => {
+    expect(buildForBiomass(80, mutation).power).toBe(1);
+    expect(buildForBiomass(180, mutation).power).toBe(2);
+    expect(buildForBiomass(180, mutation).mutation).toBe(mutation);
   });
 });

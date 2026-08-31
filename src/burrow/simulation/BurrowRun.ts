@@ -1,56 +1,93 @@
-export type BurrowGrowthStage = "sprout" | "burrower" | "colossus";
-export type BurrowLevelId = "meadow-edge" | "goblin-market";
-export type BurrowRunPhase = "intro" | "hunt" | "shrine-ready" | "upgrade" | "finale" | "level-complete" | "failed";
-export type BurrowUpgradeId = "skystrider" | "glutton" | "ram";
-export type BurrowUpgradeRanks = Readonly<Record<BurrowUpgradeId, number>>;
+import type { BurrowMotionTuning } from "./BurrowMotion";
 
-export interface BurrowUpgradeDefinition { readonly id: BurrowUpgradeId; readonly name: string; readonly description: string; readonly rankOneDescription: string; readonly rankTwoDescription: string; }
-export interface BurrowLevelDefinition { readonly id: BurrowLevelId; readonly number: 1 | 2; readonly name: string; readonly activeStepLimit: number; readonly shrineBiomass: number; readonly finaleHitPoints: number; readonly requiresStructureCollapse: boolean; }
-export interface BurrowRunBuild { readonly stage: BurrowGrowthStage; readonly burstSpeedMultiplier: number; readonly burstCooldownMultiplier: number; readonly biteDamageBonus: number; readonly biteCooldownMultiplier: number; readonly impactRadiusMultiplier: number; readonly armoredDamageBonus: number; }
-export interface BurrowRunState { readonly level: BurrowLevelDefinition; readonly phase: BurrowRunPhase; readonly activeSteps: number; readonly levelBiomass: number; readonly totalBiomass: number; readonly shrineAwakened: boolean; readonly selectedUpgrade: BurrowUpgradeId | null; readonly upgradeRanks: BurrowUpgradeRanks; readonly structureCollapsed: boolean; readonly build: BurrowRunBuild; }
-export interface BurrowRunSnapshot { readonly state: BurrowRunState; readonly checkpoint: BurrowRunState; }
+export type BurrowGrowthStage = "sprout" | "hunter" | "burrower";
+export type BurrowMutation = "trailrunner" | "vacuum" | "chain";
+export type BurrowRunPhase = "intro" | "feeding" | "mutation" | "surface" | "complete";
+export const GROWTH = { hunter: 40, mutation: 80, burrower: 180, surface: 240 } as const;
 
-export const LEVEL_1: BurrowLevelDefinition = { id: "meadow-edge", number: 1, name: "Wiesenrand", activeStepLimit: 10_800, shrineBiomass: 5, finaleHitPoints: 1, requiresStructureCollapse: false };
-export const LEVEL_2: BurrowLevelDefinition = { id: "goblin-market", number: 2, name: "Goblinmarkt", activeStepLimit: 10_800, shrineBiomass: 5, finaleHitPoints: 1, requiresStructureCollapse: true };
-export const BURROW_UPGRADES: readonly BurrowUpgradeDefinition[] = [
-  { id: "skystrider", name: "HIMMELSSTÜRMER", description: "+12 % Bursttempo · höhere Flugspitze", rankOneDescription: "+12 % Bursttempo · höhere Flugspitze", rankTwoDescription: "RANG 2 · −15 % Burst-Cooldown" },
-  { id: "glutton", name: "VIELFRASS", description: "+1 Bissschaden bei gültigem Kopfkontakt", rankOneDescription: "+1 Bissschaden bei gültigem Kopfkontakt", rankTwoDescription: "RANG 2 · −20 % Biss-Cooldown" },
-  { id: "ram", name: "RAMMBOCK", description: "+20 % Breach- und Einschlagkrater", rankOneDescription: "+20 % Breach- und Einschlagkrater", rankTwoDescription: "RANG 2 · +1 Schaden gegen gepanzerte Wagen" },
-] as const;
-const EMPTY_RANKS: BurrowUpgradeRanks = { skystrider: 0, glutton: 0, ram: 0 };
+export const BURROW_MUTATIONS = [
+  { id: "trailrunner", name: "SPURFLITZER", description: "Auf deiner Schnellspur:\n+25 % Bursttempo und Wendigkeit.", color: 0x7fdbff },
+  { id: "vacuum", name: "SOGMAUL", description: "Beim Burst lose Nahrung\nvor deinem Maul einsaugen.", color: 0xd7a1ff },
+  { id: "chain", name: "KETTENFRESSER", description: "Wurm gefressen? Dein Burst\nist 0,7 Sekunden früher bereit.", color: 0xffc875 },
+] as const satisfies readonly { id: BurrowMutation; name: string; description: string; color: number }[];
+
+export interface BurrowRunState {
+  readonly phase: BurrowRunPhase;
+  readonly biomass: number;
+  readonly activeSteps: number;
+  readonly preyEaten: number;
+  readonly largePreyEaten: number;
+  readonly mutation: BurrowMutation | null;
+}
+export interface BurrowRunBuild extends BurrowMotionTuning {
+  readonly stage: BurrowGrowthStage;
+  readonly power: 0 | 1 | 2;
+  readonly label: string;
+  readonly bodyCount: number;
+  readonly headScale: number;
+  readonly bodyScale: number;
+  readonly mutation: BurrowMutation | null;
+}
 
 export class BurrowRun {
   private mutableState: BurrowRunState;
-  private checkpoint: BurrowRunState;
-  public constructor(level: BurrowLevelDefinition = LEVEL_1, snapshot?: BurrowRunSnapshot) {
-    if (snapshot) { this.mutableState = cloneState(snapshot.state); this.checkpoint = cloneState(snapshot.checkpoint); return; }
-    this.checkpoint = createInitialState(level, 0, EMPTY_RANKS); this.mutableState = cloneState(this.checkpoint);
+  public constructor(snapshot?: BurrowRunState) {
+    this.mutableState = snapshot ? { ...snapshot } : {
+      phase: "intro", biomass: 0, activeSteps: 0, preyEaten: 0, largePreyEaten: 0, mutation: null,
+    };
   }
   public get state(): BurrowRunState { return this.mutableState; }
-  public snapshot(): BurrowRunSnapshot { return { state: cloneState(this.mutableState), checkpoint: cloneState(this.checkpoint) }; }
-  public start(): void { if (this.mutableState.phase === "intro") this.mutableState = { ...this.mutableState, phase: "hunt" }; }
-  public advanceActiveStep(): void { if (!isActivePhase(this.mutableState.phase)) return; const activeSteps = this.mutableState.activeSteps + 1; this.mutableState = activeSteps >= this.mutableState.level.activeStepLimit ? { ...this.mutableState, activeSteps, phase: "failed" } : { ...this.mutableState, activeSteps }; }
-  public collectBiomass(amount = 1): boolean {
-    if (!Number.isInteger(amount) || amount <= 0 || !isActivePhase(this.mutableState.phase)) return false;
-    const levelBiomass = this.mutableState.levelBiomass + amount; const awakenedNow = !this.mutableState.shrineAwakened && levelBiomass >= this.mutableState.level.shrineBiomass;
-    this.mutableState = { ...this.mutableState, levelBiomass, shrineAwakened: this.mutableState.shrineAwakened || awakenedNow, phase: awakenedNow && this.mutableState.phase === "hunt" ? "shrine-ready" : this.mutableState.phase }; return awakenedNow;
+  public get active(): boolean { return this.state.phase === "feeding" || this.state.phase === "surface"; }
+  public get build(): BurrowRunBuild { return buildForBiomass(this.state.biomass, this.state.mutation); }
+  public snapshot(): BurrowRunState { return { ...this.state }; }
+  public start(): void {
+    if (this.state.phase === "intro") this.mutableState = { ...this.state, phase: "feeding" };
   }
-  public registerStructureCollapse(): boolean { if (!this.mutableState.level.requiresStructureCollapse || this.mutableState.structureCollapsed) return false; this.mutableState = { ...this.mutableState, structureCollapsed: true }; return true; }
-  public openUpgrade(): boolean { if (this.mutableState.phase !== "shrine-ready") return false; this.mutableState = { ...this.mutableState, phase: "upgrade" }; return true; }
-  public availableUpgrades(): readonly BurrowUpgradeDefinition[] { const chosen = this.mutableState.selectedUpgrade; return this.mutableState.level.number === 1 || !chosen ? BURROW_UPGRADES.filter((u) => this.mutableState.upgradeRanks[u.id] === 0) : BURROW_UPGRADES.filter((u) => u.id === chosen && this.mutableState.upgradeRanks[u.id] === 1); }
-  public chooseUpgrade(upgrade: BurrowUpgradeId): boolean { if (this.mutableState.phase !== "upgrade" || !this.availableUpgrades().some((entry) => entry.id === upgrade)) return false; const upgradeRanks = { ...this.mutableState.upgradeRanks, [upgrade]: this.mutableState.upgradeRanks[upgrade] + 1 }; this.mutableState = { ...this.mutableState, selectedUpgrade: upgrade, upgradeRanks, build: buildForRanks(upgradeRanks, stageForLevel(this.mutableState.level.number)), phase: "finale" }; return true; }
-  public canBeginFinale(): boolean { return this.mutableState.phase === "finale" && (!this.mutableState.level.requiresStructureCollapse || this.mutableState.structureCollapsed); }
-  public completeLevel(): boolean { if (!this.canBeginFinale()) return false; this.mutableState = { ...this.mutableState, phase: "level-complete", totalBiomass: this.mutableState.totalBiomass + this.mutableState.levelBiomass, build: buildForRanks(this.mutableState.upgradeRanks, this.mutableState.level.number === 1 ? "burrower" : "colossus") }; return true; }
-  public continueToLevel2(): boolean { if (this.mutableState.level.id !== "meadow-edge" || this.mutableState.phase !== "level-complete") return false; const state = createInitialState(LEVEL_2, this.mutableState.totalBiomass, this.mutableState.upgradeRanks, this.mutableState.selectedUpgrade); this.checkpoint = cloneState(state); this.mutableState = state; return true; }
-  public restartFromCheckpoint(): void { this.mutableState = cloneState(this.checkpoint); }
+  public advanceActiveStep(): void {
+    if (this.active) this.mutableState = { ...this.state, activeSteps: this.state.activeSteps + 1 };
+  }
+  public feed(biomass: number, preyEaten = 0, largePreyEaten = 0): boolean {
+    if (!this.active || !Number.isSafeInteger(biomass) || biomass <= 0 ||
+        !Number.isSafeInteger(preyEaten) || preyEaten < 0 ||
+        !Number.isSafeInteger(largePreyEaten) || largePreyEaten < 0 || largePreyEaten > preyEaten) return false;
+    this.mutableState = { ...this.state, biomass: this.state.biomass + biomass,
+      preyEaten: this.state.preyEaten + preyEaten, largePreyEaten: this.state.largePreyEaten + largePreyEaten };
+    this.updatePhase();
+    return true;
+  }
+  public chooseMutation(mutation: BurrowMutation): boolean {
+    if (this.state.phase !== "mutation" || this.state.mutation ||
+        !BURROW_MUTATIONS.some((entry) => entry.id === mutation)) return false;
+    this.mutableState = { ...this.state, mutation, phase: "feeding" };
+    this.updatePhase();
+    return true;
+  }
+  public complete(): boolean {
+    if (this.state.phase !== "surface") return false;
+    this.mutableState = { ...this.state, phase: "complete" };
+    return true;
+  }
+  private updatePhase(): void {
+    if (this.state.biomass >= GROWTH.mutation && !this.state.mutation) {
+      this.mutableState = { ...this.state, phase: "mutation" };
+    } else if (this.state.biomass >= GROWTH.surface && this.state.largePreyEaten > 0 && this.state.mutation) {
+      this.mutableState = { ...this.state, phase: "surface" };
+    }
+  }
 }
 
-export function buildForRanks(ranks: BurrowUpgradeRanks, stage: BurrowGrowthStage): BurrowRunBuild {
-  const growth = stage === "sprout" ? { burst: 1, bite: 0, impact: 1 } : stage === "burrower" ? { burst: 400 / 370, bite: 1, impact: 1.1 } : { burst: 430 / 370, bite: 2, impact: 1.25 };
-  return { stage, burstSpeedMultiplier: growth.burst * (ranks.skystrider >= 1 ? 1.12 : 1), burstCooldownMultiplier: ranks.skystrider >= 2 ? 0.85 : 1, biteDamageBonus: growth.bite + (ranks.glutton >= 1 ? 1 : 0), biteCooldownMultiplier: ranks.glutton >= 2 ? 0.8 : 1, impactRadiusMultiplier: growth.impact * (ranks.ram >= 1 ? 1.2 : 1), armoredDamageBonus: ranks.ram >= 2 ? 1 : 0 };
+export function buildForBiomass(biomass: number, mutation: BurrowMutation | null = null): BurrowRunBuild {
+  const mass = Number.isFinite(biomass) ? Math.max(0, biomass) : 0;
+  const power = mass >= GROWTH.burrower ? 2 : mass >= GROWTH.hunter ? 1 : 0;
+  const fraction = Math.min(1, mass / GROWTH.surface);
+  return {
+    stage: power === 0 ? "sprout" : power === 1 ? "hunter" : "burrower", power,
+    label: ["KEIMLING", "JÄGER", "GRÄBER"][power]!,
+    bodyCount: 10 + Math.floor(fraction * 18), headScale: 0.78 + fraction * 0.38,
+    bodyScale: 0.65 + fraction * 0.4, mutation,
+    movementSpeedMultiplier: 1 + power * 0.075, burstSpeedMultiplier: 1 + power * 0.11,
+    burstCooldownMultiplier: 1, impactRadiusMultiplier: 1 + power * 0.1,
+    trailBurstMultiplier: mutation === "trailrunner" ? 1.25 : 1,
+    trailTurnMultiplier: mutation === "trailrunner" ? 1.25 : 1,
+  };
 }
-export function buildForUpgrade(upgrade: BurrowUpgradeId | null, stage: BurrowGrowthStage = "sprout"): BurrowRunBuild { return buildForRanks({ ...EMPTY_RANKS, ...(upgrade ? { [upgrade]: 1 } : {}) }, stage); }
-export function isActivePhase(phase: BurrowRunPhase): boolean { return phase === "hunt" || phase === "shrine-ready" || phase === "finale"; }
-function stageForLevel(level: 1 | 2): BurrowGrowthStage { return level === 1 ? "sprout" : "burrower"; }
-function createInitialState(level: BurrowLevelDefinition, totalBiomass: number, upgradeRanks: BurrowUpgradeRanks, selectedUpgrade: BurrowUpgradeId | null = null): BurrowRunState { return { level, phase: "intro", activeSteps: 0, levelBiomass: 0, totalBiomass, shrineAwakened: false, selectedUpgrade, upgradeRanks: { ...upgradeRanks }, structureCollapsed: false, build: buildForRanks(upgradeRanks, stageForLevel(level.number)) }; }
-function cloneState(state: BurrowRunState): BurrowRunState { return { ...state, build: { ...state.build }, upgradeRanks: { ...state.upgradeRanks } }; }

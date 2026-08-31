@@ -141,7 +141,7 @@ Level-Einstiegscheckpoint wieder her.
 - Turm bleibt als lesbare optionale Weltreaktion, nicht als Pflichtziel,
 - Biomasseschwelle: bewusst in ungefähr 60–90 Sekunden erreichbar,
 - Schrein liegt in einer gut erreichbaren, vorgefertigten Seitenhöhle,
-- Finale: verstärkte Händlerkutsche mit mehreren klaren Schadensstufen.
+- Finale: Schlusskutsche als klarer Ein-Kontakt-Payoff nach der Schreinwahl.
 
 **Sieg:** Schlusskutsche verschlungen.
 
@@ -159,7 +159,7 @@ Level 1 wird zuerst vollständig gebaut und persönlich gespielt. Ohne positiven
 - ein stützengestützter Marktturm ist konkretes Pflicht-Zerstörungsziel,
 - normale Grabspur beschädigt keine Stützen; Breach und schneller Impact schon,
 - Kollaps vergibt Biomasse und deutliches Slapstick-Feedback,
-- Finale: gepanzerter Handelswagen, der mehr gültige Treffer benötigt.
+- Finale: Handelswagen als Ein-Kontakt-Payoff nach der Zerstörungsaufgabe.
 
 **Sieg:** Pflichtstruktur zerstört und Handelswagen verschlungen.
 
@@ -177,8 +177,8 @@ aus wenigen Terrainankern, Zuständen und kuratierten Animationen.
 - ein Turm und eine gepanzerte Eskorte erzeugen räumlichen Druck,
 - die Eskorte beschleunigt auf einer festen Fluchtroute statt neue Fahrphysik
   oder allgemeine Gegner-KI einzuführen,
-- Finale: königliche Schlusskutsche mit mehreren sichtbaren Schadensphasen
-  wie Gepäckverlust, verlorenes Rad und Wrackzustand.
+- Finale: königliche Schlusskutsche als schneller Ein-Kontakt-Payoff nach dem
+  aufgebauten Machtbogen.
 
 **Sieg:** Schlusskutsche vor dem Kartenende verschlungen.
 
@@ -217,7 +217,7 @@ Upgradepfade auf Rang 1, Schlusskutsche, Levelabschluss und Übergang zum Gräbe
 
 **Stand 30. August 2026:** technisch umgesetzt und automatisiert geprüft.
 Level 1 nutzt fünf Biomasse (ein fliehendes Bergtier plus die bestehende
-Kutsche), pausiert Auswahl und Ergebnis, und endet mit einer acht-HP-
+Kutsche), pausiert Auswahl und Ergebnis, und endet mit einer Ein-Kontakt-
 Schlusskutsche. Ein echter Mobilspieltest und die persönliche
 Wiederholungswertung bleiben das Freigabetor für Level 2.
 

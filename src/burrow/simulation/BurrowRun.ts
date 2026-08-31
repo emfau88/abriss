@@ -10,8 +10,8 @@ export interface BurrowRunBuild { readonly stage: BurrowGrowthStage; readonly bu
 export interface BurrowRunState { readonly level: BurrowLevelDefinition; readonly phase: BurrowRunPhase; readonly activeSteps: number; readonly levelBiomass: number; readonly totalBiomass: number; readonly shrineAwakened: boolean; readonly selectedUpgrade: BurrowUpgradeId | null; readonly upgradeRanks: BurrowUpgradeRanks; readonly structureCollapsed: boolean; readonly build: BurrowRunBuild; }
 export interface BurrowRunSnapshot { readonly state: BurrowRunState; readonly checkpoint: BurrowRunState; }
 
-export const LEVEL_1: BurrowLevelDefinition = { id: "meadow-edge", number: 1, name: "Wiesenrand", activeStepLimit: 10_800, shrineBiomass: 5, finaleHitPoints: 8, requiresStructureCollapse: false };
-export const LEVEL_2: BurrowLevelDefinition = { id: "goblin-market", number: 2, name: "Goblinmarkt", activeStepLimit: 10_800, shrineBiomass: 5, finaleHitPoints: 12, requiresStructureCollapse: true };
+export const LEVEL_1: BurrowLevelDefinition = { id: "meadow-edge", number: 1, name: "Wiesenrand", activeStepLimit: 10_800, shrineBiomass: 5, finaleHitPoints: 1, requiresStructureCollapse: false };
+export const LEVEL_2: BurrowLevelDefinition = { id: "goblin-market", number: 2, name: "Goblinmarkt", activeStepLimit: 10_800, shrineBiomass: 5, finaleHitPoints: 1, requiresStructureCollapse: true };
 export const BURROW_UPGRADES: readonly BurrowUpgradeDefinition[] = [
   { id: "skystrider", name: "HIMMELSSTÜRMER", description: "+12 % Bursttempo · höhere Flugspitze", rankOneDescription: "+12 % Bursttempo · höhere Flugspitze", rankTwoDescription: "RANG 2 · −15 % Burst-Cooldown" },
   { id: "glutton", name: "VIELFRASS", description: "+1 Bissschaden bei gültigem Kopfkontakt", rankOneDescription: "+1 Bissschaden bei gültigem Kopfkontakt", rankTwoDescription: "RANG 2 · −20 % Biss-Cooldown" },

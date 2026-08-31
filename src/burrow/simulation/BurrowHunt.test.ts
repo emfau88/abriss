@@ -15,7 +15,7 @@ describe("BurrowHunt", () => {
     expect(hunt.state.vehicle.direction).toBe(-1);
   });
 
-  it("requires a close, sufficiently fast head contact for a bite", () => {
+  it("requires a close, sufficiently fast head contact and devours a cart immediately", () => {
     const hunt = createHunt();
     const position = hunt.state.vehicle.position;
 
@@ -25,7 +25,7 @@ describe("BurrowHunt", () => {
     ).toBeNull();
 
     const bite = hunt.tryBite({ headPosition: position, speed: 225, burstActive: false });
-    expect(bite).toEqual({ damage: 1, devoured: false, remainingHitPoints: 2 });
+    expect(bite).toEqual({ damage: 1, devoured: true, remainingHitPoints: 0 });
     expect(hunt.tryBite({ headPosition: position, speed: 370, burstActive: true })).toBeNull();
   });
 
@@ -33,10 +33,7 @@ describe("BurrowHunt", () => {
     const hunt = createHunt();
     const position = hunt.state.vehicle.position;
 
-    const firstBite = hunt.tryBite({ headPosition: position, speed: 225, burstActive: false });
-    expect(firstBite?.damage).toBe(1);
-    advancePastBiteCooldown(hunt);
-    const devour = hunt.tryBite({ headPosition: hunt.state.vehicle.position, speed: 370, burstActive: true });
+    const devour = hunt.tryBite({ headPosition: position, speed: 370, burstActive: true });
 
     expect(devour).toEqual({ damage: 2, devoured: true, remainingHitPoints: 0 });
     expect(hunt.state.biomass).toBe(1);
@@ -47,8 +44,6 @@ describe("BurrowHunt", () => {
     const hunt = createHunt();
     const position = hunt.state.vehicle.position;
     hunt.tryBite({ headPosition: position, speed: 370, burstActive: true });
-    advancePastBiteCooldown(hunt);
-    hunt.tryBite({ headPosition: hunt.state.vehicle.position, speed: 370, burstActive: true });
 
     let respawned = false;
     for (let step = 0; step < 210; step += 1) {
@@ -61,17 +56,13 @@ describe("BurrowHunt", () => {
     expect(hunt.state.biomass).toBe(1);
   });
 
-  it("turns the existing cart into a non-respawning multi-hit finale target", () => {
+  it("turns the existing cart into a non-respawning one-contact finale target", () => {
     const hunt = createHunt();
-    hunt.beginFinale({ vehicleHitPoints: 5 });
+    hunt.beginFinale({ vehicleHitPoints: 1 });
     const position = hunt.state.vehicle.position;
 
-    expect(hunt.state.vehicle).toMatchObject({ kind: "finale", hitPoints: 5, maximumHitPoints: 5 });
+    expect(hunt.state.vehicle).toMatchObject({ kind: "finale", hitPoints: 1, maximumHitPoints: 1 });
     hunt.tryBite({ headPosition: position, speed: 370, burstActive: true });
-    advancePastBiteCooldown(hunt);
-    hunt.tryBite({ headPosition: hunt.state.vehicle.position, speed: 370, burstActive: true });
-    advancePastBiteCooldown(hunt);
-    hunt.tryBite({ headPosition: hunt.state.vehicle.position, speed: 370, burstActive: true });
     expect(hunt.state.vehicle.active).toBe(false);
     for (let step = 0; step < 240; step += 1) hunt.step(FIXED_STEP);
     expect(hunt.state.vehicle.active).toBe(false);
@@ -102,10 +93,4 @@ function createHunt(overrides: Partial<{ startX: number }> = {}): BurrowHunt {
     startX: overrides.startX ?? 150,
     surfaceYAt: () => 300,
   });
-}
-
-function advancePastBiteCooldown(hunt: BurrowHunt): void {
-  for (let step = 0; step < 36; step += 1) {
-    hunt.step(FIXED_STEP);
-  }
 }

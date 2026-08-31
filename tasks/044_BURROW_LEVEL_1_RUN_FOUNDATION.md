@@ -80,7 +80,7 @@ Level 2 oder zusätzlicher Content begonnen werden.
 ### Finale und Übergang
 
 - nach der Wahl beginnt das Finale mit einer verstärkten Händlerkutsche,
-- mehrere Treffer und mindestens zwei sichtbare Schadenszustände,
+- ein gültiger schneller Kopfkontakt verschlingt die Schlusskutsche,
 - Sieg erst bei Devour; anschließend kurze Wachstumssequenz zum Gräber,
 - Levelabschluss zeigt Zeit, Level-/Gesamtbiomasse und gewähltes Upgrade,
 - `Weiter` endet vor Level 2 in einem ehrlichen Slice-Abschlusszustand,
@@ -111,8 +111,8 @@ Level 2 oder zusätzlicher Content begonnen werden.
    weiterhin nicht.
 6. Rammbock vergrößert nur zulässige Aktionskrater. Burststart lässt die gesamte
    Terrainmaske unverändert.
-7. Die Schlusskutsche besitzt lesbare Schadenszustände und beendet das Level
-   ausschließlich bei Devour.
+7. Die Schlusskutsche beendet das Level ausschließlich bei einem gültigen
+   Devour.
 8. Wachstum zum Gräber ist sichtbar und fachlich aktiv, verändert den
    Kollisionsradius aber nicht.
 9. Scheitern stellt Zeit, Welt, Ziele, Biomasse und aktuelle Schreinwahl exakt
@@ -150,8 +150,9 @@ Der Bearbeiter berichtet:
 - `BurrowRun` hält den serialisierbaren Levelzustand, die aktive 180-Sekunden-
   Uhr, den Level-Einstiegscheckpoint, getrennte Level-/Gesamtbiomasse und die
   sieben vorgesehenen Phasen. Level 1 verwendet fünf Biomasse und eine
-  acht-HP-Schlusskutsche.
-- Der vorhandene Schrein bleibt in der initialen Seitenhöhle. Das Bergtier
+  Ein-Kontakt-Schlusskutsche (D-067).
+- Der vorhandene Schrein bleibt in der initialen Seitenhöhle und steht mit
+  seinem Spritefuß auf deren Boden. Das Bergtier
   bleibt deterministisch fliehend und ist einmalig fressbare Kleinbeute; die
   bestehende Kutsche ist die parametrisierte Wiederholungsbeute vor dem Finale.
 - Rang 1 ist direkt am gemeinsamen Build verknüpft: Himmelsstürmer erhöht die
@@ -171,5 +172,5 @@ Der Bearbeiter berichtet:
 
 - Persönlicher kompletter Level-1-Run und echter Mobiltest, insbesondere
   Wiederholungswunsch, reale Dauer bis zum Schrein und Lesbarkeit der
-  Schlusskutschen-Schadensstufen.
+  Abschlusslesbarkeit und den Ein-Kontakt-Payoff der Schlusskutsche.
 - Keine Level-2-Freigabe, keine Meta-, Gegner- oder zusätzliche Regionsarbeit.

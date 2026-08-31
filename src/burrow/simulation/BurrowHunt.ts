@@ -61,7 +61,7 @@ const MINIMUM_BITE_SPEED = 170;
 const HEAVY_BITE_SPEED = 300;
 const BITE_COOLDOWN = 0.58;
 const RESPAWN_SECONDS = 3.2;
-const VEHICLE_HIT_POINTS = 3;
+const VEHICLE_HIT_POINTS = 1;
 const DEFAULT_TUNING: BurrowHuntTuning = {
   vehicleSpeed: VEHICLE_SPEED,
   vehicleContactRadius: VEHICLE_CONTACT_RADIUS,

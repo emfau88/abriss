@@ -45,7 +45,7 @@ Test als erledigt auszugeben.
 - zweiter Schrein mit Rang 2 desselben gewählten Pfads:
   Himmelsstürmer kürzerer Burst-Cooldown, Vielfraß kürzerer Biss-Cooldown,
   Rammbock stärkerer Schaden gegen die gepanzerte Schlusskutsche,
-- gepanzerter Handelswagen als Finale, erst nach Turmkollaps und Schreinwahl,
+- Handelswagen als Ein-Kontakt-Finale, erst nach Turmkollaps und Schreinwahl,
 - Levelabschluss wächst Gräber zum Koloss und endet ehrlich vor Level 3,
 - deterministische Fachtests für Fortsetzung, Checkpoint, Rang-2-Build,
   Turmpflicht und Finale,
@@ -71,8 +71,8 @@ Test als erledigt auszugeben.
    die Leveluhr.
 5. Rang 2 verändert genau den dokumentierten Buildwert und wird fachlich
    nachgewiesen.
-6. Der gepanzerte Handelswagen besitzt mehrere lesbare Schadenszustände;
-   Level 2 gewinnt nur nach Turmkollaps, Schreinwahl und Devour.
+6. Level 2 gewinnt nur nach Turmkollaps, Schreinwahl und einem gültigen
+   Devour des Handelswagens.
 7. Abschluss zeigt Koloss und endet vor Level 3 ehrlich.
 8. Typprüfung, Burrow-Fachtests, Gesamttests, Build und Desktop-/Touch-Smoke
    bleiben grün.

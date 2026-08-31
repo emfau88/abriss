@@ -2,6 +2,7 @@ import Phaser from "phaser";
 
 import {
   BURROW_HUT,
+  BURROW_SHRINE_POSITION,
   BURROW_START,
   BURROW_VEHICLE_ROUTE,
   BURROW_WORLD_HEIGHT,
@@ -39,7 +40,6 @@ const VIEW_WIDTH = 1280;
 const VIEW_HEIGHT = 720;
 // Liegt vollständig in der vorbereiteten Höhle; kein großflächiges
 // Hintergrundgebäude, das beim Graben ungewollt freigelegt wird.
-const SHRINE_POSITION = { x: 1115, y: 970 } as const;
 const ANIMAL_START_X = 1040;
 
 interface DustParticle {
@@ -114,7 +114,6 @@ export class BurrowGameScene extends Phaser.Scene {
   private keyOne?: Phaser.Input.Keyboard.Key;
   private keyTwo?: Phaser.Input.Keyboard.Key;
   private keyThree?: Phaser.Input.Keyboard.Key;
-  private completionAcknowledged = false;
   private liveStatus?: HTMLOutputElement | null;
 
   public constructor() {
@@ -136,7 +135,6 @@ export class BurrowGameScene extends Phaser.Scene {
     this.started = false;
     this.accumulator = 0;
     this.vehicleHitFlash = 0;
-    this.completionAcknowledged = false;
     this.dustParticles = [];
     const terrain = createBurrowArena();
     this.run = new BurrowRun();
@@ -151,7 +149,7 @@ export class BurrowGameScene extends Phaser.Scene {
     this.structure = new BurrowStructure(terrain, createHutSupportPoints());
     this.worldResponse = new BurrowWorldResponse({
       animalStart: { x: ANIMAL_START_X, y: surfaceYAt(ANIMAL_START_X) - 3 },
-      shrinePosition: SHRINE_POSITION,
+      shrinePosition: BURROW_SHRINE_POSITION,
       surfaceYAt,
       minimumX: 760,
       maximumX: 1480,
@@ -265,7 +263,7 @@ export class BurrowGameScene extends Phaser.Scene {
         if (bite.devoured) {
           if (this.run.state.phase === "finale") {
             this.run.completeLevel();
-            this.showEvent("SCHLUSSKUTSCHE VERSCHLUNGEN! · GRÄBER!", "#c7f279");
+            this.showEvent("SCHLUSSKUTSCHE VERSCHLUNGEN! · LEVEL GESCHAFFT!", "#c7f279");
           } else if (this.run.collectBiomass()) {
             this.announceShrineReady();
           }
@@ -364,7 +362,7 @@ export class BurrowGameScene extends Phaser.Scene {
   }
 
   private createEnvironmentAssets(): void {
-    this.shrineSprite = this.add.image(SHRINE_POSITION.x, SHRINE_POSITION.y, "burrow-shrine")
+    this.shrineSprite = this.add.image(BURROW_SHRINE_POSITION.x, BURROW_SHRINE_POSITION.y, "burrow-shrine")
       .setOrigin(0.5, 1).setDisplaySize(92, 108).setDepth(4);
     this.structureSprite = this.add.image(BURROW_HUT.centerX, surfaceYAt(BURROW_HUT.centerX) + 5, "burrow-outpost")
       .setOrigin(0.5, 1).setDisplaySize(270, 250).setDepth(6);
@@ -772,8 +770,7 @@ export class BurrowGameScene extends Phaser.Scene {
       return;
     }
     if (phase === "level-complete") {
-      this.completionAcknowledged = true;
-      this.showEvent("LEVEL 2 FOLGT NACH DER LEVEL-1-ABNAHME", "#fff0a1");
+      this.scene.restart();
     }
   }
 
@@ -1028,7 +1025,7 @@ export class BurrowGameScene extends Phaser.Scene {
   private announceShrineActivation(): void {
     this.showEvent("SCHREIN · WÄHLE DEINE MACHT!", "#e7b8ff");
     this.cameras.main.shake(160, 0.004);
-    this.spawnDigDust(SHRINE_POSITION, -Math.PI / 2, 18);
+    this.spawnDigDust(BURROW_SHRINE_POSITION, -Math.PI / 2, 18);
   }
 
   private announceShrineReady(): void {
@@ -1232,7 +1229,7 @@ export class BurrowGameScene extends Phaser.Scene {
         : "KEINE";
       this.modalBody.setText(`Zeit ${Math.floor(this.run.state.activeSteps / 3600)}:${String(Math.floor(this.run.state.activeSteps / 60) % 60).padStart(2, "0")} · Biomasse ${this.run.state.levelBiomass}/${this.run.state.totalBiomass}\nUpgrade ${upgrade} · Wachstum: GRÄBER`);
       this.modalButtons[0]!
-        .setText(this.completionAcknowledged ? "LEVEL 2 NOCH GESPERRT" : "WEITER\nLEVEL-1-SLICE ENDET HIER")
+        .setText("NEUER RUN\nKEIMLING")
         .setBackgroundColor("#355b91")
         .setVisible(true);
       this.modalButtons.slice(1).forEach((button) => button.setVisible(false));

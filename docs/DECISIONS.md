@@ -873,3 +873,22 @@ oder isolierten Entwicklungsuntersuchungen verwendet werden. Es ist keine
 zehn Sekunden aktive Schnellspur; nur Breach und schneller Wiedereintritt
 verändern die tragende Terrainmaske dauerhaft. Die visuelle UI-Politur ändert
 keine Simulationswerte oder Level-Abhängigkeiten.
+
+## 2026-08-31 – D-067: Kutschen sind Ein-Kontakt-Beute, Levelabschluss endet klar
+
+**Entscheidung:** Der persönliche Spieltest ersetzt die Mehrtreffer-Vorgabe aus
+D-064. Jede Kutsche im aktuellen Drei-Level-Slice wird durch einen gültigen,
+schnellen Kopfkontakt unmittelbar verschlungen. Der Levelabschluss nach der
+Schlusskutsche bleibt als pausierter Ergebniszustand stehen und bietet nur den
+eindeutigen Start eines neuen Runs.
+
+**Grund:** Wiederholte Kontakte auf derselben Kutsche bremsen die direkte
+Hunger- und Machtfantasie, statt eine interessante Entscheidung zu erzeugen.
+Der bisherige Abschlussknopf vermittelte zudem fälschlich einen noch
+fortsetzbaren, aber nicht vorhandenen Level-2-Übergang.
+
+**Konsequenz:** Patrouillen- und Schlusskutschen haben je einen HP; Upgrades
+behalten ihre übrigen Werte, erzeugen aber keinen Pflicht-Mehrfachangriff.
+Der Schrein steht mit seinem Spritefuß auf dem Boden seiner vorbereiteten
+Höhle. Level 2 kann erst als tatsächlich sichtbare Fortsetzung statt über
+einen Platzhalter erreichbar werden.

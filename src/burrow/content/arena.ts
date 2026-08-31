@@ -12,6 +12,9 @@ export const BURROW_HUT = {
   centerX: 1400,
   supportOffsets: [-62, 0, 62],
 } as const;
+// Der Fuß des Schreins steht knapp über dem festen Boden der vorbereiteten
+// Seitenhöhle. So bleibt er visuell verankert, ohne die Kammer zu verkleinern.
+export const BURROW_SHRINE_POSITION = { x: 1115, y: 1076 } as const;
 
 export function surfaceYAt(worldX: number): number {
   return (

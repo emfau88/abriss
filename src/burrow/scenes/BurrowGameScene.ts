@@ -15,7 +15,6 @@ import { creatureVisualForStage } from "../rendering/BurrowCreatureVisual";
 import { TiledTerrainRenderer } from "../rendering/TiledTerrainRenderer";
 import { BurrowTrailRenderer } from "../rendering/BurrowTrailRenderer";
 import { BurrowSurfaceSupport } from "../simulation/BurrowSurfaceSupport";
-import { DEFAULT_TERRAIN_VARIANT, type BurrowTerrainVariant } from "../simulation/BurrowTerrainVariant";
 import { BurrowHunt, type BiteResult, type BurrowVehicleState } from "../simulation/BurrowHunt";
 import {
   BURROW_MOTION_CONSTANTS,
@@ -66,8 +65,11 @@ export class BurrowGameScene extends Phaser.Scene {
   private dustGraphics!: Phaser.GameObjects.Graphics;
   private hudText!: Phaser.GameObjects.Text;
   private hudPanel!: Phaser.GameObjects.Rectangle;
+  private hudKicker!: Phaser.GameObjects.Text;
   private hudTitle!: Phaser.GameObjects.Text;
+  private goalPanel!: Phaser.GameObjects.Rectangle;
   private goalText!: Phaser.GameObjects.Text;
+  private eventPanel!: Phaser.GameObjects.Rectangle;
   private eventText!: Phaser.GameObjects.Text;
   private joystickBase!: Phaser.GameObjects.Arc;
   private joystickNub!: Phaser.GameObjects.Arc;
@@ -75,7 +77,9 @@ export class BurrowGameScene extends Phaser.Scene {
   private burstButton!: Phaser.GameObjects.Arc;
   private burstLabel!: Phaser.GameObjects.Text;
   private controlsHint!: Phaser.GameObjects.Text;
+  private modalShade!: Phaser.GameObjects.Rectangle;
   private modalPanel!: Phaser.GameObjects.Rectangle;
+  private modalAccent!: Phaser.GameObjects.Rectangle;
   private modalTitle!: Phaser.GameObjects.Text;
   private modalBody!: Phaser.GameObjects.Text;
   private modalButtons: Phaser.GameObjects.Text[] = [];
@@ -113,7 +117,7 @@ export class BurrowGameScene extends Phaser.Scene {
   private completionAcknowledged = false;
   private liveStatus?: HTMLOutputElement | null;
 
-  public constructor(private readonly terrainVariant: BurrowTerrainVariant = DEFAULT_TERRAIN_VARIANT) {
+  public constructor() {
     super("BurrowGameScene");
   }
 
@@ -136,13 +140,12 @@ export class BurrowGameScene extends Phaser.Scene {
     this.dustParticles = [];
     const terrain = createBurrowArena();
     this.run = new BurrowRun();
-    this.motion = new BurrowMotion(terrain, BURROW_START, -0.16, this.terrainVariant, this.run.state.build);
+    this.motion = new BurrowMotion(terrain, BURROW_START, -0.16, "recovering", this.run.state.build);
     this.createWorldBackdrop();
     this.terrainRenderer = new TiledTerrainRenderer(this, terrain, "burrow-terrain", "burrow-earth");
     this.createSurfaceDetails();
     this.createEnvironmentAssets();
-    this.trailRenderer = this.terrainVariant === "recovering"
-      ? new BurrowTrailRenderer(this, terrain, this.motion.trailField) : null;
+    this.trailRenderer = new BurrowTrailRenderer(this, terrain, this.motion.trailField);
     const surface = new BurrowSurfaceSupport(terrain);
     this.hunt = new BurrowHunt({ ...BURROW_VEHICLE_ROUTE, surfaceYAt }, surface);
     this.structure = new BurrowStructure(terrain, createHutSupportPoints());
@@ -403,47 +406,70 @@ export class BurrowGameScene extends Phaser.Scene {
 
   private createHud(): void {
     this.hudPanel = this.add
-      .rectangle(18, 18, 500, 137, 0x17122a, 0.9)
+      .rectangle(18, 18, 500, 142, 0x151627, 0.94)
       .setOrigin(0)
       .setScrollFactor(0)
       .setDepth(100)
-      .setStrokeStyle(2, 0xffbd50, 0.75);
-    this.hudTitle = this.add
-      .text(38, 32, "BURROW · VISUAL LAB", {
+      .setStrokeStyle(2, 0x7e79b8, 0.86);
+    this.hudKicker = this.add
+      .text(38, 30, "LEVEL 1 · WIESENRAND", {
         fontFamily: "Arial Black, sans-serif",
-        fontSize: "25px",
+        fontSize: "12px",
+        color: "#aee37d",
+        letterSpacing: 1.4,
+      })
+      .setScrollFactor(0)
+      .setDepth(101);
+    this.hudTitle = this.add
+      .text(38, 45, "BURROW", {
+        fontFamily: "Arial Black, sans-serif",
+        fontSize: "26px",
         color: "#ffd66d",
+        stroke: "#27203a",
+        strokeThickness: 4,
       })
       .setScrollFactor(0)
       .setDepth(101);
     this.hudText = this.add
-      .text(38, 67, "", {
+      .text(38, 78, "", {
         fontFamily: "Arial Black, sans-serif",
         fontSize: "15px",
-        color: "#f6edda",
-        lineSpacing: 7,
+        color: "#f8f2df",
+        lineSpacing: 6,
       })
       .setScrollFactor(0)
       .setDepth(101);
+    this.goalPanel = this.add
+      .rectangle(VIEW_WIDTH - 18, 18, 350, 78, 0x17182a, 0.94)
+      .setOrigin(1, 0)
+      .setScrollFactor(0)
+      .setDepth(100)
+      .setStrokeStyle(2, 0xd5a65e, 0.82);
     this.goalText = this.add
-      .text(VIEW_WIDTH - 22, 22, "", {
+      .text(VIEW_WIDTH - 36, 35, "", {
         align: "right",
         fontFamily: "Arial Black, sans-serif",
-        fontSize: "18px",
-        color: "#ffe084",
-        stroke: "#201b1f",
-        strokeThickness: 5,
+        fontSize: "17px",
+        color: "#fff0b0",
+        stroke: "#1f1d2d",
+        strokeThickness: 4,
       })
       .setOrigin(1, 0)
       .setScrollFactor(0)
       .setDepth(101);
+    this.eventPanel = this.add
+      .rectangle(VIEW_WIDTH / 2, 142, 720, 66, 0x211b31, 0.92)
+      .setScrollFactor(0)
+      .setDepth(109)
+      .setStrokeStyle(2, 0xffd66d, 0.8)
+      .setAlpha(0);
     this.eventText = this.add
-      .text(VIEW_WIDTH / 2, 125, "", {
+      .text(VIEW_WIDTH / 2, 142, "", {
         fontFamily: "Arial Black, sans-serif",
-        fontSize: "34px",
+        fontSize: "27px",
         color: "#fff0a1",
-        stroke: "#512c22",
-        strokeThickness: 8,
+        stroke: "#211b31",
+        strokeThickness: 6,
       })
       .setOrigin(0.5)
       .setScrollFactor(0)
@@ -496,11 +522,21 @@ export class BurrowGameScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(101);
 
+    this.modalShade = this.add
+      .rectangle(VIEW_WIDTH / 2, VIEW_HEIGHT / 2, VIEW_WIDTH, VIEW_HEIGHT, 0x0a0c18, 0.6)
+      .setScrollFactor(0)
+      .setDepth(138)
+      .setVisible(false);
     this.modalPanel = this.add
-      .rectangle(VIEW_WIDTH / 2, VIEW_HEIGHT / 2, 860, 350, 0x17122a, 0.95)
+      .rectangle(VIEW_WIDTH / 2, VIEW_HEIGHT / 2, 860, 390, 0x17182a, 0.98)
       .setScrollFactor(0)
       .setDepth(140)
-      .setStrokeStyle(4, 0xffd66d, 0.9)
+      .setStrokeStyle(3, 0xffd66d, 0.92)
+      .setVisible(false);
+    this.modalAccent = this.add
+      .rectangle(VIEW_WIDTH / 2, 184, 760, 7, 0xaee37d, 1)
+      .setScrollFactor(0)
+      .setDepth(141)
       .setVisible(false);
     this.modalTitle = this.add
       .text(VIEW_WIDTH / 2, 245, "", {
@@ -513,7 +549,7 @@ export class BurrowGameScene extends Phaser.Scene {
       })
       .setOrigin(0.5)
       .setScrollFactor(0)
-      .setDepth(141)
+      .setDepth(142)
       .setVisible(false);
     this.modalBody = this.add
       .text(VIEW_WIDTH / 2, 292, "", {
@@ -525,22 +561,22 @@ export class BurrowGameScene extends Phaser.Scene {
       })
       .setOrigin(0.5)
       .setScrollFactor(0)
-      .setDepth(141)
+      .setDepth(142)
       .setVisible(false);
     this.modalButtons = Array.from({ length: 3 }, () => this.add
       .text(0, 0, "", {
         align: "center",
         fontFamily: "Arial Black, sans-serif",
         fontSize: "15px",
-        color: "#fff2c6",
-        backgroundColor: "#6b3f32",
+        color: "#fff9df",
+        backgroundColor: "#355b91",
         padding: { x: 16, y: 14 },
         wordWrap: { width: 210, useAdvancedWrap: true },
       })
       .setOrigin(0.5)
       .setFixedSize(232, 104)
       .setScrollFactor(0)
-      .setDepth(142)
+      .setDepth(143)
       .setInteractive({ useHandCursor: true })
       .setVisible(false));
     this.modalButtons.forEach((button, index) => {
@@ -559,21 +595,34 @@ export class BurrowGameScene extends Phaser.Scene {
     const height = this.scale.height;
     const scale = Math.min(1, width / VIEW_WIDTH, height / VIEW_HEIGHT);
     const compactViewport = width <= 900 || height <= 600;
+    const hudScale = compactViewport
+      ? Math.max(scale, Math.min(1, width / 520, height / 520))
+      : scale;
     // The world may scale down, but thumb controls need a useful minimum size
     // on narrow portrait and short landscape screens.
     const touchControlScale = compactViewport
       ? Math.max(scale, Math.min(0.72, width / 520, height / 460))
       : scale;
-    const at = (value: number): number => value * scale;
+    const at = (value: number): number => value * hudScale;
     const controlAt = (value: number): number => value * touchControlScale;
-    this.uiScale = scale;
+    this.uiScale = hudScale;
     this.touchControlScale = touchControlScale;
 
-    this.hudPanel.setPosition(at(18), at(18)).setSize(at(500), at(137));
-    this.hudTitle.setPosition(at(38), at(32)).setScale(scale);
-    this.hudText.setPosition(at(38), at(69)).setScale(scale);
-    this.goalText.setPosition(width - at(22), at(22)).setScale(scale);
-    this.eventText.setPosition(width / 2, at(125)).setScale(scale);
+    this.hudPanel.setPosition(at(18), at(18)).setSize(at(500), at(142));
+    this.hudKicker.setPosition(at(38), at(30)).setScale(hudScale);
+    this.hudTitle.setPosition(at(38), at(45)).setScale(hudScale);
+    this.hudText.setPosition(at(38), at(78)).setScale(hudScale);
+    if (compactViewport) {
+      this.goalPanel.setPosition(at(18), at(172)).setOrigin(0, 0).setSize(at(500), at(68));
+      this.goalText.setPosition(at(38), at(184)).setOrigin(0, 0).setAlign("left");
+    } else {
+      this.goalPanel.setPosition(width - at(18), at(18)).setOrigin(1, 0).setSize(at(350), at(78));
+      this.goalText.setPosition(width - at(36), at(35)).setOrigin(1, 0).setAlign("right");
+    }
+    this.goalText.setScale(hudScale);
+    const eventY = compactViewport ? at(270) : at(142);
+    this.eventPanel.setPosition(width / 2, eventY).setSize(Math.min(width - at(24), at(720)), at(66));
+    this.eventText.setPosition(width / 2, eventY).setScale(hudScale);
 
     const joystickX = controlAt(116);
     const joystickY = height - controlAt(108);
@@ -588,8 +637,8 @@ export class BurrowGameScene extends Phaser.Scene {
     this.controlsHint
       .setVisible(!compactViewport)
       .setPosition(width / 2, height - at(33))
-      .setScale(scale);
-    this.layoutModal(scale, width, height);
+      .setScale(hudScale);
+    this.layoutModal(hudScale, width, height);
   }
 
   private configureInput(): void {
@@ -735,19 +784,34 @@ export class BurrowGameScene extends Phaser.Scene {
 
   private layoutModal(scale: number, width: number, height: number): void {
     if (!this.modalPanel) return;
-    const modalScale = Math.max(scale, Math.min(0.72, width / 980, height / 620));
+    const stacked = width < 620;
+    const modalScale = stacked
+      ? Math.min(0.72, Math.max(0.56, width / 560))
+      : Math.max(scale, Math.min(1, width / 980, height / 620));
     const centerX = width / 2;
     const centerY = height / 2;
-    this.modalPanel.setPosition(centerX, centerY).setSize(860 * modalScale, 350 * modalScale);
-    this.modalTitle.setPosition(centerX, centerY - 115 * modalScale).setScale(modalScale);
-    this.modalBody.setPosition(centerX, centerY - 54 * modalScale).setScale(modalScale);
     const phase = this.run?.state.phase;
     const buttonCount = phase === "upgrade" ? 3 : 1;
-    const gap = 270 * modalScale;
+    const modalWidth = stacked ? width - 24 : 860 * modalScale;
+    const modalHeight = stacked ? (buttonCount === 3 ? 560 : 360) * modalScale : 390 * modalScale;
+    this.modalShade.setPosition(centerX, centerY).setSize(width, height);
+    this.modalPanel.setPosition(centerX, centerY).setSize(modalWidth, modalHeight);
+    this.modalAccent
+      .setPosition(centerX, centerY - modalHeight / 2 + 23 * modalScale)
+      .setSize(Math.max(90, modalWidth - 74 * modalScale), 7 * modalScale);
+    const stackedUpgrade = stacked && buttonCount === 3;
+    this.modalTitle.setPosition(centerX, centerY - modalHeight * (stackedUpgrade ? 0.34 : 0.31)).setScale(modalScale);
+    this.modalBody.setPosition(centerX, centerY - modalHeight * (stackedUpgrade ? 0.24 : 0.13)).setScale(modalScale);
     this.modalButtons.forEach((button, index) => {
       const visible = index < buttonCount;
       button.setVisible(visible);
-      if (visible) button.setPosition(centerX + (index - (buttonCount - 1) / 2) * gap, centerY + 78 * modalScale).setScale(modalScale);
+      if (!visible) return;
+      if (stackedUpgrade) {
+        button.setPosition(centerX, centerY - modalHeight * 0.07 + index * modalHeight * 0.21).setScale(modalScale);
+      } else {
+        const gap = 270 * modalScale;
+        button.setPosition(centerX + (index - (buttonCount - 1) / 2) * gap, centerY + modalHeight * 0.28).setScale(modalScale);
+      }
     });
   }
 
@@ -987,20 +1051,27 @@ export class BurrowGameScene extends Phaser.Scene {
 
   private showEvent(message: string, color: string): void {
     const baseScale = this.uiScale;
+    const eventY = this.eventPanel.y;
     this.eventText
       .setText(message)
       .setColor(color)
       .setAlpha(1)
       .setScale(baseScale * 0.82);
-    this.tweens.killTweensOf(this.eventText);
+    this.eventPanel.setAlpha(0.96);
+    this.tweens.killTweensOf([this.eventText, this.eventPanel]);
     this.tweens.add({
-      targets: this.eventText,
+      targets: [this.eventText, this.eventPanel],
       alpha: 0,
-      scale: baseScale * 1.08,
-      y: 105 * baseScale,
       duration: 950,
       ease: "Quad.easeOut",
-      onComplete: () => this.eventText.setY(125 * baseScale),
+    });
+    this.tweens.add({
+      targets: this.eventText,
+      scale: baseScale * 1.08,
+      y: eventY - 16 * baseScale,
+      duration: 950,
+      ease: "Quad.easeOut",
+      onComplete: () => this.eventText.setY(eventY),
     });
   }
 
@@ -1066,7 +1137,6 @@ export class BurrowGameScene extends Phaser.Scene {
     const run = this.run.state;
     const visual = creatureVisualForStage(run.build.stage);
     const activeSeconds = Math.max(0, Math.ceil((run.level.activeStepLimit - run.activeSteps) / 60));
-    this.hudTitle.setText(`${this.terrainVariant === "persistent" ? "TERRAIN A" : "TERRAIN B"} · LEVEL 1: WIESENRAND`);
     this.hudText.setText([
       `ZEIT  ${Math.floor(activeSeconds / 60)}:${String(activeSeconds % 60).padStart(2, "0")} · ${visual.label}`,
       `BIOMASSE  ${run.levelBiomass}/${run.level.shrineBiomass} · GESAMT ${run.totalBiomass}`,
@@ -1108,7 +1178,6 @@ export class BurrowGameScene extends Phaser.Scene {
       this.liveStatus.textContent = this.started
         ? `Modus ${modeLabel[state.mode]}, Tempo ${Math.round(state.speed)}, Position ${Math.round(state.position.x)} zu ${Math.round(state.position.y)}, ${vehicle.active ? `Kutsche ${vehicle.hitPoints} von ${vehicle.maximumHitPoints} HP` : "Kutsche verschlungen"}, Biomasse ${run.levelBiomass}, Phase ${run.phase}.`
         : "Burrow wartet auf eine Richtung.";
-      this.liveStatus.textContent += ` Terrain ${this.terrainVariant === "persistent" ? "A dauerhaft" : "B Spur 10 Sekunden"}.`;
     }
     this.updateModal();
   }
@@ -1131,7 +1200,9 @@ export class BurrowGameScene extends Phaser.Scene {
   private updateModal(): void {
     const phase = this.run.state.phase;
     const visible = phase === "upgrade" || phase === "failed" || phase === "level-complete";
+    this.modalShade.setVisible(visible);
     this.modalPanel.setVisible(visible);
+    this.modalAccent.setVisible(visible);
     this.modalTitle.setVisible(visible);
     this.modalBody.setVisible(visible);
     if (!visible) {
@@ -1143,12 +1214,16 @@ export class BurrowGameScene extends Phaser.Scene {
       this.modalBody.setText("Wähle eine Macht. Die Zeit steht still.");
       this.modalButtons.forEach((button, index) => {
         const upgrade = BURROW_UPGRADES[index]!;
-        button.setText(`${index + 1} · ${upgrade.name}\n${upgrade.description}`).setVisible(true);
+        const colors = ["#355b91", "#367153", "#8c4a36"];
+        button
+          .setText(`${index + 1} · ${upgrade.name}\n${upgrade.description}`)
+          .setBackgroundColor(colors[index]!)
+          .setVisible(true);
       });
     } else if (phase === "failed") {
       this.modalTitle.setText("DIE WIESE HAT DICH VERSCHLUCKT");
       this.modalBody.setText(`Levelzeit abgelaufen · Biomasse ${this.run.state.levelBiomass} · Keimling startet frisch.`);
-      this.modalButtons[0]!.setText("NEUSTART\nR").setVisible(true);
+      this.modalButtons[0]!.setText("NEUSTART\nR").setBackgroundColor("#8c4a36").setVisible(true);
       this.modalButtons.slice(1).forEach((button) => button.setVisible(false));
     } else {
       this.modalTitle.setText("LEVEL 1 · GESCHAFFT");
@@ -1158,6 +1233,7 @@ export class BurrowGameScene extends Phaser.Scene {
       this.modalBody.setText(`Zeit ${Math.floor(this.run.state.activeSteps / 3600)}:${String(Math.floor(this.run.state.activeSteps / 60) % 60).padStart(2, "0")} · Biomasse ${this.run.state.levelBiomass}/${this.run.state.totalBiomass}\nUpgrade ${upgrade} · Wachstum: GRÄBER`);
       this.modalButtons[0]!
         .setText(this.completionAcknowledged ? "LEVEL 2 NOCH GESPERRT" : "WEITER\nLEVEL-1-SLICE ENDET HIER")
+        .setBackgroundColor("#355b91")
         .setVisible(true);
       this.modalButtons.slice(1).forEach((button) => button.setVisible(false));
     }

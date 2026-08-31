@@ -1,26 +1,23 @@
-# Burrow: persönliche Terrainwertung
+# Burrow: abgeschlossene persönliche Terrainwertung
 
 Stand: 30. August 2026. Qualitative Nutzerwahl: B als Grundlage (D-062).
 Die numerische Tabelle wurde nicht ausgefüllt; keine Messwerte behauptet.
 Regeln und Entscheidungskriterien: Task 043. Dieser Bogen speichert nur die
 persönlichen Ergebnisse, nicht eine zweite Produktvision.
 
-## Start
+## Ergebnis
 
-`npm run dev` starten und dessen URL um `burrow.html?terrain=recovering` ergänzen.
-Oben wechseln A/B jeweils auf einen frischen Stand; ↻ startet dieselbe Variante
-neu. Links Richtung, rechts Burst; Desktop zusätzlich WASD/Pfeile, Shift und R.
+Der Vergleich ist abgeschlossen. Der öffentliche Einstieg startet fest mit B;
+es gibt keine A/B-Schalter oder unterstützte Terrain-URLs mehr. ↻ startet den
+Run neu. Die Tabelle dokumentiert nur die damalige qualitative Entscheidung.
 
 - A: normale Bewegung hinterlässt dauerhaft offene Tunnel.
 - B: normale Bewegung hinterlässt eine zehn Sekunden schnelle Grabspur.
   Erneutes Durchfahren erneuert die Frist. Burststart erzeugt kein Erdloch.
   Nur Durchbruch und schneller Einschlag erzeugen permanente Aktionskrater.
 
-Optionaler standardisierter Vergleich: frisch A – B – B – A
-starten. Jeweils drei Minuten mit einer externen Stoppuhr; keine Werte zwischen
-Runs ändern. Der Test hat noch keinen Runcontroller und endet nicht automatisch.
-
-Gerät / Browser: offen
+Der optionale A–B–B–A-Ablauf ist historisch; er ist keine aktuelle
+Spielanweisung. `persistent` bleibt für technische Regressionstests isoliert.
 
 | Beobachtung | A1 | B1 | B2 | A2 |
 | --- | --- | --- | --- | --- |

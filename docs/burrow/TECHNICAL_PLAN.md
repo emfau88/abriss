@@ -47,7 +47,8 @@ zulässig.
 
 ## Terraingrundlage (Task 043 / D-061, D-062)
 
-`recovering` ist der gewählte Standard; `persistent` bleibt explizit zum Vergleich.
+`recovering` ist die einzige öffentliche Terrainregel. `persistent` bleibt nur
+für isolierte Regressionstests und Entwicklungsuntersuchungen verfügbar.
 `recovering` legt normale Grabbewegungen in
 einem separaten 4-Pixel-Spurfeld mit Ablauf nach 600 festen 60-Hz-Schritten ab.
 Erneute Bewegung erneuert die Frist; Stillstand nicht. Nur aktive Zellen werden

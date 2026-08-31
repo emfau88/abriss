@@ -171,16 +171,14 @@ Kollapses wird nach der öffentlichen Veröffentlichung bewertet.
 
 ## Task 043 – Terrainvergleich vor weiteren Gates
 
-Am 30. August 2026 freigegeben: dieselbe Arena und vorhandene Objekte mit
-`?terrain=persistent` (A, Vergleich) oder `?terrain=recovering` (B, Standard, zehn Sekunden
-aktive Schnellspur). B erhält lokale permanente Aktionskrater, normales Graben
-entfernt dort keine tragende Erde. Beide Varianten korrigieren schwebende
-Oberflächenobjekte durch dieselbe begrenzte Bodenreaktion (D-061).
-Neustart setzt beide vollständig zurück. Keine neuen Ziele, Upgrades oder Meta.
-Der Nutzer hat B nach persönlichem Test als Grundlage gewählt (D-062), ohne
-quantitative A–B–B–A-Wertung. Burststart entfernt auf seinen Wunsch keine Erde
-mehr; Breach und schneller Einschlag behalten ihre Terrainwirkung. Damit
-entfällt das direkte Freistanzen von Stützen per Burstknopf. Neue Inhalte oder
+Der frühere Terrainvergleich ist abgeschlossen: Die öffentliche Burrow-Version
+startet ausschließlich mit B (`recovering`, zehn Sekunden aktive Schnellspur).
+Normales Graben entfernt keine tragende Erde; Burststart verändert ebenfalls
+keine Terrainzellen. Nur Breach und schneller Einschlag erzeugen lokale
+permanente Aktionskrater. Der Neustart setzt den Run vollständig zurück.
+`persistent` (A) bleibt ausschließlich eine fachliche Regressionsvariante und
+wird weder per URL noch im HUD angeboten (D-066). Die maskenbasierte
+Bodenreaktion verhindert schwebende Oberflächenobjekte. Neue Inhalte oder
 Folgegates sind durch diese Korrektur nicht freigegeben.
 
 ## Nächster Slice – drei vollständige Levels

@@ -12,25 +12,23 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta
       name="description"
-      content="Burrow – isolierter Terrain-A/B-Test mit Graben, Jagd und Weltreaktionen."
+      content="Burrow – grabe, jage und wachse im Wiesenrand."
     />
-    <title>Burrow Lab · Terrain A/B</title>
+    <title>Burrow · Wiesenrand</title>
   </head>
   <body>
-    <main class="burrow-shell" aria-label="Burrow Bewegungslabor">
+    <main class="burrow-shell" aria-label="Burrow">
       <p class="sr-only" id="burrow-description">
-        Isolierter Bewegungsprototyp für Graben, Tunnelgleiten, Burst und
-        Oberflächendurchbruch. Links Richtung steuern, rechts Burst auslösen.
+        Grabe durch den Wiesenrand, jage Kutschen und wähle am Schrein eine
+        Macht. Links Richtung steuern, rechts Burst auslösen.
       </p>
       <output id="burrow-live-status" class="sr-only" aria-live="polite">
         Burrow wartet auf eine Richtung.
       </output>
       <div id="burrow-game" aria-describedby="burrow-description"></div>
-      <nav class="terrain-test-controls" aria-label="Terrain-Test starten">
-        <a href="?terrain=persistent" data-terrain="persistent" title="Frischer Test mit dauerhaften Tunneln">A</a>
-        <a href="?terrain=recovering" data-terrain="recovering" title="Frischer Test mit Zehn-Sekunden-Spur">B</a>
-        <button id="burrow-restart" type="button" title="Aktuelle Variante neu starten">↻</button>
-      </nav>
+      <button id="burrow-restart" class="burrow-restart" type="button" title="Run neu starten">
+        ↻ <span>Neu starten</span>
+      </button>
       <a class="abriss-link" href="./">← Projekt Abriss</a>
       <button id="burrow-fullscreen" class="burrow-fullscreen" type="button" hidden>
         ⛶ <span>Vollbild</span>

@@ -48,7 +48,9 @@ Test als erledigt auszugeben.
 - gepanzerter Handelswagen als Finale, erst nach Turmkollaps und Schreinwahl,
 - Levelabschluss wächst Gräber zum Koloss und endet ehrlich vor Level 3,
 - deterministische Fachtests für Fortsetzung, Checkpoint, Rang-2-Build,
-  Turmpflicht und Finale.
+  Turmpflicht und Finale,
+- B ist die einzige öffentliche Terrainregel; der alte A/B-Schalter und die
+  Terrain-URL-Auswahl gehören nicht zur Level-2-Spieloberfläche.
 
 ## Nichtziele
 

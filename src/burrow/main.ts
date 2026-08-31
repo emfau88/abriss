@@ -1,17 +1,14 @@
 import Phaser from "phaser";
 
 import { createBurrowGameConfig } from "./config";
-import { parseTerrainVariant } from "./simulation/BurrowTerrainVariant";
 import "./style.css";
 
-const terrainVariant = parseTerrainVariant(new URLSearchParams(window.location.search).get("terrain"));
-const game = new Phaser.Game(createBurrowGameConfig(terrainVariant));
-document.querySelector(`[data-terrain="${terrainVariant}"]`)?.setAttribute("aria-current", "page");
+const game = new Phaser.Game(createBurrowGameConfig());
 const restartButton = document.querySelector<HTMLButtonElement>("#burrow-restart");
-function restartTest(): void {
+function restartRun(): void {
   if (game.scene.isActive("BurrowGameScene")) game.scene.getScene("BurrowGameScene").scene.restart();
 }
-restartButton?.addEventListener("click", restartTest);
+restartButton?.addEventListener("click", restartRun);
 const fullscreenButton = document.querySelector<HTMLButtonElement>("#burrow-fullscreen");
 
 function canUseFullscreen(): boolean {
@@ -46,7 +43,7 @@ updateFullscreenButton();
 
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {
-    restartButton?.removeEventListener("click", restartTest);
+    restartButton?.removeEventListener("click", restartRun);
     fullscreenButton?.removeEventListener("click", toggleFullscreen);
     document.removeEventListener("fullscreenchange", updateFullscreenButton);
     game.destroy(true);

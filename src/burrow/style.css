@@ -65,6 +65,7 @@ body {
 }
 
 .abriss-link,
+.burrow-restart,
 .burrow-fullscreen {
   position: fixed;
   z-index: 10;
@@ -88,6 +89,15 @@ body {
   padding: 0 14px;
 }
 
+.burrow-restart {
+  top: max(10px, env(safe-area-inset-top));
+  left: 50%;
+  min-width: 48px;
+  padding: 0 14px;
+  transform: translateX(-50%);
+  cursor: pointer;
+}
+
 .burrow-fullscreen {
   right: max(10px, env(safe-area-inset-right));
   bottom: max(10px, env(safe-area-inset-bottom));
@@ -101,6 +111,8 @@ body {
 
 .abriss-link:hover,
 .abriss-link:focus-visible,
+.burrow-restart:hover,
+.burrow-restart:focus-visible,
 .burrow-fullscreen:hover,
 .burrow-fullscreen:focus-visible {
   border-color: #ffd66d;
@@ -118,38 +130,6 @@ body {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-.terrain-test-controls {
-  position: fixed;
-  z-index: 10;
-  display: flex;
-  gap: 4px;
-  top: max(8px, env(safe-area-inset-top));
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.terrain-test-controls a,
-.terrain-test-controls button {
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  border: 1px solid #a88160;
-  border-radius: 12px;
-  background: #211820e8;
-  color: #fff2d1;
-  text-decoration: none;
-  font: inherit;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.terrain-test-controls [aria-current="page"],
-.terrain-test-controls :focus-visible {
-  border: 2px solid #ffd66d;
-  background: #633c29;
 }
 
 @media (max-width: 900px), (max-height: 600px) {
@@ -183,16 +163,21 @@ body {
     line-height: 46px;
   }
 
-  .terrain-test-controls {
-    gap: 6px;
-  }
-
-  .terrain-test-controls a,
-  .terrain-test-controls button {
+  .burrow-restart {
+    right: max(10px, env(safe-area-inset-right));
+    left: auto;
     width: 52px;
     height: 52px;
+    min-height: 52px;
+    padding: 0;
     border-radius: 15px;
     font-size: 16px;
+    line-height: 50px;
+    transform: none;
+  }
+
+  .burrow-restart span {
+    display: none;
   }
 }
 

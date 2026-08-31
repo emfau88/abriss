@@ -855,3 +855,21 @@ Produktabnahme fingiert. Level 2 bleibt auf Goblinmarkt, Rang 2, verpflichteten
 Marktturm und gepanzerten Handelswagen begrenzt; Level 3, Meta und Gegnerkampf
 bleiben gesperrt. Vor Level 3 ist ein persönlicher Test des zusammenhängenden
 Level-1→2-Abschnitts weiterhin erforderlich.
+
+## 2026-08-31 – D-066: B ist die einzige öffentliche Terrainregel
+
+**Entscheidung:** Nach der verbindlichen Wahl von B entfernt die öffentliche
+Burrow-Oberfläche den A/B-Vergleich vollständig. `recovering` ist fest für
+den Spieleinstieg verdrahtet; URL-Parameter und sichtbare A/B-Schalter ändern
+den Run nicht mehr. Der Neustart bleibt erhalten.
+
+**Grund:** Der Vergleich hat seinen Zweck erfüllt. Sichtbare Varianten machten
+den inzwischen zusammenhängenden Drei-Level-Run wie einen unfertigen Test
+wirken und widersprachen der Wahl von B als Grundlage.
+
+**Konsequenz:** `persistent` darf ausschließlich in fachlichen Regressionstests
+oder isolierten Entwicklungsuntersuchungen verwendet werden. Es ist keine
+öffentliche Regel, kein unterstützter Link und kein Teil des HUDs. B behält die
+zehn Sekunden aktive Schnellspur; nur Breach und schneller Wiedereintritt
+verändern die tragende Terrainmaske dauerhaft. Die visuelle UI-Politur ändert
+keine Simulationswerte oder Level-Abhängigkeiten.

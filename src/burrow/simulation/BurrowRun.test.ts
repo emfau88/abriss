@@ -13,7 +13,7 @@ describe("Burrow feed–grow run", () => {
   it("pauses for exactly one mutation, retaining threshold overshoot", () => {
     const run = new BurrowRun();
     expect(run.feed(1)).toBe(false);
-    expect(run.chooseMutation("chain")).toBe(false);
+    expect(run.chooseMutation("thunderjaw")).toBe(false);
     run.start();
     run.feed(79);
     run.feed(20, 1, 1);
@@ -22,9 +22,9 @@ describe("Burrow feed–grow run", () => {
     run.advanceActiveStep();
     expect(run.feed(8, 1)).toBe(false);
     expect(run.snapshot()).toEqual(paused);
-    expect(run.chooseMutation("chain")).toBe(true);
+    expect(run.chooseMutation("thunderjaw")).toBe(true);
     expect(run.chooseMutation("vacuum")).toBe(false);
-    expect(run.state).toMatchObject({ phase: "feeding", biomass: 99, mutation: "chain" });
+    expect(run.state).toMatchObject({ phase: "feeding", biomass: 99, mutation: "thunderjaw" });
   });
   it("requires mass AND a large prey AND mutation before a real final contact can complete", () => {
     const run = new BurrowRun();
@@ -53,7 +53,19 @@ describe("Burrow feed–grow run", () => {
     const snapshot = run.snapshot();
     expect(new BurrowRun(JSON.parse(JSON.stringify(snapshot))).snapshot()).toEqual(snapshot);
   });
-  it.each(["trailrunner", "vacuum", "chain"] as const)("keeps %s independent of automatic power growth", (mutation) => {
+  it("charges and releases at most three Bebenherz plates from real digging distance", () => {
+    const run = new BurrowRun();
+    run.start();
+    run.feed(80);
+    run.chooseMutation("quakeheart");
+    run.advanceQuakeDig(71);
+    expect(run.state.quakeCharge).toBe(0);
+    run.advanceQuakeDig(217);
+    expect(run.state.quakeCharge).toBe(3);
+    expect(run.releaseQuake()).toBe(3);
+    expect(run.releaseQuake()).toBe(0);
+  });
+  it.each(["vacuum", "thunderjaw", "quakeheart"] as const)("keeps %s independent of automatic power growth", (mutation) => {
     expect(buildForBiomass(80, mutation).power).toBe(1);
     expect(buildForBiomass(180, mutation).power).toBe(2);
     expect(buildForBiomass(180, mutation).mutation).toBe(mutation);

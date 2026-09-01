@@ -915,3 +915,37 @@ Kein Multiplayer oder Slither-Körperkampf. Abriss bleibt vollständig isoliert.
 
 **Abnahme:** technische Prüfungen plus persönlicher Spieltest; Nutzerfreigabe
 der Richtung ist keine vorweggenommene positive Wertung des neuen Builds.
+
+## 2026-09-01 – D-069: Feed–Grow startet ohne vorgegrabene Hohlräume
+
+**Entscheidung:** Der aktuelle Feed–Grow-Lebensraum beginnt vollständig in
+festem Boden. Weder der alte Führungstunnel noch die Schreinhöhle werden für
+Task 047 vorbereitet. Historische Arenavarianten dürfen beide Geometrien für
+ihre isolierten Regressionstests weiterhin explizit anfordern.
+
+**Grund:** Der persönlich grundsätzlich positiv bewertete neue Loop soll seine
+Grabfantasie ab der ersten Eingabe zeigen. Schwarze Startkammern wirken wie
+fremde Levelreste, konkurrieren visuell mit Nahrungsspuren und nehmen dem
+Spieler die erste sichtbare Wirkung auf den Boden.
+
+**Konsequenz:** Diese Korrektur ändert weder Terrain B noch Nahrung, Wachstum,
+Machtstufen oder Abschluss. Neue Futterklassen und Mutationen bleiben bis zu
+einer eigenen Scopefreigabe Designvorschlag, nicht Implementierungsauftrag.
+
+## 2026-09-01 – D-070: Burrow prüft ein funktionales Nahrungsnetz und sichtbare Macht
+
+**Entscheidung:** Nach positivem Ersteindruck des Feed–Grow-Loops gibt der
+Nutzer den kleinen Vergleichsbuild aus `POWER_FANTASY_DIRECTION.md` frei.
+Task 048 ergänzt genau drei Nahrungverben, drei reguläre Beuterollen und die
+Mutationen Sogschlund, Donnerrachen und Bebenherz in demselben Lebensraum.
+
+**Grund:** Wachstum ist bereits spielbar, wirkt aber durch gleichförmige
+Nahrung, zwei gefühlte Beutegrößen und überwiegend unsichtbare Upgradezahlen
+noch nicht wie steigende Macht. Unterschiedliche Jagdfragen und körpergebundene
+Effekte sollen den Untergrund als eigenständigen USP prüfen.
+
+**Konsequenz:** Panzerwurm, Rennwurm und Nahrungskapseln bleiben deterministische
+Fachzustände. Mutationseffekte nutzen lokale Ereignisse statt allgemeiner
+Physik. Neue Bitmap-Assets, Wurzelwächter, Level und Meta bleiben gesperrt, bis
+dieser Loop persönlich bewertet wurde. D-066, D-067, D-068 und D-069 bleiben
+für Terrain, Abschluss, Runform und festen Start gültig.

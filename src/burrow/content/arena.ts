@@ -34,7 +34,13 @@ export function createHutSupportPoints(): readonly { readonly id: string; readon
   });
 }
 
-export function createBurrowArena(withShrineCave = true): BurrowTerrain {
+export interface BurrowArenaOptions {
+  readonly guideTunnel?: boolean;
+  readonly shrineCave?: boolean;
+}
+
+export function createBurrowArena(options: BurrowArenaOptions = {}): BurrowTerrain {
+  const { guideTunnel = true, shrineCave = true } = options;
   const terrain = new BurrowTerrain({
     worldWidth: BURROW_WORLD_WIDTH,
     worldHeight: BURROW_WORLD_HEIGHT,
@@ -42,18 +48,20 @@ export function createBurrowArena(withShrineCave = true): BurrowTerrain {
     solidAt: (x, y) => y >= surfaceYAt(x),
   });
 
-  const guideTunnel = [
-    { x: 260, y: 850 },
-    { x: 390, y: 820 },
-    { x: 520, y: 835 },
-    { x: 650, y: 790 },
-    { x: 770, y: 760 },
-  ];
-  for (let index = 1; index < guideTunnel.length; index += 1) {
-    terrain.carveCapsule(guideTunnel[index - 1]!, guideTunnel[index]!, 39);
+  if (guideTunnel) {
+    const points = [
+      { x: 260, y: 850 },
+      { x: 390, y: 820 },
+      { x: 520, y: 835 },
+      { x: 650, y: 790 },
+      { x: 770, y: 760 },
+    ];
+    for (let index = 1; index < points.length; index += 1) {
+      terrain.carveCapsule(points[index - 1]!, points[index]!, 39);
+    }
   }
 
-  if (withShrineCave) {
+  if (shrineCave) {
     terrain.carveCircle({ x: 1090, y: 940 }, 145);
     terrain.carveCircle({ x: 1195, y: 900 }, 105);
   }

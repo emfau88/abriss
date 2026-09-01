@@ -2,9 +2,12 @@
 
 Stand: 31. August 2026
 
-## Aktueller Scope – Feed–Grow (D-068)
+## Aktueller Scope – Feed–Grow und sichtbare Macht (D-068, D-070)
 
-Verbindlich ist jetzt `FEED_GROW_SLICE.md`, umgesetzt durch Task 046.
+Verbindlich ist jetzt `FEED_GROW_SLICE.md`, umgesetzt durch Task 046 und
+gezielt erweitert durch Task 048. Drei Nahrungverben, drei reguläre
+Beuterollen und Sogschlund/Donnerrachen/Bebenherz gehören zum selben
+Lebensraum; neue Levels, Apex-Gegner und Meta bleiben gesperrt.
 Die folgenden Gates dokumentieren die Entstehung des technischen Fundaments;
 der frühere Drei-Level-Schreinbogen ist abgelöst. Normale B-Bewegung,
 Burststart ohne Krater, Ein-Kontakt-Kutsche und Abriss-Isolation bleiben gültig.

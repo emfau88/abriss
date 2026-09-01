@@ -1,14 +1,14 @@
 import type { BurrowMotionTuning } from "./BurrowMotion";
 
 export type BurrowGrowthStage = "sprout" | "hunter" | "burrower";
-export type BurrowMutation = "trailrunner" | "vacuum" | "chain";
+export type BurrowMutation = "vacuum" | "thunderjaw" | "quakeheart";
 export type BurrowRunPhase = "intro" | "feeding" | "mutation" | "surface" | "complete";
 export const GROWTH = { hunter: 40, mutation: 80, burrower: 180, surface: 240 } as const;
 
 export const BURROW_MUTATIONS = [
-  { id: "trailrunner", name: "SPURFLITZER", description: "Auf deiner Schnellspur:\n+25 % Bursttempo und Wendigkeit.", color: 0x7fdbff },
-  { id: "vacuum", name: "SOGMAUL", description: "Beim Burst lose Nahrung\nvor deinem Maul einsaugen.", color: 0xd7a1ff },
-  { id: "chain", name: "KETTENFRESSER", description: "Wurm gefressen? Dein Burst\nist 0,7 Sekunden früher bereit.", color: 0xffc875 },
+  { id: "vacuum", name: "SOGSCHLUND", description: "Der Burst zieht lose Nahrung\nin einem breiten Maulkegel an.", color: 0xd7a1ff },
+  { id: "thunderjaw", name: "DONNERRACHEN", description: "Wurmfang im Burst verlängert\ndie Jagd – höchstens dreimal.", color: 0xffc45e },
+  { id: "quakeheart", name: "BEBENHERZ", description: "Graben lädt drei Rückenplatten.\nBurst entfesselt eine Bodenwelle.", color: 0xff7a5c },
 ] as const satisfies readonly { id: BurrowMutation; name: string; description: string; color: number }[];
 
 export interface BurrowRunState {
@@ -18,6 +18,8 @@ export interface BurrowRunState {
   readonly preyEaten: number;
   readonly largePreyEaten: number;
   readonly mutation: BurrowMutation | null;
+  readonly quakeCharge: number;
+  readonly quakeDigDistance: number;
 }
 export interface BurrowRunBuild extends BurrowMotionTuning {
   readonly stage: BurrowGrowthStage;
@@ -34,6 +36,7 @@ export class BurrowRun {
   public constructor(snapshot?: BurrowRunState) {
     this.mutableState = snapshot ? { ...snapshot } : {
       phase: "intro", biomass: 0, activeSteps: 0, preyEaten: 0, largePreyEaten: 0, mutation: null,
+      quakeCharge: 0, quakeDigDistance: 0,
     };
   }
   public get state(): BurrowRunState { return this.mutableState; }
@@ -67,6 +70,21 @@ export class BurrowRun {
     this.mutableState = { ...this.state, phase: "complete" };
     return true;
   }
+  public advanceQuakeDig(distance: number): void {
+    if (this.state.mutation !== "quakeheart" || !this.active || !Number.isFinite(distance) || distance <= 0 ||
+        this.state.quakeCharge >= 3) return;
+    const total = this.state.quakeDigDistance + distance;
+    const gained = Math.floor(total / 72);
+    const quakeCharge = Math.min(3, this.state.quakeCharge + gained);
+    this.mutableState = { ...this.state, quakeCharge,
+      quakeDigDistance: quakeCharge === 3 ? 0 : total - gained * 72 };
+  }
+  public releaseQuake(): number {
+    if (this.state.mutation !== "quakeheart" || this.state.quakeCharge === 0 || !this.active) return 0;
+    const charge = this.state.quakeCharge;
+    this.mutableState = { ...this.state, quakeCharge: 0, quakeDigDistance: 0 };
+    return charge;
+  }
   private updatePhase(): void {
     if (this.state.biomass >= GROWTH.mutation && !this.state.mutation) {
       this.mutableState = { ...this.state, phase: "mutation" };
@@ -87,7 +105,7 @@ export function buildForBiomass(biomass: number, mutation: BurrowMutation | null
     bodyScale: 0.65 + fraction * 0.4, mutation,
     movementSpeedMultiplier: 1 + power * 0.075, burstSpeedMultiplier: 1 + power * 0.11,
     burstCooldownMultiplier: 1, impactRadiusMultiplier: 1 + power * 0.1,
-    trailBurstMultiplier: mutation === "trailrunner" ? 1.25 : 1,
-    trailTurnMultiplier: mutation === "trailrunner" ? 1.25 : 1,
+    trailBurstMultiplier: 1,
+    trailTurnMultiplier: 1,
   };
 }

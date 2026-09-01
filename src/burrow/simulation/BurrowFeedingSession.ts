@@ -8,7 +8,7 @@ import { BurrowSurfaceSupport } from "./BurrowSurfaceSupport";
 
 /** Owns the active-step gate: food, prey, trails, cart and cooldown all pause together. */
 export class BurrowFeedingSession {
-  public readonly terrain = createBurrowArena(false);
+  public readonly terrain = createBurrowArena({ guideTunnel: false, shrineCave: false });
   public readonly run = new BurrowRun();
   public readonly motion = new BurrowMotion(this.terrain, BURROW_START, -0.16, "recovering", this.run.build);
   public readonly feeding = new BurrowFeeding(createFeedingContent());
@@ -30,14 +30,18 @@ export class BurrowFeedingSession {
     const movement = this.motion.step(input, 1 / 60);
     this.hunt.step(1 / 60);
     const head = this.motion.state;
+    const quakeReleased = (movement.burstStarted || movement.events.some((event) => event.type === "breach"))
+      ? this.run.releaseQuake() : 0;
+    if (head.mode === "digging") this.run.advanceQuakeDig(Math.hypot(head.position.x - previous.x, head.position.y - previous.y));
     const meal = this.feeding.step({ previous, position: head.position, angle: head.angle,
-      power: this.run.build.power, burst: head.burstRemaining > 0, vacuum: this.run.state.mutation === "vacuum" });
+      power: this.run.build.power, burst: head.burstRemaining > 0, vacuum: this.run.state.mutation === "vacuum",
+      digging: head.mode === "digging", quakeRadius: quakeReleased > 0 ? 70 + quakeReleased * 38 : 0 });
     const finalCart = this.hunt.state.vehicle.kind === "finale";
     const bite = this.hunt.tryBite({ headPosition: head.position, speed: head.speed, burstActive: head.burstRemaining > 0 });
     this.run.feed(meal.biomass + (bite?.devoured ? 12 : 0), meal.preyEaten, meal.largePreyEaten);
-    if (this.run.state.mutation === "chain") this.motion.rewardPrey(meal.preyEaten);
+    const thunderChain = this.run.state.mutation === "thunderjaw" ? this.motion.extendBurstForPrey(meal.preyEaten) : 0;
     if (bite?.devoured && finalCart) this.run.complete();
     if (oldPhase !== "surface" && this.run.state.phase === "surface") this.hunt.beginFinale({ vehicleHitPoints: 1 });
-    return { movement, meal, bite };
+    return { movement, meal, bite, mutation: { quakeReleased, thunderChain } };
   }
 }

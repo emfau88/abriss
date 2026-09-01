@@ -14,6 +14,7 @@ export interface BurrowMotionState {
   readonly mode: BurrowMovementMode;
   readonly burstRemaining: number;
   readonly burstCooldown: number;
+  readonly burstChain: number;
   readonly traveledDistance: number;
   readonly excavatedCells: number;
 }
@@ -90,6 +91,7 @@ export class BurrowMotion {
       mode: terrainVariant === "recovering" && terrain.isSolidWorld(start.x, start.y) ? "digging" : "tunnel",
       burstRemaining: 0,
       burstCooldown: 0,
+      burstChain: 0,
       traveledDistance: 0,
       excavatedCells: initialMutation?.removedCells ?? 0,
     };
@@ -114,9 +116,13 @@ export class BurrowMotion {
     );
   }
 
-  public rewardPrey(count: number): void {
-    if (!Number.isSafeInteger(count) || count <= 0) return;
-    this.mutableState = { ...this.state, burstCooldown: Math.max(0, this.state.burstCooldown - count * 0.7) };
+  public extendBurstForPrey(count: number): number {
+    if (!Number.isSafeInteger(count) || count <= 0 || this.state.burstRemaining <= 0) return 0;
+    const rewarded = Math.min(count, 3 - this.state.burstChain);
+    if (rewarded <= 0) return 0;
+    this.mutableState = { ...this.state, burstRemaining: this.state.burstRemaining + rewarded * 0.24,
+      burstChain: this.state.burstChain + rewarded };
+    return rewarded;
   }
 
   public step(input: BurrowInput, deltaSeconds: number): BurrowTerrainStepResult {
@@ -160,6 +166,7 @@ export class BurrowMotion {
       burstRemaining = BURST_DURATION;
       burstCooldown = BURST_COOLDOWN * this.tuning.burstCooldownMultiplier;
       burstStarted = true;
+      this.mutableState = { ...this.mutableState, burstChain: 0 };
     }
 
     const normalizedInput = normalizeOrNull(input.direction);
@@ -280,6 +287,7 @@ export class BurrowMotion {
       mode: solidAhead && !fastTrail ? "digging" : "tunnel",
       burstRemaining,
       burstCooldown,
+      burstChain: this.mutableState.burstChain,
       traveledDistance: this.mutableState.traveledDistance + traveledDistance,
       excavatedCells:
         this.mutableState.excavatedCells + (terrainMutation?.removedCells ?? 0),
@@ -356,6 +364,7 @@ export class BurrowMotion {
       mode,
       burstRemaining,
       burstCooldown,
+      burstChain: this.mutableState.burstChain,
       traveledDistance: this.mutableState.traveledDistance + traveledDistance,
       excavatedCells:
         this.mutableState.excavatedCells + (terrainMutation?.removedCells ?? 0),

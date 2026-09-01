@@ -67,3 +67,35 @@
 
 Die Testfahrer-Zeiten beweisen Erreichbarkeit, nicht menschliche Run-Dauer
 oder Spielspaß. Keine Veröffentlichung/kein Deployment in diesem Task.
+
+## Nachkorrektur D-069
+
+Seit Task 047 startet der öffentliche Feed–Grow-Run ohne vorbereitete Höhle
+und ohne Führungstunnel in festem Boden. Ein Arena-Regressionsfall belegt
+Terrainversion 0 sowie festen Boden an Start, altem Tunnel und Schreinkammer.
+Im Browser war vor der Eingabe keine schwarze Öffnung sichtbar; die erste
+Bewegung erzeugte ausschließlich die helle, temporäre Terrain-B-Spur.
+
+## Power-Fantasy-Erweiterung D-070
+
+Task 048 ersetzt die gleichförmige Nahrung und die zwei gefühlten Beutegrößen
+durch drei Nahrungverben und drei Jagdrollen. Sporen werden berührt,
+Wurzelknollen beim Graben geöffnet und Brutkapseln im Burst oder durch eine
+Bebenherz-Welle geknackt. Fadenwürmer sind Grundbeute, Rennwürmer beschleunigen
+bei Nähe auf ihrer Route und Panzerwurm-Stirnkontakte werden bis zur
+Gräberstufe abgewehrt. Sogschlund sammelt, Donnerrachen verlängert eine aktive
+Jagdkette höchstens dreimal und Bebenherz lädt drei körpergebundene Platten.
+
+Automatisiert bestanden 79 Burrow-Tests sowie die Gesamtsuite mit 207
+bestandenen und zwei bestehenden übersprungenen Tests. Typprüfung und
+Produktionsbuild sind grün; der bekannte Größenhinweis für den gemeinsamen
+Phaser-Chunk bleibt.
+
+Im Desktop-Browser wurde der Run mit sichtbaren Eingaben vom festen Start bis
+80 Biomasse gespielt. Faden- und Rennwurm, kontinuierliches Körperwachstum und
+Jägerstufe waren lesbar. Die pausierte Wahl zeigte Sogschlund, Donnerrachen und
+Bebenherz. Danach wurden drei Bebenherz-Platten durch reales Graben geladen und
+als große Ring-/Risswelle entladen; eine nahe Nahrung wurde dabei geöffnet.
+Die kompakte Querformatansicht blieb lesbar. Es gab keine Browserwarnung oder
+-fehler. Das bestätigt technische Erreichbarkeit und Darstellung, nicht die
+persönliche 3–5-Minuten-Wertung oder echte Zwei-Daumen-Bedienung.

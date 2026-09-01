@@ -1,6 +1,6 @@
 # Projektindex
 
-Stand: 30. August 2026
+Stand: 1. September 2026
 
 Dieses Dokument ist der Einstiegspunkt und die Karte der verbindlichen Projektdokumentation. Die Dokumente sollen kompakt bleiben. Inhalte werden nicht in mehreren Dateien parallel gepflegt.
 
@@ -69,8 +69,10 @@ Grundlage: normale Bewegung erzeugt eine zehn Sekunden aktive Schnellspur,
 Burststart kein Erdloch; lokale Krater bleiben Durchbruch und schnellem
 Wiedereintritt vorbehalten (D-062). Das nächste Produkttor ist ein gestuft
 gebauter Feed–Grow-Lebensraum mit unterirdischer Nahrung und Jagd, laufendem
-Wachstum, einer Mutation und Oberflächenjagd (D-068), keine breite
-Contentproduktion. Der Drei-Level-Schreinplan ist abgelöst. Verbindlich für
+Wachstum, einer Mutation und Oberflächenjagd (D-068). D-070 erweitert genau
+diesen Lebensraum um drei Nahrungverben, drei Beuterollen und sichtbarere
+Mutationen, ohne neue Levels oder Meta. Der Drei-Level-Schreinplan ist
+abgelöst. Verbindlich für
 diesen abgegrenzten Bereich sind:
 
 - `burrow/VISION.md`,
@@ -78,8 +80,11 @@ diesen abgegrenzten Bereich sind:
 - `burrow/TECHNICAL_PLAN.md`,
 - `burrow/FEED_GROW_SLICE.md`,
 - `burrow/FEED_GROW_VALIDATION.md` (Prüfstand und offene Produktabnahme).
+- `burrow/POWER_FANTASY_DIRECTION.md` (freigegebene Machtrichtung; darin klar
+  als Folgearbeit markierte Ideen bleiben unverbindlich).
 
-Aktueller Umsetzungsauftrag: `../tasks/046_BURROW_FEED_GROW_SLICE.md`.
+Aktueller Umsetzungsauftrag:
+`../tasks/048_BURROW_POWER_FANTASY_SLICE.md`.
 Die ältere Referenzanalyse und `burrow/THREE_LEVEL_SLICE.md` sind historisch.
 
 Der direkte Test läuft über `burrow.html`; Abriss bleibt unter `index.html`.

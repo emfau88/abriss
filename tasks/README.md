@@ -53,6 +53,8 @@ andere Priorität bestätigt. Es darf höchstens ein Task als `in Arbeit` gelten
 | `044_BURROW_LEVEL_1_RUN_FOUNDATION.md` | historisch, durch 046 abgelöst | früherer Schrein-/Run-Bogen (D-063) |
 | `045_BURROW_LEVEL_2_DESTRUCTION.md` | pausiert | Goblinmarkt erst nach positiver Feed–Grow-Abnahme |
 | `046_BURROW_FEED_GROW_SLICE.md` | technisch geprüft, Produktabnahme offen | Nahrung, Wurmjagd, laufendes Wachstum und eine Mutation (D-068) |
+| `047_BURROW_SOLID_START_AND_POWER_DIRECTION.md` | technisch abgeschlossen | fester Startboden und nächstes Machtdesign (D-069) |
+| `048_BURROW_POWER_FANTASY_SLICE.md` | technisch abgeschlossen | drei Nahrungverben, drei Beuterollen und sichtbare Mutationen (D-070) |
 
 Ein Status wird erst nach überprüfter Abnahme geändert. Scope-Erweiterungen
 gehören in einen neuen Task, nicht stillschweigend in einen bestehenden.

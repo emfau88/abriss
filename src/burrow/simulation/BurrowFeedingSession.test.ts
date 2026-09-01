@@ -22,7 +22,7 @@ describe("feed–grow session integration", () => {
     const paused = snapshot(session);
     for (let i = 0; i < 80; i += 1) session.step({ ...right, burstPressed: true });
     expect(snapshot(session)).toEqual(paused);
-    session.chooseMutation("chain");
+    session.chooseMutation("thunderjaw");
     session.run.feed(180, 1, 1);
     session.run.complete();
     const completed = snapshot(session);
@@ -37,7 +37,17 @@ describe("feed–grow session integration", () => {
     expect(session.run.build.bodyCount).toBeGreaterThan(10);
     expect(session.run.state.activeSteps).toBeLessThan(600);
   });
-  it.each(["trailrunner", "vacuum", "chain"] as const)(
+  it("releases three charged Bebenherz plates through an actual burst step", () => {
+    const session = new BurrowFeedingSession();
+    session.step(right);
+    session.run.feed(80);
+    session.chooseMutation("quakeheart");
+    session.run.advanceQuakeDig(216);
+    const result = session.step({ ...right, burstPressed: true });
+    expect(result?.mutation).toEqual({ quakeReleased: 3, thunderChain: 0 });
+    expect(session.run.state.quakeCharge).toBe(0);
+  });
+  it.each(["vacuum", "thunderjaw", "quakeheart"] as const)(
     "can finish an actual movement/food/prey/cart run using %s without injected rewards", (mutation) => {
       const session = new BurrowFeedingSession();
       let mutationChoices = 0;
@@ -71,6 +81,7 @@ function drive(session: BurrowFeedingSession, _mutation: BurrowMutation): void {
   const { motion, run, feeding, hunt } = session;
   const origin = motion.state.position;
   let target: Point = { x: 750, y: 790 };
+  let targetFoodKind: string | null = null;
   let nearest = Number.POSITIVE_INFINITY;
   const consider = (position: Point, weight = 1): void => {
     const distance = Math.hypot(position.x - origin.x, position.y - origin.y) / weight;
@@ -84,7 +95,11 @@ function drive(session: BurrowFeedingSession, _mutation: BurrowMutation): void {
       if (prey.large && !feeding.isEaten(prey.id)) consider(feeding.positionOf(prey, feeding.elapsedTicks + 12));
     }
   } else {
-    for (const food of feeding.foods) if (food.active) consider(food.position);
+    for (const food of feeding.foods) if (food.active) {
+      const before = nearest;
+      consider(food.position);
+      if (nearest < before) targetFoodKind = food.kind;
+    }
     for (const prey of feeding.content.prey) {
       if (!prey.large && !feeding.isEaten(prey.id)) consider(feeding.positionOf(prey), 1.8);
     }
@@ -95,5 +110,6 @@ function drive(session: BurrowFeedingSession, _mutation: BurrowMutation): void {
   const alignment = (dx * Math.cos(motion.state.angle) + dy * Math.sin(motion.state.angle)) / Math.max(1, distance);
   session.step({ direction: { x: dx, y: dy },
     burstPressed: motion.state.burstCooldown === 0 && alignment > 0.92 &&
-      (run.state.phase === "surface" ? distance < 280 : run.build.power >= 1 && run.state.largePreyEaten === 0 && distance < 130) });
+      (run.state.phase === "surface" ? distance < 280 : targetFoodKind === "brood" ? distance < 130 :
+        run.build.power >= 1 && run.state.largePreyEaten === 0 && distance < 130) });
 }

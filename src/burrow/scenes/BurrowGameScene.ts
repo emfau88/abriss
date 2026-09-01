@@ -6,6 +6,7 @@ import { BurrowHud } from "../rendering/BurrowHud";
 import { BurrowTrailRenderer } from "../rendering/BurrowTrailRenderer";
 import { TiledTerrainRenderer } from "../rendering/TiledTerrainRenderer";
 import { BurrowFeedingSession } from "../simulation/BurrowFeedingSession";
+import type { FoodKind, PreyKind } from "../simulation/BurrowFeeding";
 import { BURROW_MUTATIONS, type BurrowMutation } from "../simulation/BurrowRun";
 import type { Point } from "../simulation/BurrowTerrain";
 
@@ -34,6 +35,10 @@ export class BurrowGameScene extends Phaser.Scene {
   private readonly burst = new OneShotInputBuffer();
   private accumulator = 0;
   private growthPulse = 0;
+  private jawPulse = 0;
+  private quakePulse = 0;
+  private quakeOrigin: Point = { x: 0, y: 0 };
+  private quakeStrength = 0;
   private blockedToastAt = -10000;
   private now = 0;
 
@@ -48,6 +53,9 @@ export class BurrowGameScene extends Phaser.Scene {
     this.session = new BurrowFeedingSession();
     this.accumulator = 0;
     this.growthPulse = 0;
+    this.jawPulse = 0;
+    this.quakePulse = 0;
+    this.quakeStrength = 0;
     this.blockedToastAt = -10000;
     this.now = 0;
     this.burst.clear();
@@ -59,14 +67,15 @@ export class BurrowGameScene extends Phaser.Scene {
       .setOrigin(0).setDepth(3.5);
     this.foodGraphics = this.add.graphics().setDepth(5);
     this.preyGraphics = this.add.graphics().setDepth(6);
-    this.effects = this.add.graphics().setDepth(11);
+    this.effects = this.add.graphics().setDepth(14);
     this.segments = Array.from({ length: 28 }, (_, index) =>
       this.add.image(0, 0, "burrow-body-segment").setDepth(12 + (28 - index) * 0.01));
     this.head = this.add.image(0, 0, "burrow-head").setDepth(13);
     this.cart = this.add.image(0, 0, "burrow-cart").setDepth(8);
     this.cartLabel = this.worldText("", 14).setDepth(9);
     this.preyLabels = this.session.feeding.content.prey.map((prey) =>
-      this.worldText(prey.large ? "40 + BURST" : "+8", prey.large ? 13 : 11).setDepth(7));
+      this.worldText(prey.kind === "armored" ? "PANZERWURM" : prey.kind === "runner" ? "RENNWURM" : "+8",
+        prey.kind === "armored" ? 13 : 11).setDepth(7));
     this.guide = this.worldText("", 14).setScrollFactor(0).setDepth(20);
     this.createControls();
     this.configureInput();
@@ -113,14 +122,34 @@ export class BurrowGameScene extends Phaser.Scene {
       this.terrainRenderer.applyMutation(result.movement.terrainMutation);
       this.trailRenderer.apply(new Set(result.movement.trailDirtyTiles), result.movement.terrainMutation);
       if (result.meal.biomass > 0 || result.bite?.devoured) this.growthPulse = 1;
+      if (result.mutation.thunderChain > 0) {
+        this.jawPulse = 1;
+        this.cameras.main.shake(90, 0.004 + result.mutation.thunderChain * 0.002);
+        this.hud.showToast("DONNERRACHEN ×" + this.session.motion.state.burstChain + " · BURST VERLÄNGERT", time);
+      }
+      if (result.mutation.quakeReleased > 0) {
+        this.quakePulse = 1;
+        this.quakeOrigin = { ...this.session.motion.state.position };
+        this.quakeStrength = result.mutation.quakeReleased;
+        this.cameras.main.shake(130, 0.004 + result.mutation.quakeReleased * 0.002);
+        this.hud.showToast("BEBENHERZ · " + result.mutation.quakeReleased + " PLATTEN ENTLADEN", time);
+      }
       if (run.build.power > oldPower) {
-        this.hud.showToast(run.build.power === 1 ? "JÄGER! Schneller. Große Würmer mit Burst fressbar." :
-          "GRÄBER! Noch schneller. Große Würmer jetzt auch ohne Burst.", time);
-      } else if (result.meal.largePreyEaten > 0) this.hud.showToast("+20! Folge seiner Nahrungsspur.", time);
-      else if (result.meal.preyEaten > 0) this.hud.showToast("+8 · WURM GEFRESSEN", time);
+        this.hud.showToast(run.build.power === 1 ? "JÄGER! Schneller. Panzerwürmer seitlich im Burst angreifen." :
+          "GRÄBER! Noch schneller. Panzerwürmer jetzt frontal überwältigen.", time);
+      } else if (result.meal.largePreyEaten > 0) {
+        this.jawPulse = 1;
+        this.cameras.main.shake(120, 0.008);
+        this.hud.showToast("+22 PANZERWURM! Folge seiner Markspur.", time);
+      } else if (result.meal.preyKinds.includes("runner")) this.hud.showToast("+14 · RENNWURM ABGEFANGEN", time);
+      else if (result.meal.preyEaten > 0) this.hud.showToast("+8 · FADENWURM GEFRESSEN", time);
+      else if (result.meal.foodOpened > 0) this.hud.showToast(
+        result.mutation.quakeReleased > 0 ? "BODENWELLE BRICHT NAHRUNG AUF" :
+          this.session.motion.state.burstRemaining > 0 ? "BRUTKAPSEL GEKNACKT" : "WURZELKNOLLE AUFGEBROCHEN", time);
       if (result.meal.blockedPrey && time - this.blockedToastAt > 3500) {
         this.blockedToastAt = time;
-        this.hud.showToast(run.build.power === 0 ? "Noch zu groß. Wachse auf 40 Biomasse." : "Den großen Wurm im Burst treffen!", time);
+        this.hud.showToast(run.build.power === 0 ? "Panzer zu stark. Wachse auf 40 Biomasse." :
+          "Stirnplatte! Im Burst von Seite oder hinten angreifen.", time);
       }
       if (!run.active) { this.resetInput(); break; }
     }
@@ -234,11 +263,7 @@ export class BurrowGameScene extends Phaser.Scene {
     food.clear();
     for (const item of feeding.foods) {
       if (!item.active || !visible(item.position)) continue;
-      const { x, y } = item.position;
-      food.fillStyle(0xc5fa8b, 0.11).fillCircle(x, y, 14);
-      food.fillStyle(0x283121, 1).fillCircle(x, y, 7);
-      food.fillStyle(0xd3f697, 1).fillCircle(x, y, 5);
-      food.fillStyle(0xffffff, 0.9).fillCircle(x - 1.5, y - 1.5, 1.8);
+      this.drawFood(food, item.kind, item.position, feeding.elapsedTicks);
     }
     const preyGraphics = this.preyGraphics;
     preyGraphics.clear();
@@ -246,14 +271,14 @@ export class BurrowGameScene extends Phaser.Scene {
       const p = feeding.positionOf(prey);
       const show = !feeding.isEaten(prey.id) && visible(p);
       const label = this.preyLabels[index]!;
-      label.setVisible(show);
+      const labelRange = prey.kind === "armored" ? 380 : 250;
+      label.setVisible(show && Math.hypot(p.x - motion.state.position.x, p.y - motion.state.position.y) <= labelRange);
       if (!show) return;
-      const large = prey.large;
-      const color = large ? 0xf3ba71 : 0x93d6ba;
-      const radius = large ? 22 : 11;
-      const edible = feeding.canEat(prey, run.build.power, motion.state.burstRemaining > 0);
-      for (let segment = large ? 9 : 4; segment >= 0; segment -= 1) {
-        const point = feeding.positionOf(prey, feeding.elapsedTicks - segment * (large ? 26 : 23));
+      const style = preyStyle(prey.kind);
+      const { color, radius, segments, spacing } = style;
+      const edible = feeding.canEat(prey, run.build.power, motion.state.burstRemaining > 0, motion.state.position);
+      for (let segment = segments - 1; segment >= 0; segment -= 1) {
+        const point = feeding.positionOf(prey, feeding.elapsedTicks - segment * spacing);
         const size = radius * (1 - segment * 0.055);
         preyGraphics.fillStyle(0x342730, 1).fillCircle(point.x, point.y, size + 2);
         preyGraphics.fillStyle(color, 1).fillCircle(point.x, point.y, size);
@@ -263,13 +288,22 @@ export class BurrowGameScene extends Phaser.Scene {
       for (const side of [-1, 1]) {
         const eyeX = p.x + Math.cos(angle) * radius * 0.4 + Math.sin(angle) * side * radius * 0.45;
         const eyeY = p.y + Math.sin(angle) * radius * 0.4 - Math.cos(angle) * side * radius * 0.45;
-        preyGraphics.fillStyle(0xfff8de).fillCircle(eyeX, eyeY, large ? 5 : 4);
+        preyGraphics.fillStyle(0xfff8de).fillCircle(eyeX, eyeY, prey.kind === "armored" ? 5 : 4);
         preyGraphics.fillStyle(0x282032).fillCircle(eyeX + Math.cos(angle) * 1.5, eyeY + Math.sin(angle) * 1.5, 2);
       }
-      if (large) {
+      if (prey.kind === "runner") {
+        preyGraphics.lineStyle(3, 0x8deaff, 0.55);
+        preyGraphics.lineBetween(p.x - Math.cos(angle) * 28, p.y - Math.sin(angle) * 28,
+          p.x - Math.cos(angle) * 48, p.y - Math.sin(angle) * 48);
+        label.setText("RENNWURM · +14");
+      } else if (prey.kind === "armored") {
+        const tip = { x: p.x + Math.cos(angle) * (radius + 11), y: p.y + Math.sin(angle) * (radius + 11) };
+        const left = { x: p.x + Math.cos(angle + 2.2) * (radius + 5), y: p.y + Math.sin(angle + 2.2) * (radius + 5) };
+        const right = { x: p.x + Math.cos(angle - 2.2) * (radius + 5), y: p.y + Math.sin(angle - 2.2) * (radius + 5) };
+        preyGraphics.fillStyle(0x8e543d, 1).fillTriangle(tip.x, tip.y, left.x, left.y, right.x, right.y);
         preyGraphics.lineStyle(2, edible ? 0xe3ffbc : 0xf3ba71, 0.85).strokeCircle(p.x, p.y, radius + 7);
-        label.setText(run.build.power === 0 ? "40 + BURST" : run.build.power === 1 ? "BURST → +20" : "FRESSBAR · +20");
-      }
+        label.setText(run.build.power === 0 ? "PANZER · ERST AB 40" : run.build.power === 1 ? "SEITE + BURST · +22" : "ÜBERMÄCHTIG · +22");
+      } else label.setText("FADENWURM · +8");
       label.setPosition(p.x, p.y - radius - 17);
     });
     const vehicle = hunt.state.vehicle;
@@ -281,6 +315,9 @@ export class BurrowGameScene extends Phaser.Scene {
     const visual = creatureVisualForBiomass(run.state.biomass);
     const samples = motion.trail.sample(visual.sampleCount + 1, visual.segmentSpacing);
     this.growthPulse = Math.max(0, this.growthPulse - delta / 650);
+    this.jawPulse = Math.max(0, this.jawPulse - delta / 340);
+    this.quakePulse = Math.max(0, this.quakePulse - delta / 620);
+    const lightWave = (1 - this.growthPulse) * Math.max(1, visual.sampleCount);
     for (let index = 0; index < this.segments.length; index += 1) {
       const sprite = this.segments[index]!;
       const p = samples[index + 1];
@@ -288,21 +325,28 @@ export class BurrowGameScene extends Phaser.Scene {
       const next = samples[index]!;
       const ratio = 1 - (index + 1) / samples.length;
       const size = (46 + ratio * 15) * visual.bodyRadiusMultiplier;
+      const lit = this.growthPulse > 0 && Math.abs(index - lightWave) < 2.5;
       sprite.setVisible(true).setPosition(p.x, p.y).setRotation(Math.atan2(next.y - p.y, next.x - p.x))
-        .setDisplaySize(size, size * 0.88).setTint(this.growthPulse > 0.2 ? 0xe1ffab : 0xffffff);
+        .setDisplaySize(size, size * 0.88).setTint(lit ? 0xe1ffab : 0xffffff);
     }
     const head = motion.state;
     this.head.setPosition(head.position.x, head.position.y).setRotation(head.angle)
       .setDisplaySize(visual.headRadius * 3.25, visual.headRadius * 2.7);
     this.effects.clear();
+    this.drawPowerSilhouette(head.position, head.angle, visual.headRadius, run.build.power);
     if (head.burstRemaining > 0) {
-      const color = run.state.mutation === "trailrunner" && motion.onFastTrail ? 0x7fdbff : 0xd8a2ff;
+      const color = run.state.mutation === "thunderjaw" ? 0xffc45e :
+        run.state.mutation === "quakeheart" ? 0xff7a5c : 0xd8a2ff;
       this.effects.lineStyle(3, color, 0.65).strokeCircle(head.position.x, head.position.y, visual.headRadius * 1.4);
       if (run.state.mutation === "vacuum") {
-        this.effects.lineStyle(2, 0xd7a1ff, 0.6);
-        this.effects.beginPath().arc(head.position.x, head.position.y, 100, head.angle - Math.PI / 3, head.angle + Math.PI / 3).strokePath();
+        this.drawVacuum(head.position, head.angle, feeding.elapsedTicks);
       }
     }
+    if (run.state.mutation === "thunderjaw" && (head.burstRemaining > 0 || this.jawPulse > 0)) {
+      this.drawThunderJaw(head.position, head.angle, visual.headRadius, Math.max(0.35, this.jawPulse));
+    }
+    if (run.state.mutation === "quakeheart") this.drawQuakePlates(samples, run.state.quakeCharge);
+    if (this.quakePulse > 0) this.drawQuakeWave();
     const cooldown = head.burstCooldown;
     this.burstLabel.setText(cooldown > 0 ? cooldown.toFixed(1) : "BURST");
     this.burstButton.setFillStyle(cooldown > 0 ? 0x3e304f : 0x76519e, 0.9);
@@ -332,13 +376,15 @@ export class BurrowGameScene extends Phaser.Scene {
       };
       const seekLarge = run.build.power >= 1 && (run.state.largePreyEaten === 0 || run.state.biomass >= 180);
       if (run.build.power === 0) {
-        for (const item of feeding.foods) if (item.active) consider(item.position, "NAHRUNG");
+        for (const item of feeding.foods) if (item.active) consider(item.position, foodGuideLabel(item.kind));
       }
       for (const prey of feeding.content.prey) {
         if (feeding.isEaten(prey.id) || (seekLarge ? !prey.large : prey.large)) continue;
-        consider(feeding.positionOf(prey), prey.large ? (run.build.power >= 2 ? "GROSSER WURM" : "GROSSER WURM · BURST") : "KLEINER WURM");
+        consider(feeding.positionOf(prey), prey.kind === "armored" ?
+          (run.build.power >= 2 ? "PANZERWURM" : "PANZERWURM · SEITE + BURST") :
+          prey.kind === "runner" ? "RENNWURM" : "FADENWURM");
       }
-      if (!target) for (const item of feeding.foods) if (item.active) consider(item.position, "NAHRUNG");
+      if (!target) for (const item of feeding.foods) if (item.active) consider(item.position, foodGuideLabel(item.kind));
     }
     const camera = this.cameras.main;
     const selected = target as Point | null;
@@ -356,4 +402,114 @@ export class BurrowGameScene extends Phaser.Scene {
       .setPosition(Phaser.Math.Clamp(sx, 135, Math.max(135, camera.width - 135)),
         Phaser.Math.Clamp(sy, 132, Math.max(132, camera.height - 135)));
   }
+  private drawFood(graphics: Phaser.GameObjects.Graphics, kind: FoodKind, position: Point, ticks: number): void {
+    const { x, y } = position;
+    if (kind === "spore") {
+      graphics.fillStyle(0xc5fa8b, 0.12).fillCircle(x, y, 14);
+      graphics.fillStyle(0x283121, 1).fillCircle(x, y, 7);
+      graphics.fillStyle(0xd3f697, 1).fillCircle(x, y, 5);
+      graphics.fillStyle(0xffffff, 0.9).fillCircle(x - 1.5, y - 1.5, 1.8);
+    } else if (kind === "root") {
+      graphics.lineStyle(3, 0x9e633e, 0.9).strokeCircle(x, y, 19);
+      graphics.fillStyle(0x442c2b, 1).fillCircle(x, y, 15);
+      graphics.fillStyle(0xf0a65f, 1).fillCircle(x, y, 10);
+      for (let i = 0; i < 4; i += 1) graphics.lineBetween(x + Math.cos(i * 1.57) * 16, y + Math.sin(i * 1.57) * 16,
+        x + Math.cos(i * 1.57) * 27, y + Math.sin(i * 1.57) * 27);
+    } else if (kind === "brood") {
+      const pulse = 1 + Math.sin(ticks * 0.08) * 0.08;
+      graphics.fillStyle(0x3b2442, 1).fillEllipse(x, y, 30 * pulse, 42 * pulse);
+      graphics.lineStyle(3, 0xff8ec8, 0.9).strokeEllipse(x, y, 30 * pulse, 42 * pulse);
+      graphics.fillStyle(0xffd37d, 1).fillCircle(x - 5, y - 7, 3).fillCircle(x + 6, y + 4, 3).fillCircle(x - 3, y + 10, 2);
+    } else if (kind === "rootBite") {
+      graphics.fillStyle(0x4a2b25, 1).fillCircle(x, y, 9);
+      graphics.fillStyle(0xffb663, 1).fillCircle(x, y, 6);
+    } else if (kind === "larva") {
+      graphics.fillStyle(0x2e2337, 1).fillEllipse(x, y, 15, 8);
+      graphics.fillStyle(0xffd6ec, 1).fillEllipse(x, y, 11, 5);
+    } else {
+      graphics.fillStyle(0xff9f5a, 0.18).fillCircle(x, y, 15);
+      graphics.fillStyle(0xffc46e, 1).fillCircle(x, y, 7);
+      graphics.fillStyle(0xffffff, 0.75).fillCircle(x - 2, y - 2, 2);
+    }
+  }
+  private drawVacuum(position: Point, angle: number, ticks: number): void {
+    this.effects.lineStyle(2, 0xd7a1ff, 0.65);
+    for (const offset of [-0.72, -0.36, 0, 0.36, 0.72]) {
+      const outer = angle + offset;
+      const wave = 92 + ((ticks * 5 + Math.round(offset * 50)) % 35);
+      this.effects.beginPath().moveTo(position.x + Math.cos(outer) * 125, position.y + Math.sin(outer) * 125)
+        .lineTo(position.x + Math.cos(angle + offset * 0.55) * 72, position.y + Math.sin(angle + offset * 0.55) * 72)
+        .lineTo(position.x + Math.cos(angle) * 34, position.y + Math.sin(angle) * 34).strokePath();
+      this.effects.fillStyle(0xf4dcff, 0.85).fillCircle(position.x + Math.cos(outer) * wave,
+        position.y + Math.sin(outer) * wave, 3);
+    }
+  }
+  private drawThunderJaw(position: Point, angle: number, radius: number, alpha: number): void {
+    const front = { x: position.x + Math.cos(angle) * (radius + 26), y: position.y + Math.sin(angle) * (radius + 26) };
+    this.effects.lineStyle(5, 0xffd16c, alpha);
+    for (const side of [-1, 1]) {
+      const jawAngle = angle + side * 0.72;
+      this.effects.lineBetween(position.x + Math.cos(jawAngle) * radius, position.y + Math.sin(jawAngle) * radius,
+        front.x, front.y);
+      for (let tooth = 0; tooth < 3; tooth += 1) {
+        const t = 0.25 + tooth * 0.23;
+        const x = position.x + (front.x - position.x) * t + Math.sin(angle) * side * (19 - tooth * 4);
+        const y = position.y + (front.y - position.y) * t - Math.cos(angle) * side * (19 - tooth * 4);
+        this.effects.fillStyle(0xfff1b5, alpha).fillTriangle(x, y, x + Math.cos(angle + side * 1.8) * 11,
+          y + Math.sin(angle + side * 1.8) * 11, x + Math.cos(angle) * 7, y + Math.sin(angle) * 7);
+      }
+    }
+  }
+  private drawQuakePlates(samples: readonly Point[], charge: number): void {
+    for (let index = 0; index < 3; index += 1) {
+      const point = samples[index + 2];
+      const next = samples[index + 1];
+      if (!point || !next) continue;
+      const angle = Math.atan2(next.y - point.y, next.x - point.x);
+      const lit = index < charge;
+      const x = point.x + Math.sin(angle) * 20;
+      const y = point.y - Math.cos(angle) * 20;
+      this.effects.fillStyle(lit ? 0xff7a5c : 0x543842, lit ? 1 : 0.8)
+        .fillTriangle(x + Math.cos(angle) * 10, y + Math.sin(angle) * 10,
+          x + Math.cos(angle + 2.35) * 13, y + Math.sin(angle + 2.35) * 13,
+          x + Math.cos(angle - 2.35) * 13, y + Math.sin(angle - 2.35) * 13);
+    }
+  }
+  private drawQuakeWave(): void {
+    const progress = 1 - this.quakePulse;
+    const maximum = 70 + this.quakeStrength * 38;
+    this.effects.lineStyle(7, 0xff7a5c, this.quakePulse * 0.8).strokeCircle(
+      this.quakeOrigin.x, this.quakeOrigin.y, 18 + maximum * progress);
+    this.effects.lineStyle(3, 0xffc078, this.quakePulse * 0.65).strokeCircle(
+      this.quakeOrigin.x, this.quakeOrigin.y, 8 + maximum * progress * 0.72);
+    for (let index = 0; index < 8; index += 1) {
+      const angle = index / 8 * Math.PI * 2;
+      const inner = 24 + progress * maximum * 0.35;
+      const outer = inner + 18 + this.quakeStrength * 4;
+      this.effects.lineBetween(this.quakeOrigin.x + Math.cos(angle) * inner, this.quakeOrigin.y + Math.sin(angle) * inner,
+        this.quakeOrigin.x + Math.cos(angle + 0.12) * outer, this.quakeOrigin.y + Math.sin(angle + 0.12) * outer);
+    }
+  }
+  private drawPowerSilhouette(position: Point, angle: number, radius: number, power: number): void {
+    if (power === 0) return;
+    for (const side of [-1, 1]) {
+      const baseAngle = angle + side * 0.72;
+      const x = position.x + Math.cos(baseAngle) * radius * 0.9;
+      const y = position.y + Math.sin(baseAngle) * radius * 0.9;
+      this.effects.fillStyle(power === 2 ? 0xffe2a3 : 0xe6f3b5, 0.92).fillTriangle(x, y,
+        x + Math.cos(angle + side * 1.45) * (8 + power * 4), y + Math.sin(angle + side * 1.45) * (8 + power * 4),
+        x + Math.cos(angle) * 10, y + Math.sin(angle) * 10);
+    }
+  }
+}
+
+function preyStyle(kind: PreyKind): { color: number; radius: number; segments: number; spacing: number } {
+  return kind === "thread" ? { color: 0x93d6a2, radius: 10, segments: 4, spacing: 23 } :
+    kind === "runner" ? { color: 0x6fd5e8, radius: 15, segments: 7, spacing: 20 } :
+      { color: 0xf3a45f, radius: 23, segments: 10, spacing: 26 };
+}
+
+function foodGuideLabel(kind: FoodKind): string {
+  return kind === "root" ? "WURZELKNOLLE · GRABEN" : kind === "brood" ? "BRUTKAPSEL · BURST" :
+    kind === "larva" ? "FLIEHENDE LARVEN" : kind === "mark" ? "MARKSPUR" : "NAHRUNG";
 }

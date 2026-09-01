@@ -54,14 +54,14 @@ export class BurrowHud {
     this.mass.textContent = state.biomass + " / 240";
     this.progress.style.width = Math.min(100, state.biomass / GROWTH.surface * 100) + "%";
     this.progress.parentElement!.setAttribute("aria-valuenow", String(Math.min(240, state.biomass)));
-    const objective = state.phase === "intro" ? "Folge der Nahrung. Kleine Würmer geben +8. Bewege dich zum Start." :
+    const objective = state.phase === "intro" ? "Grabe zu den grünen Sporen. Knollen brechen beim Graben, Brutkapseln im Burst." :
       state.phase === "surface" ? "Du bist bereit! Durchbrich die Oberfläche und friss die goldene Schlusskutsche." :
       state.phase === "complete" ? "Vom Keimling zum großen Jäger." :
       state.phase === "mutation" ? "Wähle deine Mutation. Der gesamte Run pausiert." :
-      state.biomass < GROWTH.hunter ? "Sammle Nahrung und friss kleine Würmer. Bei 40 wirst du zum Jäger." :
-      state.biomass < GROWTH.mutation ? "Große Würmer: im Burst fressen. Bei 80 wählst du deine Mutation." :
-      state.biomass < GROWTH.burrower ? "Jage weiter. Große Würmer geben +20 und Nahrung. Bei 180 wirst du Gräber." :
-      state.largePreyEaten === 0 ? "Du bist stärker! Friss jetzt einen großen Wurm – auch ohne Burst." :
+      state.biomass < GROWTH.hunter ? "Sporen +1 · Fadenwurm +8 · Rennwurm +14. Bei 40 wirst du Jäger." :
+      state.biomass < GROWTH.mutation ? "Panzerwurm: im Burst von Seite oder hinten. Bei 80 wählst du deine Mutation." :
+      state.biomass < GROWTH.burrower ? "Beweise deine Mutation. Panzerwurm +22 und eine warme Markspur. Bei 180 wirst du Gräber." :
+      state.largePreyEaten === 0 ? "Du bist übermächtig! Panzerwurm jetzt aus jeder Richtung fressbar." :
       "Wachse auf 240. Die Oberfläche wartet – du kannst schon jetzt hinauf.";
     this.goal.textContent = objective;
     this.toast.hidden = now >= this.toastUntil || state.phase === "mutation" || state.phase === "complete";
@@ -97,7 +97,7 @@ export class BurrowHud {
     const subtitle = document.createElement("p");
     subtitle.textContent = phase === "mutation" ? "Wähle eine Mutation für diesen Run. Alles pausiert. Tasten 1 · 2 · 3" :
       run.state.biomass + " Biomasse · " + run.build.bodyCount + " Körperabschnitte · " +
-      run.state.preyEaten + " Würmer (" + run.state.largePreyEaten + " groß) · " +
+      run.state.preyEaten + " Würmer (" + run.state.largePreyEaten + " gepanzert) · " +
       formatTime(run.state.activeSteps / 60) + " aktive Spielzeit";
     const choices = document.createElement("div");
     choices.className = "burrow-mutation-choices";
